@@ -1,3 +1,5 @@
-
-* @Conversational-AI-for-Mental-Health/Backend-Team
-
+@Conversational-AI-for-Mental-Health/backend-team
+/backend/ @Conversational-AI-for-Mental-Health/backend-team
+/frontend/ @Conversational-AI-for-Mental-Health/frontend-team 
+/.github/ @Conversational-AI-for-Mental-Health/backend-team
+/conversational_ai/ @Conversational-AI-for-Mental-Health/llm-team

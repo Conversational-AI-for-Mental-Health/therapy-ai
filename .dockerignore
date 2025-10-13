@@ -1,0 +1,15 @@
+# Ignore compiled output folders
+**/dist
+
+# Ignore Node dependencies and local files
+**/node_modules
+.git
+.gitignore
+.vscode
+
+# Ignore environment files
+.env
+
+# Ignore build artifacts and cache
+tmp
+cache

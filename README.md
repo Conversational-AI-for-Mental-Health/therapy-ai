@@ -1,9 +1,5 @@
 # 🧠 Mental Health Chatbot: Local Development Guide
 
-The basic project folder structure has been created.
-All the folder are currently empty.
-Each folder has a .gitkeep folder which i kept temporarily to setup this
-Each team can edit their folder and remove .gitkeep file when they can
 
 ## Overview
 
@@ -27,11 +23,11 @@ You need **Git**, **Node.js** (LTS), **Docker Destop** and **Yarn Classic (v1)**
 1.  **Clone the Repo:**
 
     ```bash
-    git clone <your-project-repository-url>
+    git clone https://github.com/Conversational-AI-for-Mental-Health/therapy-ai
     cd therapy-ai
     ```
 
-2.  **Install Dependencies:**
+2.  **Install Dependencies:** (json file has setup for concurrent installation so yarn install should work after golabl yarn installation in a device)
     ```bash
     yarn install
     ```
@@ -51,3 +47,4 @@ yarn dev
 ```
 
 You can also run this command in the frontend or backend to test them separately
+No seperate yarn installation is required

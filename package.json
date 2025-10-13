@@ -1,9 +1,42 @@
 {
-  "name": "demo-repo",
-  "version": "0.2.0",
-  "description": "A sample package.json",
-  "dependencies": {
-    "@primer/css": "17.0.1"
+  "name": "therapy-ai-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "yarn workspace backend build && yarn workspace frontend build",
+    "build:frontend": "yarn workspace frontend build",
+    "build:backend": "yarn workspace backend build",
+    "dev": "concurrently \"cd backend && yarn dev\" \"cd frontend && yarn dev\"",
+    "install:all": "yarn install",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:all": "jest --coverage --watchAll",
+    "lint": "eslint --ext .ts,.tsx,.js,.jsx ./backend ./frontend",
+    "lint:fix": "eslint --ext .ts,.tsx,.js,.jsx --fix ./backend ./frontend",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:start": "docker compose up --build -d",
+    "docker:clean": "docker compose down --rmi all",
+    "docker:logs": "docker compose logs -f"
   },
-  "license": "MIT"
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/mongodb": "^4.0.7",
+    "@typescript-eslint/eslint-plugin": "^8.46.0",
+    "@typescript-eslint/parser": "^8.46.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "jest": "^30.2.0",
+    "prettier": "^3.6.2",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.4.5",
+    "typescript": "^5.9.3"
+  }
 }

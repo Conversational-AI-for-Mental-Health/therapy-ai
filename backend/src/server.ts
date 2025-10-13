@@ -24,3 +24,19 @@ httpServer.listen(config.PORT, () => {
   console.log(`[HTTP] Server running in ${config.NODE_ENV} mode.`);
   console.log(`[HTTP] Listening on http://localhost:${config.PORT}`);
 });
+
+// Handle Server Errors
+httpServer.on("error", (err: any) => {
+  console.error(`[HTTP] Server Error: ${err.message}`);
+  process.exit(1);
+});
+
+// Proper Shutdown
+process.on("SIGINT", () => {
+  console.log("\n[System] Shutting down server gracefully...");
+  io.close();
+  httpServer.close(() => {
+    console.log("[System] Server closed successfully. Exiting...");
+    process.exit(0);
+  });
+});

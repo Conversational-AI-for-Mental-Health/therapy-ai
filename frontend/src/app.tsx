@@ -3,10 +3,6 @@ import { useState, useRef, useEffect } from "react";
 import React, { FC } from "react";
 import { Screens, DashboardTab } from '@/util/types/index';
 
-
-
-
-
 /**
  * App component serves as the main container and entry point for all application routes and UI.
  * This is where you will add your routing, state providers, and core layout.
@@ -28,7 +24,10 @@ const App: FC= () => {
     }
   }, [isDarkMode]);
 
-  
+  // Scroll to top on screen change
+   useEffect(() => {
+    window.scrollTo(0, 0);
+   },[currentScreen]);
 
   return (
     <div>

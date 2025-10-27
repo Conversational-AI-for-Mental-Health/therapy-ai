@@ -6,6 +6,7 @@
 .git
 .gitignore
 .vscode
+.yarn
 
 # Ignore environment files
 .env

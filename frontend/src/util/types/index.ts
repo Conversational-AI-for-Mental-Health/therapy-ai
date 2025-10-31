@@ -21,3 +21,10 @@ export type ChatSession = {
   timestamp: string;
   preview: string;
 };
+
+export type LandingPageProps = {
+  setCurrentScreen: (screen: Screens) => void;
+  handleChatSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  chatInput: string;
+  setChatInput: (value: string) => void;
+}

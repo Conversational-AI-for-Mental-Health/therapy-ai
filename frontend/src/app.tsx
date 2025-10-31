@@ -10,7 +10,7 @@ import { Screens, DashboardTab } from '@/util/types/index';
  * App component serves as the main container and entry point for all application routes and UI.
  * This is where you will add your routing, state providers, and core layout.
  */
-const App: FC= () => {
+const App: FC = () => {
 
   //Navigation and UI state management
   const [currentScreen, setCurrentScreen] = useState<Screens>('landing');
@@ -30,18 +30,18 @@ const App: FC= () => {
   }, [isDarkMode]);
 
   // Scroll to top on screen change
-   useEffect(() => {
+  useEffect(() => {
     window.scrollTo(0, 0);
     setMobileMenuOpen(false);
-   },[currentScreen]);
+  }, [currentScreen]);
 
-   useEffect(() => {
+  useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
         setMobileMenuOpen(false);
       }
     };
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -54,7 +54,7 @@ const App: FC= () => {
             <span>🧠</span>
             <span>Therapy AI</span>
           </a>
-          
+
           {/* Desktop Navigation Links */}
           <div className="hidden lg:flex items-center" style={{ gap: 'var(--space-lg)' }}>
             <a href="#features" className="text-secondary hover:text-primary transition text-body">
@@ -64,7 +64,7 @@ const App: FC= () => {
               How It Works
             </a>
           </div>
-          
+
           {/* Right Side Actions */}
           <div className="flex items-center" style={{ gap: 'var(--space-sm)' }}>
             <button
@@ -113,11 +113,10 @@ const App: FC= () => {
 
       <motion.aside
         initial={false}
-        animate={{ x: mobileMenuOpen ? 0 : '100%'}}
+        animate={{ x: mobileMenuOpen ? 0 : '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className={`fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] z-70 lg:hidden ${
-          isDarkMode ? 'mobile-sidebar-dark' : 'mobile-sidebar-light'
-        }`}
+        className={`fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] z-70 lg:hidden ${isDarkMode ? 'mobile-sidebar-dark' : 'mobile-sidebar-light'
+          }`}
       >
         <div className="h-full flex flex-col" style={{ padding: 'var(--space-lg)' }}>
           {/* Close button */}
@@ -139,15 +138,15 @@ const App: FC= () => {
 
           {/* Navigation Links */}
           <div className="flex flex-col" style={{ gap: 'var(--space-md)', marginBottom: 'var(--space-xl)' }}>
-            <a 
-              href="#features" 
+            <a
+              href="#features"
               onClick={() => setMobileMenuOpen(false)}
               className="text-secondary hover:text-primary transition text-body-lg text-center"
             >
               Features
             </a>
-            <a 
-              href="#how-it-works" 
+            <a
+              href="#how-it-works"
               onClick={() => setMobileMenuOpen(false)}
               className="text-secondary hover:text-primary transition text-body-lg text-center"
             >
@@ -163,7 +162,7 @@ const App: FC= () => {
                 setCurrentScreen('login');
               }}
               className="w-full text-primary rounded-full hover:opacity-90 transition text-body-lg border-2 border-primary bg-primary/10"
-              style={{ 
+              style={{
                 padding: 'var(--space-sm) var(--space-md)',
               }}
             >
@@ -175,9 +174,9 @@ const App: FC= () => {
                 setCurrentScreen('signup');
               }}
               className="w-full gradient-bg-primary text-white rounded-full hover:opacity-90 transition-all hover:shadow-xl text-body-lg"
-              style={{ 
+              style={{
                 padding: 'var(--space-sm) var(--space-md)',
-                boxShadow: '0 4px 20px rgba(90, 154, 139, 0.3)' 
+                boxShadow: '0 4px 20px rgba(90, 154, 139, 0.3)'
               }}
             >
               Sign Up
@@ -186,7 +185,48 @@ const App: FC= () => {
         </div>
       </motion.aside>
 
+      <main>
+        {/* HERO SECTION */}
+        <section className="text-center gradient-bg-subtle px-4 sm:px-6 md:px-8 relative overflow-hidden" style={{ paddingTop: 'calc(var(--space-xxl) * 2)', paddingBottom: 'var(--space-xxl)' }}>
 
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+
+          <div className="container mx-auto relative z-10" style={{ padding: '0 var(--space-md)' }}>
+            <motion.h1
+              className="text-display leading-tight"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              The <span className="highlight-word">mental health</span> companion you can <span className="highlight-word">trust</span>
+            </motion.h1>
+            <motion.p
+              className="text-body-lg text-secondary max-w-3xl mx-auto"
+              style={{ marginTop: 'var(--space-md)' }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              Chat with an <span className="gradient-text" style={{ fontWeight: 'var(--font-weight-semibold)' }}>empathetic AI</span> about your thoughts and feelings, or keep a private journal to track your mental well-being over time.
+            </motion.p>
+            <motion.button
+              onClick={() => setCurrentScreen('signup')}
+              className="gradient-bg-primary text-white rounded-full hover:opacity-90 transition-all hover:shadow-xl text-body-lg relative z-20"
+              style={{ marginTop: 'var(--space-lg)', padding: 'var(--space-sm) var(--space-lg)', boxShadow: '0 4px 20px rgba(90, 154, 139, 0.3)' }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Start Your Journey
+            </motion.button>
+          </div>
+        </section>
+
+        
+      </main>
     </div>
   );
 };

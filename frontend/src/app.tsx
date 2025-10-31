@@ -5,7 +5,8 @@ import { X, Menu } from 'lucide-react';
 
 import { motion } from "framer-motion";
 import { LandingPage } from "./pages/LandingPage";
-
+import { SignupPage } from "./pages/SignupPage";
+import { LoginPage } from "./pages/LoginPage";
 import { Screens, DashboardTab, ChatMessage } from '@/util/types/index';
 
 /**
@@ -55,9 +56,9 @@ const App: FC = () => {
   const handleChatSubmit = async (e: React.FormEvent) => { }
 
   const renderCurrentScreen = () => {
-    switch(currentScreen){
+    switch (currentScreen) {
       case 'landing':
-        return(
+        return (
           <LandingPage
             setCurrentScreen={setCurrentScreen}
             handleChatSubmit={handleChatSubmit}
@@ -65,8 +66,21 @@ const App: FC = () => {
             setChatInput={setChatInput}
           />
         );
+      case 'signup':
+        return (
+          <SignupPage
+            setCurrentScreen={setCurrentScreen}
+
+          />
+        );
+      case 'login':
+        return (
+          <LoginPage
+            setCurrentScreen={setCurrentScreen}
+          />
+        )
       default:
-        return(
+        return (
           <LandingPage
             setCurrentScreen={setCurrentScreen}
             handleChatSubmit={handleChatSubmit}

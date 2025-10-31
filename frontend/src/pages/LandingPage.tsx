@@ -8,7 +8,7 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 import { faqItems, reviews } from "../constants/constants";
-import { Screens, LandingPageProps } from '@/util/types/index';
+import { LandingPageProps } from '@/util/types/index';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const LandingPage: FC<LandingPageProps> = ({

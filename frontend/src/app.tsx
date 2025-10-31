@@ -320,6 +320,49 @@ const App: FC = () => {
           </div>
         </section>
 
+        {/* HOW IT WORKS SECTION */}
+         <section id="how-it-works" className="gradient-bg-subtle px-4 sm:px-6 md:px-8 relative" style={{ padding: 'var(--space-xxl) 0' }}>
+          <div className="container mx-auto text-center" style={{ padding: '0 var(--space-md)' }}>
+            <motion.h2 
+              className="text-h1" 
+              style={{ marginBottom: 'var(--space-xl)' }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              Get Started in <span className="gradient-text">3 Simple Steps</span>
+            </motion.h2>
+            <div className="flex flex-col md:flex-row justify-center items-start" style={{ gap: 'var(--space-lg)' }}>
+              {[
+                { num: '1', title: 'Start a Conversation', desc: 'Begin a conversation with the AI anytime you need to talk' },
+                { num: '2', title: 'Create an account', desc: 'Sign up securely with us to enjoy the full benefits' },
+                { num: '3', title: 'Reflect & Grow', desc: 'Use the journal and ✨ AI insights to support your personal growth.' }
+              ].map((step, index) => (
+                <motion.div 
+                  key={index}
+                  className="text-center max-w-xs"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.15 }}
+                >
+                  <motion.div 
+                    className="gradient-bg-primary text-white rounded-full flex items-center justify-center mx-auto text-h2 shadow-lg"
+                    style={{ width: 'var(--space-xxl)', height: 'var(--space-xxl)', marginBottom: 'var(--space-sm)', fontWeight: 'var(--font-weight-bold)', boxShadow: '0 4px 20px rgba(90, 154, 139, 0.3)' }}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    {step.num}
+                  </motion.div>
+                  <h3 className="text-h3" style={{ marginBottom: 'var(--space-xs)' }}>{step.title}</h3>
+                  <p className="text-body text-secondary">{step.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
       </main>
     </div>
   );

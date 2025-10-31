@@ -4,7 +4,7 @@ import React, { FC } from "react";
 import { X, Menu } from 'lucide-react';
 import { motion } from "framer-motion";
 
-import { Screens, DashboardTab } from '@/util/types/index';
+import { Screens, DashboardTab, ChatMessage } from '@/util/types/index';
 
 /**
  * App component serves as the main container and entry point for all application routes and UI.
@@ -19,6 +19,10 @@ const App: FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
+    { sender: 'ai', text: 'Hello! I am here to listen. How are you feeling today?' },
+  ]);
+  const [chatInput, setChatInput] = useState('');
 
   //Dark Mode toggle
   useEffect(() => {
@@ -45,6 +49,9 @@ const App: FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const handleChatSubmit = async () => { }
+
 
   return (
     <div>
@@ -192,7 +199,7 @@ const App: FC = () => {
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
 
-          <div className="container mx-auto relative z-10" style={{ padding: '0 var(--space-md)' }}>
+          <div className="container mx-auto relative z-10 mt-10" style={{ padding: '0 var(--space-md)' }}>
             <motion.h1
               className="text-display leading-tight"
               initial={{ opacity: 0, y: 20 }}
@@ -222,10 +229,97 @@ const App: FC = () => {
             >
               Start Your Journey
             </motion.button>
+            <motion.form onSubmit={handleChatSubmit} className="shrink-0 flex items-center mt-25"
+              style={{
+                gap: 'var(--space-xs)',
+                padding: 'var(--space-xs)'
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}>
+              <input
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                type="text"
+                placeholder="Ask anything or seek consultation about your health"
+                className="w-full rounded-lg bg-surface border border-color ring-primary focus:ring-2 focus:outline-none transition text-body"
+                style={{ height: 'var(--space-xl)', padding: '0 var(--space-sm)' }}
+              />
+              <button
+                type="submit"
+                className="shrink-0 bg-primary text-white rounded-lg hover:opacity-90 transition flex items-center justify-center"
+                style={{ height: 'var(--space-xl)', width: 'var(--space-xl)', fontSize: 'var(--font-h3)' }}
+              >
+                <span>&rarr;</span>
+              </button>
+            </motion.form>
+            <div style={{ padding: '0 var(--space-md)' }}>
+              <motion.p
+                className="text-body-sm text-secondary max-w-3xl mx-auto"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >                Not a replacement for a doctor. If this is an emergency, call 911 or go to the emergency room.
+              </motion.p>
+            </div>
           </div>
         </section>
 
-        
+        {/* FEATURES SECTION */}
+        <section id="features" className="px-4 sm:px-6 md:px-8" style={{ padding: 'var(--space-xxl) 0' }}>
+          <div className="container mx-auto text-center" style={{ padding: '0 var(--space-md)' }}>
+            <motion.h2
+              className="text-h1"
+              style={{ marginBottom: 'var(--space-sm)' }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              Features Designed For <span className="gradient-text">You</span>
+            </motion.h2>
+            <motion.p
+              className="text-body-lg text-secondary max-w-2xl mx-auto"
+              style={{ marginBottom: 'var(--space-xl)' }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              Tools to support your <span className="highlight-word">mental health journey</span>.
+            </motion.p>
+            <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 'var(--space-lg)' }}>
+              {[
+                { icon: '💬', title: 'AI Consultation', desc: 'Engage in supportive conversations with an AI trained to listen and help you explore your feelings.' },
+                { icon: '📝', title: 'Private Journaling', desc: 'Keep a secure log of your thoughts and moods to recognize patterns and progress.' },
+                { icon: '💡', title: '✨ Personalized Insights', desc: 'Our AI can help identify themes in your conversations and entries to foster self-awareness.' }
+              ].map((feature, index) => (
+                <motion.div
+                  key={index}
+                  className="bg-surface rounded-2xl shadow-md hover:shadow-xl transition-all relative overflow-hidden group"
+                  style={{ padding: 'var(--space-lg)' }}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                >
+                  {/* Gradient hover effect */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 gradient-bg-primary" style={{ mixBlendMode: 'soft-light' }} />
+
+                  <div className="relative z-10">
+                    <div style={{ fontSize: 'var(--space-xl)', marginBottom: 'var(--space-sm)' }}>{feature.icon}</div>
+                    <h3 className="text-h3" style={{ marginBottom: 'var(--space-xs)' }}>{feature.title}</h3>
+                    <p className="text-body text-secondary">{feature.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
       </main>
     </div>
   );

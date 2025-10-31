@@ -2,7 +2,15 @@
 import { useState, useRef, useEffect } from "react";
 import React, { FC } from "react";
 import { X, Menu } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { motion } from "framer-motion";
+
+import { faqItems } from "./constants/constants";
 
 import { Screens, DashboardTab, ChatMessage } from '@/util/types/index';
 
@@ -362,7 +370,41 @@ const App: FC = () => {
             </div>
           </div>
         </section>
-
+        {/* FAQ SECTION */}
+        
+        <section className="bg-surface px-4 sm:px-6 md:px-8" style={{ padding: 'var(--space-xxl) 0' }}>
+          <div className="container mx-auto max-w-3xl" style={{ padding: '0 var(--space-md)' }}>
+            <motion.h2 
+              className="text-h1 text-center" 
+              style={{ marginBottom: 'var(--space-xl)' }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              Frequently Asked Questions
+            </motion.h2>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Accordion type="single" collapsible className="w-full">
+                {faqItems.map((item, index) => (
+                  <AccordionItem key={index} value={`item-${index}`}>
+                    <AccordionTrigger className="text-left text-body hover:text-primary">
+                      {item.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-body text-secondary">
+                      {item.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </motion.div>
+          </div>
+        </section>
       </main>
     </div>
   );

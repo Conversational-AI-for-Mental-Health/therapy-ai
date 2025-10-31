@@ -4,9 +4,9 @@ import React, { FC } from "react";
 import { X, Menu } from 'lucide-react';
 
 import { motion } from "framer-motion";
-import { LandingPage } from "./pages/LandingPage";
-import { SignupPage } from "./pages/SignupPage";
-import { LoginPage } from "./pages/LoginPage";
+import LandingPage from "./pages/LandingPage";
+import SignupPage from "./pages/SignupPage";
+import LoginPage from "./pages/LoginPage";
 import { Screens, DashboardTab, ChatMessage } from '@/util/types/index';
 
 /**
@@ -60,7 +60,7 @@ const App: FC = () => {
       case 'landing':
         return (
           <LandingPage
-            setCurrentScreen={setCurrentScreen}
+            onNavigate={setCurrentScreen}
             handleChatSubmit={handleChatSubmit}
             chatInput={chatInput}
             setChatInput={setChatInput}
@@ -69,20 +69,20 @@ const App: FC = () => {
       case 'signup':
         return (
           <SignupPage
-            setCurrentScreen={setCurrentScreen}
+            onNavigate={setCurrentScreen}
 
           />
         );
       case 'login':
         return (
           <LoginPage
-            setCurrentScreen={setCurrentScreen}
+            onNavigate={setCurrentScreen}
           />
         )
       default:
         return (
           <LandingPage
-            setCurrentScreen={setCurrentScreen}
+            onNavigate={setCurrentScreen}
             handleChatSubmit={handleChatSubmit}
             chatInput={chatInput}
             setChatInput={setChatInput}
@@ -149,7 +149,7 @@ const App: FC = () => {
 
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] lg:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-60 lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}

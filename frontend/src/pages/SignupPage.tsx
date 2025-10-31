@@ -1,16 +1,12 @@
 import React, { FC } from 'react';
-import { Screens } from '@/util/types/index';
+import { SignupPageProps } from '@/util/types';
 
-type SignupPageProps = {
-  setCurrentScreen: (screen: Screens) => void;
-};
 
-export const SignupPage: FC<SignupPageProps> = ({ setCurrentScreen }) => {
+export default function SignupPage ({ onNavigate }:SignupPageProps) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 mt-25 mb-15">
       <div className="w-full max-w-sm">
         <div className="bg-surface rounded-2xl shadow-xl" style={{ padding: 'var(--space-lg)' }}>
-          {/* Logo - Icon Only */}
           <div className="flex items-center justify-center" style={{ marginBottom: 'var(--space-sm)' }}>
             <span style={{ fontSize: 'var(--space-xl)' }}>🧠</span>
           </div>
@@ -47,18 +43,17 @@ export const SignupPage: FC<SignupPageProps> = ({ setCurrentScreen }) => {
 
           {/* Create Account Button */}
           <button
-            onClick={() => setCurrentScreen('dashboard')}
+            onClick={() => onNavigate('dashboard')}
             className="w-full bg-primary text-white rounded-lg hover:opacity-90 transition text-body flex items-center justify-center"
             style={{ height: 'var(--space-xl)', marginTop: 'var(--space-md)' }}
           >
             Create Account
           </button>
 
-          {/* Divider */}
           <div className="flex items-center" style={{ margin: 'var(--space-md) 0' }}>
-            <div className="flex-grow border-t border-color"></div>
+            <div className="grow border-t border-color"></div>
             <span className="text-body-sm text-secondary" style={{ padding: '0 var(--space-xs)' }}>or</span>
-            <div className="flex-grow border-t border-color"></div>
+            <div className="grow border-t border-color"></div>
           </div>
 
           {/* Social Login Buttons */}
@@ -83,11 +78,11 @@ export const SignupPage: FC<SignupPageProps> = ({ setCurrentScreen }) => {
           {/* Footer Links */}
           <p className="text-center text-body-sm text-secondary">
             Have an account?{' '}
-            <a href="#" onClick={(e) => { e.preventDefault(); setCurrentScreen('login'); }} className="text-primary hover:underline" style={{ fontWeight: 'var(--font-weight-semibold)' }}>
+            <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('login'); }} className="text-primary hover:underline" style={{ fontWeight: 'var(--font-weight-semibold)' }}>
               Log in
             </a>{' '}
             |{' '}
-            <a href="#" onClick={(e) => { e.preventDefault(); setCurrentScreen('landing'); }} className="text-primary hover:underline" style={{ fontWeight: 'var(--font-weight-semibold)' }}>
+            <a href="#" onClick={(e) => { e.preventDefault(); onNavigate('landing'); }} className="text-primary hover:underline" style={{ fontWeight: 'var(--font-weight-semibold)' }}>
               Home
             </a>
           </p>

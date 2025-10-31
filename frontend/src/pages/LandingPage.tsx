@@ -11,12 +11,12 @@ import { faqItems, reviews } from "../constants/constants";
 import { LandingPageProps } from '@/util/types/index';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export const LandingPage: FC<LandingPageProps> = ({
-    setCurrentScreen,
+export default function LandingPage({
+    onNavigate,
     handleChatSubmit,
     chatInput,
     setChatInput
-}) => {
+}: LandingPageProps){
     const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
     const nextReview = () => {
         setCurrentReviewIndex((prev) => (prev + 1) % reviews.length);
@@ -54,7 +54,7 @@ export const LandingPage: FC<LandingPageProps> = ({
                         Chat with an <span className="gradient-text" style={{ fontWeight: 'var(--font-weight-semibold)' }}>empathetic AI</span> about your thoughts and feelings, or keep a private journal to track your mental well-being over time.
                     </motion.p>
                     <motion.button
-                        onClick={() => setCurrentScreen('signup')}
+                        onClick={() => onNavigate('signup')}
                         className="gradient-bg-primary text-white rounded-full hover:opacity-90 transition-all hover:shadow-xl text-body-lg relative z-20"
                         style={{ marginTop: 'var(--space-lg)', padding: 'var(--space-sm) var(--space-lg)', boxShadow: '0 4px 20px rgba(90, 154, 139, 0.3)' }}
                         initial={{ opacity: 0, y: 20 }}

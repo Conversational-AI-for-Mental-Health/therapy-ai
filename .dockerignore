@@ -13,3 +13,5 @@
 # Ignore build artifacts and cache
 tmp
 cache
+
+.yarn

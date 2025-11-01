@@ -1,7 +1,7 @@
 # Dependency Installation & Workspace Linking
 FROM node:20-alpine AS installer
 WORKDIR /app
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock .yarnrc.yml ./
 COPY backend/ ./backend
 COPY frontend/ ./frontend
 RUN yarn install --frozen-lockfile --production=false

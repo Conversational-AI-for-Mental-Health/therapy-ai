@@ -21,3 +21,46 @@ export type ChatSession = {
   timestamp: string;
   preview: string;
 };
+
+export interface DashboardPageProps{
+  onNavigate: (screen: Screens) => void;
+  isDarkMode: boolean;
+  setIsDarkMode: (value: boolean) => void;
+};
+
+export interface SidebarProps{
+  isOpen: boolean;
+  onClose: () => void;
+  onShowSettings: () => void;
+  onNewConversation: () => void;
+  chatSessions: ChatSession[]; 
+  currentChatId: number;      
+  onSelectChat: (id: number) => void;
+  onNavigate: (screen: Screens) => void;
+};
+
+export type MoodOption = {
+  mood: string;
+  moodIcon: string;
+};
+
+export interface JournalProps{
+  moodOptions: MoodOption[];
+};
+
+export interface JournalViewProps {
+  journalEntries: JournalEntry[];
+  onUpdateEntry: (id: number, text: string) => void;
+  onDeleteEntry: (id: number) => void;
+  onGetInsights: (id: number) => void;
+}
+
+export interface ChatProps {
+  chatHistory: ChatMessage[];
+  chatHistoryRef: React.RefObject<HTMLDivElement>;
+  quickPrompts: string[];
+  chatInput: string;
+  onChatInputChange: (value: string) => void;
+  handleQuickPrompt: (text?: string) => void;
+  handleSubmitForm: (e: React.FormEvent<HTMLFormElement>) => void;
+};

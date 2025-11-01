@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import React, { FC } from "react";
 import { Screens, DashboardTab } from '@/util/types/index';
+import DashboardPage from "./pages/Dashboard";
 
 /**
  * App component serves as the main container and entry point for all application routes and UI.
@@ -31,9 +32,11 @@ const App: FC= () => {
 
   return (
     <div>
-      <header>
-
-      </header>
+      <DashboardPage
+        onNavigate={setCurrentScreen}
+        isDarkMode={isDarkMode}
+        setIsDarkMode={setIsDarkMode}
+      />
     </div>
   );
 };

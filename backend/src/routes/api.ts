@@ -1,8 +1,8 @@
 import axios from "axios";
-const PYTHON_API_URL = "http://127.0.0.1:5000/chat";
 import { Router, Request, Response } from "express";
 
 const apiRouter = Router();
+const PYTHON_API_URL = "http://127.0.0.1:5000/chat";
 
 apiRouter.get("/status", (req: Request, res: Response) => {
   res.status(200).json({

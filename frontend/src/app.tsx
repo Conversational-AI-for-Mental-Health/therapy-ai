@@ -66,19 +66,6 @@ const App: FC = () => {
             setChatInput={setChatInput}
           />
         );
-      case 'signup':
-        return (
-          <SignupPage
-            onNavigate={setCurrentScreen}
-
-          />
-        );
-      case 'login':
-        return (
-          <LoginPage
-            onNavigate={setCurrentScreen}
-          />
-        )
       default:
         return (
           <LandingPage
@@ -90,7 +77,22 @@ const App: FC = () => {
         );
     }
   }
-
+  if(currentScreen === "signup") {
+    return (
+      <SignupPage
+        onNavigate={setCurrentScreen}
+      />
+    )
+  }
+  if(currentScreen === "login") {
+    return(
+      <LoginPage
+        onNavigate={setCurrentScreen}
+      />
+    )
+  }
+  if(currentScreen === "dashboard") {
+  }
   return (
     <div>
       <header className="bg-surface/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">

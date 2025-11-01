@@ -13,7 +13,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import Chat from '@/components/layout/Chat';
 import Journal from '@/components/layout/Journal';
 import { callBackendAPI } from '@/util/api';
-// need setting dialog (Megana)
+import Settings from '@/components/layout/Settings';
 
 
 
@@ -40,8 +40,12 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
     const [insightsContent, setInsightsContent] = useState('');
     const [isLoadingInsights, setIsLoadingInsights] = useState(false);
 
+    // Settings State
     const [showSettingsDialog, setShowSettingsDialog] = useState(false);
-
+    const [analyticsTracking, setAnalyticsTracking] = useState(true);
+    const [personalizedAds, setPersonalizedAds] = useState(false);
+    const [pushNotifications, setPushNotifications] = useState(true);
+    
     // Refs
     const chatHistoryRef = useRef<HTMLDivElement>(null);
 
@@ -192,7 +196,21 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
 
             {/* Modals */}
            
-            {/*. Settings Dialog (waiting)*/}
+            {/*. Settings Dialog*/}
+            <Settings
+                isOpen={showSettingsDialog}
+                onClose={() => setShowSettingsDialog(false)}
+                onLogout={() => {
+                    setShowSettingsDialog(false);
+                    onNavigate('landing');
+                }}
+                analyticsTracking={analyticsTracking}
+                setAnalyticsTracking={setAnalyticsTracking}
+                personalizedAds={personalizedAds}
+                setPersonalizedAds={setPersonalizedAds}
+                pushNotifications={pushNotifications}
+                setPushNotifications={setPushNotifications}
+            />
         </>
     );
 };

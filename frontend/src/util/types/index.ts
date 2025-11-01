@@ -64,3 +64,15 @@ export interface ChatProps {
   handleQuickPrompt: (text?: string) => void;
   handleSubmitForm: (e: React.FormEvent<HTMLFormElement>) => void;
 };
+
+export interface SettingsDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onLogout: () => void;
+  analyticsTracking: boolean;
+  setAnalyticsTracking: (value: boolean) => void;
+  personalizedAds: boolean;
+  setPersonalizedAds: (value: boolean) => void;
+  pushNotifications: boolean;
+  setPushNotifications: (value: boolean) => void;
+};

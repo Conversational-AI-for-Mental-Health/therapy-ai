@@ -1,2 +1,2 @@
-yarn workspace therapy-ai-frontend add @tailwindcss/postcss @emotion/is-prop-valid framer-motion lucide-react
+yarn workspace therapy-ai-frontend add @tailwindcss/postcss @emotion/is-prop-valid framer-motion lucide-react clsx tailwind-merge @radix-ui/react-accordion
 yarn workspace therapy-ai-frontend dev 

@@ -7,6 +7,9 @@ import { motion } from "framer-motion";
 import LandingPage from "./pages/LandingPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
+import Dashboard from "./pages/Dashboard";
+import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { Screens, DashboardTab, ChatMessage } from '@/util/types/index';
 
 /**
@@ -57,42 +60,30 @@ const App: FC = () => {
 
   const renderCurrentScreen = () => {
     switch (currentScreen) {
+      case 'signup':
+        return <SignupPage onNavigate={(s) => setCurrentScreen(s as Screens)} />;
+      case 'login':
+        return <LoginPage onNavigate={(s) => setCurrentScreen(s as Screens)} />;
+      case 'dashboard':
+        return <Dashboard onNavigate={(s) => setCurrentScreen(s as Screens)} />;
+      case 'contact':
+        return <Contact onNavigate={(s) => setCurrentScreen(s as Screens)} />;
+      case 'privacy':
+        return <PrivacyPolicy />;
+      case 'story':
+        return <LandingPage onNavigate={(s) => setCurrentScreen(s as Screens)} handleChatSubmit={handleChatSubmit} chatInput={chatInput} setChatInput={setChatInput} />;
       case 'landing':
-        return (
-          <LandingPage
-            onNavigate={setCurrentScreen}
-            handleChatSubmit={handleChatSubmit}
-            chatInput={chatInput}
-            setChatInput={setChatInput}
-          />
-        );
       default:
         return (
           <LandingPage
-            onNavigate={setCurrentScreen}
+            onNavigate={(s) => setCurrentScreen(s as Screens)}
             handleChatSubmit={handleChatSubmit}
             chatInput={chatInput}
             setChatInput={setChatInput}
           />
         );
     }
-  }
-  if(currentScreen === "signup") {
-    return (
-      <SignupPage
-        onNavigate={setCurrentScreen}
-      />
-    )
-  }
-  if(currentScreen === "login") {
-    return(
-      <LoginPage
-        onNavigate={setCurrentScreen}
-      />
-    )
-  }
-  if(currentScreen === "dashboard") {
-  }
+  };
   return (
     <div>
       <header className="bg-surface/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">

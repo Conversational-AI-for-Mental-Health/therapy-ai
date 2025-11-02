@@ -84,6 +84,7 @@ export default function LandingPage({
                             style={{ height: 'var(--space-xl)', padding: '0 var(--space-sm)' }}
                         />
                         <button
+                            onClick={() => onNavigate('dashboard')}
                             type="submit"
                             className="shrink-0 bg-primary text-white rounded-lg hover:opacity-90 transition flex items-center justify-center"
                             style={{ height: 'var(--space-xl)', width: 'var(--space-xl)', fontSize: 'var(--font-h3)' }}

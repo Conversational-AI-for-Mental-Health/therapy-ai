@@ -93,6 +93,13 @@ const App: FC = () => {
     )
   }
   if(currentScreen === "dashboard") {
+    return(
+      <DashboardPage
+        onNavigate={setCurrentScreen}
+        isDarkMode={isDarkMode}
+        setIsDarkMode={setIsDarkMode}
+      />
+    )
   }
   return (
     <div>

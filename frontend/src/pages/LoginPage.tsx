@@ -3,7 +3,7 @@ import { LoginPageProps } from '@/util/types';
 
 export default function LoginPage ({ onNavigate }: LoginPageProps){
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 mt-25 mb-15">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 my-6">
       <div className="w-full max-w-sm">
         <div className="bg-surface rounded-2xl shadow-xl" style={{ padding: 'var(--space-lg)' }}>
           <div className="flex items-center justify-center" style={{ marginBottom: 'var(--space-sm)' }}>

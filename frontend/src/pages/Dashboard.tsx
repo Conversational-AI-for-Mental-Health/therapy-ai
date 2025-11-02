@@ -100,11 +100,11 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
 
     return (
         <>
-            <div className="min-h-screen flex flex-col md:flex-row relative">
+            <div className="h-screen flex flex-col md:flex-row relative overflow-hidden">
                 {sidebarOpen && (
                     <div
                         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden"
-                        onClick={() => setSidebarOpen(false)}
+                        onClick={() => setSidebarOpen(true)}
                     />
                 )}
 

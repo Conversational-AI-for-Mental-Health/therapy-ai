@@ -3,6 +3,7 @@ import { PenSquare, X } from 'lucide-react';
 import { SidebarProps } from '@/util/types';
 
 export default function Sidebar ({
+  onNavigate,
   isOpen,
   onClose,
   onShowSettings,
@@ -96,7 +97,7 @@ export default function Sidebar ({
           </span>
         </button>
         <button
-
+           onClick={() => onNavigate('landing')}
           className="w-full bg-primary text-white rounded-lg hover:opacity-90 transition flex items-center justify-center"
           style={{ padding: 'var(--space-xs) var(--space-sm)', gap: 'var(--space-xs)' }}
         >

@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React from 'react';
 import { ChatProps } from '@/util/types';
 
 export default function Chat ({
@@ -13,7 +13,7 @@ export default function Chat ({
   return (
     <div className="grow flex flex-col overflow-hidden">
       {/* Quick Prompts */}
-      <div style={{ padding: 'var(--space-sm)', borderBottom: '1px solid var(--border-light)' }} className="border-color">
+      <div className="shrink-0 border-b border-color" style={{ padding: 'var(--space-sm)' }}>
         <h3 className="text-h3" style={{ marginBottom: 'var(--space-xs)' }}>Quick Prompts</h3>
         <div style={{ display: 'flex', gap: 'var(--space-xs)', flexWrap: 'wrap' }}>
           {quickPrompts.map((prompt, index) => (
@@ -30,6 +30,7 @@ export default function Chat ({
       </div>
 
       {/* Chat History */}
+
       <div
         ref={chatHistoryRef}
         className="chat-history grow overflow-y-auto"

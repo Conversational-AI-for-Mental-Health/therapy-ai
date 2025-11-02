@@ -11,6 +11,7 @@ import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { Screens, DashboardTab, ChatMessage } from '@/util/types/index';
 import DashboardPage from "./pages/Dashboard";
+import Story from "./pages/OurStory";
 
 /**
  * App component serves as the main container and entry point for all application routes and UI.
@@ -61,9 +62,11 @@ const App: FC = () => {
   const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'contact':
-        return <Contact onNavigate={(s) => setCurrentScreen(s as Screens)} setIsDarkMode={setIsDarkMode}  isDarkMode={isDarkMode}/>;
+        return <Contact onNavigate={(s) => setCurrentScreen(s as Screens)}/>;
       case 'privacy':
-        return <PrivacyPolicy onNavigate={(s) => setCurrentScreen(s as Screens)} setIsDarkMode={setIsDarkMode} isDarkMode={isDarkMode} />;
+        return <PrivacyPolicy />;
+      case 'story':
+        return <Story/>
       case 'landing':
         return <LandingPage onNavigate={(s) => setCurrentScreen(s as Screens)} handleChatSubmit={handleChatSubmit} chatInput={chatInput} setChatInput={setChatInput} />;
       default:
@@ -104,7 +107,7 @@ const App: FC = () => {
     <div>
       <header className="bg-surface/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
         <nav className="container mx-auto flex justify-between items-center px-4 sm:px-6 md:px-8" style={{ padding: 'var(--space-sm) var(--space-md)' }}>
-          <a href="#" className="flex items-center text-primary" style={{ gap: 'var(--space-xs)', fontSize: 'var(--font-h3)', fontWeight: 'var(--font-weight-bold)' }}>
+          <a href="/" className="flex items-center text-primary" style={{ gap: 'var(--space-xs)', fontSize: 'var(--font-h3)', fontWeight: 'var(--font-weight-bold)' }}>
             <span>🧠</span>
             <span>Therapy AI</span>
           </a>

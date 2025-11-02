@@ -1,6 +1,6 @@
 import React from 'react';
-
-export default function PrivacyPolicy() {
+import { PrivacyPageProps } from '@/util/types';
+export default function PrivacyPolicy({ onNavigate, isDarkMode, setIsDarkMode }: PrivacyPageProps) {
   return (
     <main className="container mx-auto py-16 px-4">
       <h1 className="text-h1 mb-4">Privacy Policy</h1>

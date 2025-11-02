@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 import LandingPage from "./pages/LandingPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
-import Dashboard from "./pages/Dashboard";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { Screens, DashboardTab, ChatMessage } from '@/util/types/index';
@@ -60,19 +59,12 @@ const App: FC = () => {
 
   const renderCurrentScreen = () => {
     switch (currentScreen) {
-      case 'signup':
-        return <SignupPage onNavigate={(s) => setCurrentScreen(s as Screens)} />;
-      case 'login':
-        return <LoginPage onNavigate={(s) => setCurrentScreen(s as Screens)} />;
-      case 'dashboard':
-        return <Dashboard onNavigate={(s) => setCurrentScreen(s as Screens)} />;
       case 'contact':
-        return <Contact onNavigate={(s) => setCurrentScreen(s as Screens)} />;
+        return <Contact onNavigate={(s) => setCurrentScreen(s as Screens)} setIsDarkMode={setIsDarkMode}  isDarkMode={isDarkMode}/>;
       case 'privacy':
-        return <PrivacyPolicy />;
-      case 'story':
-        return <LandingPage onNavigate={(s) => setCurrentScreen(s as Screens)} handleChatSubmit={handleChatSubmit} chatInput={chatInput} setChatInput={setChatInput} />;
+        return <PrivacyPolicy onNavigate={(s) => setCurrentScreen(s as Screens)} setIsDarkMode={setIsDarkMode} isDarkMode={isDarkMode} />;
       case 'landing':
+        return <LandingPage onNavigate={(s) => setCurrentScreen(s as Screens)} handleChatSubmit={handleChatSubmit} chatInput={chatInput} setChatInput={setChatInput} />;
       default:
         return (
           <LandingPage

@@ -1,22 +1,18 @@
 import React, { useState } from 'react';
+import { ContactPageProps } from '@/util/types';
 
-interface Props {
-	onNavigate?: (screen: string) => void;
-}
-
-export default function Contact({ onNavigate }: Props) {
+export default function Contact({ onNavigate }: ContactPageProps) {
 	const [name, setName] = useState('');
 	const [email, setEmail] = useState('');
 	const [message, setMessage] = useState('');
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		// Placeholder - replace with real submission
 		alert('Thanks, we received your message.');
 		setName('');
 		setEmail('');
 		setMessage('');
-		if (onNavigate) onNavigate('landing');
+		if (onNavigate) onNavigate('dashboard');
 	};
 
 	return (

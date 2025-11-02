@@ -59,3 +59,4 @@ export const faqItems = [
     answer: "We offer a free tier with basic features. Premium features including advanced insights, unlimited journaling, and priority support are available through our subscription plans."
   }
 ];
+

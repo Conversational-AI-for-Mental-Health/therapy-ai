@@ -40,7 +40,25 @@ export interface SignupPageProps {
 }
 
 export interface ContactPageProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: Screens) => void;
+  isDarkMode: boolean;
+  setIsDarkMode: (value: boolean) => void;
+}
+
+export interface PrivacyPageProps {
+  onNavigate: (screen: Screens) => void;
+  isDarkMode: boolean;
+  setIsDarkMode: (value: boolean) => void;
+}
+
+export interface TermsPageProps {
+  onNavigate: (screen: Screens) => void;
+  isDarkMode: boolean;
+  setIsDarkMode: (value: boolean) => void;
+}
+
+export interface StoryPageProps {
+  onNavigate: (screen: Screens) => void;
   isDarkMode: boolean;
   setIsDarkMode: (value: boolean) => void;
 }

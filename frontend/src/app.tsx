@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import { Screens, DashboardTab, ChatMessage } from '@/util/types/index';
+import DashboardPage from "./pages/Dashboard";
 
 /**
  * App component serves as the main container and entry point for all application routes and UI.

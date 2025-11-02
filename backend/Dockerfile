@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY backend/ ./backend
 COPY frontend/ ./frontend
-RUN yarn install --frozen-lockfile 
+RUN yarn install --frozen-lockfile
 
 # ----------------------------------------------------
 # Build the Backend Code

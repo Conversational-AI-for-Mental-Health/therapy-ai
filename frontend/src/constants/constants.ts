@@ -8,10 +8,13 @@ export const quickPrompts = [
 ];
 
 export const moodOptions = [
-  { mood: 'Happy', icon: '😊' },
-  { mood: 'Calm', icon: '😌' },
-  { mood: 'Sad', icon: '😢' },
-  { mood: 'Anxious', icon: '😟' },
+  { mood: 'Happy', moodIcon: '😊' },
+  { mood: 'Calm', moodIcon: '😌' },
+  { mood: 'Sad', moodIcon: '😢' },
+  { mood: 'Anxious', moodIcon: '😟' },
+  { mood: "Nervous", moodIcon: '😰'},
+  { mood: "Hopeful", moodIcon: '🌟'},
+
 ];
 
 export const reviews = [

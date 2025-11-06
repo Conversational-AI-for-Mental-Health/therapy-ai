@@ -6,6 +6,7 @@ export default function Sidebar ({
   onNavigate,
   isOpen,
   onClose,
+  showFeedback,
   onShowSettings,
   onNewConversation,
   chatSessions,
@@ -94,6 +95,17 @@ export default function Sidebar ({
           <span style={{ fontSize: 'var(--font-body-lg)' }}>👨‍⚕️</span>
           <span className="text-body-sm" style={{ fontWeight: 'var(--font-weight-semibold)' }}>
             Contact Professional
+          </span>
+        </button>
+        
+        <button
+          onClick={showFeedback}
+          className="w-full bg-primary text-white rounded-lg hover:opacity-90 transition flex items-center justify-center"
+          style={{ padding: 'var(--space-xs) var(--space-sm)', gap: 'var(--space-xs)' }}
+        >
+          <span style={{ fontSize: 'var(--font-body-lg)' }}>🙌🏻</span>
+          <span className="text-body-sm" style={{ fontWeight: 'var(--font-weight-semibold)' }}>
+            Feedback
           </span>
         </button>
         <button

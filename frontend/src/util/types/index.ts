@@ -55,6 +55,11 @@ export interface DashboardPageProps{
   setIsDarkMode: (value: boolean) => void;
 };
 
+export type FeedbackProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
 export interface SidebarProps{
   isOpen: boolean;
   onClose: () => void;
@@ -64,6 +69,7 @@ export interface SidebarProps{
   currentChatId: number;      
   onSelectChat: (id: number) => void;
   onNavigate: (screen: Screens) => void;
+  showFeedback: ()=> void;
 };
 
 export type MoodOption = {

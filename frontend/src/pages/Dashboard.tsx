@@ -14,6 +14,7 @@ import Chat from '@/components/layout/Chat';
 import Journal from '@/components/layout/Journal';
 import { callBackendAPI } from '@/util/api';
 import Settings from '@/components/layout/Settings';
+import Feedback from '@/components/layout/Feedback';
 
 
 
@@ -45,7 +46,8 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
     const [analyticsTracking, setAnalyticsTracking] = useState(true);
     const [personalizedAds, setPersonalizedAds] = useState(false);
     const [pushNotifications, setPushNotifications] = useState(true);
-    
+    const [showFeedback, setShowFeedback] = useState(false);
+
     // Refs
     const chatHistoryRef = useRef<HTMLDivElement>(null);
 
@@ -56,8 +58,7 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
         }
     }, [chatHistory]);
 
-    //Event Handlers
-    
+
     //Chat Handlers
     const handleQuickPrompt = (text?: string) => {
         handleChatSubmit(text);
@@ -66,7 +67,7 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
         e.preventDefault();
         handleChatSubmit(chatInput);
     }
-    
+
     const handleChatSubmit = async (text?: string) => {
         if (!text?.trim()) return;
 
@@ -111,6 +112,7 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
                 {/* Left Sidebar */}
                 <Sidebar
                     isOpen={sidebarOpen}
+                    showFeedback={()=>setShowFeedback(true)}
                     onClose={() => setSidebarOpen(false)}
                     onShowSettings={() => setShowSettingsDialog(true)}
                     onNewConversation={handleNewConversation}
@@ -195,7 +197,7 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
             </div>
 
             {/* Modals */}
-           
+
             {/*. Settings Dialog*/}
             <Settings
                 isOpen={showSettingsDialog}
@@ -210,6 +212,10 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
                 setPersonalizedAds={setPersonalizedAds}
                 pushNotifications={pushNotifications}
                 setPushNotifications={setPushNotifications}
+            />
+            <Feedback
+                isOpen={showFeedback}
+                onClose={() => setShowFeedback(false)}
             />
         </>
     );

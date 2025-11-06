@@ -42,7 +42,7 @@ export default function LandingPage({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                     >
-                        The <span className="highlight-word">mental health</span> companion you can <span className="highlight-word">trust</span>
+                        <span className="highlight-word">Mental health</span> companion you can <span className="highlight-word">trust</span>
                     </motion.h1>
                     <motion.p
                         className="text-body-lg text-secondary max-w-3xl mx-auto"

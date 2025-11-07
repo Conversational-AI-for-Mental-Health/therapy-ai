@@ -12,6 +12,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { Screens, DashboardTab, ChatMessage } from '@/util/types/index';
 import DashboardPage from "./pages/Dashboard";
 import Story from "./pages/OurStory";
+import { callBackendAPI } from "./util/api";
 
 /**
  * App component serves as the main container and entry point for all application routes and UI.
@@ -57,7 +58,25 @@ const App: FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleChatSubmit = async (e: React.FormEvent) => { }
+  const handleChatSubmit = async (e?: React.FormEvent, promptText?: string) => {
+    if (e) e.preventDefault();
+    const text = promptText || chatInput.trim();
+    if (!text) return;
+
+    setChatHistory([...chatHistory, { sender: 'user', text }, { sender: 'ai', text: '', thinking: true }]);
+    setChatInput('');
+
+    const systemInstruction =
+      'You are an empathetic AI companion named Kai, designed to provide supportive and gentle mental health counseling. Listen carefully, validate feelings, and ask open-ended questions to help the user explore their thoughts. Do not give medical advice. Keep your responses concise and conversational.';
+    const response = await callBackendAPI(text, systemInstruction);
+
+    setChatHistory((prev) => {
+      const newHistory = [...prev];
+      newHistory.pop();
+      newHistory.push({ sender: 'ai', text: response });
+      return newHistory;
+    });
+  };
 
   const renderCurrentScreen = () => {
     switch (currentScreen) {

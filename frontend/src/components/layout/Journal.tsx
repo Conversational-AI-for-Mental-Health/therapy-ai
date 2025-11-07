@@ -129,7 +129,35 @@ export default function Journal({
                     </button>
                 </div>
             </div>
-
+            
+            {showInsightsModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+                    <div className="bg-surface rounded-2xl shadow-xl max-w-lg w-full" style={{ padding: 'var(--space-md)' }}>
+                        <h3 className="text-h2 text-primary" style={{ marginBottom: 'var(--space-sm)' }}>✨ A Gentle Reflection</h3>
+                        <div className="text-secondary" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                            {isLoadingInsights ? (
+                                <div className="flex justify-center">
+                                    <div className="lds-ellipsis">
+                                        <div></div>
+                                        <div></div>
+                                        <div></div>
+                                        <div></div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-body">{insightsContent}</p>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => setShowInsightsModal(false)}
+                            className="w-full bg-primary text-white text-body rounded-lg hover:opacity-90 transition"
+                            style={{ marginTop: 'var(--space-md)', height: '44px' }}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
             {/* Recent Entries */}
             <JournalView
                 journalEntries={journalEntries}

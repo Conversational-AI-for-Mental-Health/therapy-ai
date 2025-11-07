@@ -16,7 +16,7 @@ export default function LandingPage({
     handleChatSubmit,
     chatInput,
     setChatInput
-}: LandingPageProps){
+}: LandingPageProps) {
     const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
     const nextReview = () => {
         setCurrentReviewIndex((prev) => (prev + 1) % reviews.length);
@@ -42,7 +42,7 @@ export default function LandingPage({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                     >
-                        The <span className="highlight-word">mental health</span> companion you can <span className="highlight-word">trust</span>
+                        <span className="highlight-word">Mental health</span> companion you can <span className="highlight-word">trust</span>
                     </motion.h1>
                     <motion.p
                         className="text-body-lg text-secondary max-w-3xl mx-auto"
@@ -65,7 +65,7 @@ export default function LandingPage({
                     >
                         Start Your Journey
                     </motion.button>
-                    <motion.form onSubmit={handleChatSubmit} className="shrink-0 flex items-center mt-25"
+                    <motion.form onSubmit={handleChatSubmit} className="shrink-0 max-w-3xl mx-auto flex items-center mt-25 mb-3"
                         style={{
                             gap: 'var(--space-xs)',
                             padding: 'var(--space-xs)'
@@ -80,7 +80,7 @@ export default function LandingPage({
                             onChange={(e) => setChatInput(e.target.value)}
                             type="text"
                             placeholder="Ask anything or seek consultation about your health"
-                            className="w-full rounded-lg bg-surface border border-color ring-primary focus:ring-2 focus:outline-none transition text-body"
+                            className=" rounded-lg w-full bg-surface border border-color ring-primary focus:ring-2 focus:outline-none transition text-body"
                             style={{ height: 'var(--space-xl)', padding: '0 var(--space-sm)' }}
                         />
                         <button
@@ -213,7 +213,7 @@ export default function LandingPage({
                     >
                         What Our Users Say
                     </motion.h2>
-                    <div className="relative max-w-3xl mx-auto">
+                    <div className="relative max-w-4xl mx-auto">
                         <div className="bg-surface rounded-2xl shadow-lg text-center overflow-hidden" style={{ padding: 'var(--space-lg)' }}>
                             <motion.div
                                 key={currentReviewIndex}
@@ -221,17 +221,38 @@ export default function LandingPage({
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -100 }}
                                 transition={{ duration: 0.3 }}
+                                className="flex flex-col md:flex-row items-center gap-8"
                             >
-                                <p className="text-h2 italic text-primary" style={{ marginBottom: 'var(--space-md)' }}>
-                                    "{reviews[currentReviewIndex].text}"
-                                </p>
-                                <p className="text-body text-secondary" style={{ fontWeight: 'var(--font-weight-semibold)' }}>
-                                    - {reviews[currentReviewIndex].author}, {reviews[currentReviewIndex].role}
-                                </p>
-                            </motion.div>
+                                <div className="flex-shrink-0">
+                                    <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden ring-4 ring-primary/20 shadow-xl">
+                                        <img
+                                            src={reviews[currentReviewIndex].imageUrl}
+                                            alt={reviews[currentReviewIndex].author}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                </div>
+
+
+                                <div className="flex-1 text-center md:text-left">
+                                    <svg className="w-8 h-8 text-primary/30 mb-4 mx-auto md:mx-0" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                                    </svg>
+                                    <p className="text-h3 text-primary italic mb-4">
+                                        "{reviews[currentReviewIndex].text}"
+                                    </p>
+                                    <div>
+                                        <p className="text-body text-primary" style={{ fontWeight: 'var(--font-weight-semibold)' }}>
+                                            {reviews[currentReviewIndex].author}
+                                        </p>
+                                        <p className="text-body-sm text-secondary">
+                                            {reviews[currentReviewIndex].role}
+                                        </p>
+                                    </div>
+                                </div>                            </motion.div>
                         </div>
 
-                        {/* Carousel Controls */}
+
                         <div className="flex justify-center items-center" style={{ marginTop: 'var(--space-md)', gap: 'var(--space-md)' }}>
                             <button
                                 onClick={prevReview}
@@ -241,7 +262,7 @@ export default function LandingPage({
                                 <ChevronLeft className="text-primary" size={24} />
                             </button>
 
-                            {/* Dots */}
+
                             <div className="flex gap-2">
                                 {reviews.map((_, index) => (
                                     <button

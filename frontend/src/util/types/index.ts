@@ -13,6 +13,7 @@ export type ChatMessage = {
   sender: 'user' | 'ai';
   text: string;
   thinking?: boolean;
+  feedback?: 'positive' | 'negative' | null;
 };
 
 export type ChatSession = {
@@ -90,6 +91,7 @@ export interface ChatProps {
   onChatInputChange: (value: string) => void;
   handleQuickPrompt: (text?: string) => void;
   handleSubmitForm: (e: React.FormEvent<HTMLFormElement>) => void;
+  handleMessageFeedback: (index: number, feedbackType: 'positive' | 'negative') => void;
 };
 
 export interface SettingsDialogProps {

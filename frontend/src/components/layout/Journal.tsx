@@ -33,7 +33,7 @@ export default function Journal({
             text: 'Felt pretty relaxed today. Worked on a new feature and it went smoothly.',
         },
     ]);
-    // Insights Modal State
+    // Insights State
     const [showInsightsModal, setShowInsightsModal] = useState(false);
     const [insightsContent, setInsightsContent] = useState('');
     const [isLoadingInsights, setIsLoadingInsights] = useState(false);
@@ -83,9 +83,10 @@ export default function Journal({
         setInsightsContent(insights);
         setIsLoadingInsights(false);
     };
+
     return (
         <div className="overflow-y-auto">
-            {/* New Entry Section */}
+            {/* New Entry */}
             <div className="bg-surface rounded-2xl shadow-lg" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
                 <h2 className="text-h2">How are you feeling today?</h2>
                 <p className="text-body-lg text-secondary" style={{ marginTop: 'var(--space-xxs)', marginBottom: 'var(--space-md)' }}>
@@ -129,7 +130,7 @@ export default function Journal({
                 </div>
             </div>
 
-            {/* Recent Entries Section */}
+            {/* Recent Entries */}
             <JournalView
                 journalEntries={journalEntries}
                 onUpdateEntry={handleUpdateEntry}

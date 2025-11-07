@@ -308,7 +308,8 @@ const App: FC = () => {
                 <button onClick={() => setCurrentScreen('privacy')} className="text-body-sm text-secondary hover:text-primary transition text-left">
                   Privacy Policy
                 </button>
-                <button onClick={() => setCurrentScreen('terms')} className="text-body-sm text-secondary hover:text-primary transition text-left">
+                {/* Needs to be updated */}
+                <button onClick={() => setCurrentScreen('privacy')} className="text-body-sm text-secondary hover:text-primary transition text-left">
                   Terms & Conditions
                 </button>
                 <a href="#" className="text-body-sm text-secondary hover:text-primary transition">

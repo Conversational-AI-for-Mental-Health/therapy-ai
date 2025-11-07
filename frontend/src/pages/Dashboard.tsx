@@ -3,7 +3,6 @@ import React from 'react';
 import { moodOptions, quickPrompts } from '@/constants/constants';
 import {
     DashboardTab,
-    JournalEntry,
     ChatMessage,
     ChatSession,
     DashboardPageProps,
@@ -35,18 +34,13 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
         { id: 3, title: 'Evening Check-in', timestamp: '2 days ago', preview: 'Had a good day overall...' },
     ]);
 
-    // Insights Modal State
-    const [showInsightsModal, setShowInsightsModal] = useState(false);
-    const [insightsContent, setInsightsContent] = useState('');
-    const [isLoadingInsights, setIsLoadingInsights] = useState(false);
-
     // Settings State
     const [showSettingsDialog, setShowSettingsDialog] = useState(false);
     const [analyticsTracking, setAnalyticsTracking] = useState(true);
     const [personalizedAds, setPersonalizedAds] = useState(false);
     const [pushNotifications, setPushNotifications] = useState(true);
-    
-    // Refs
+
+    // chat histroy reference
     const chatHistoryRef = useRef<HTMLDivElement>(null);
 
 
@@ -57,7 +51,7 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
     }, [chatHistory]);
 
     //Event Handlers
-    
+
     //Chat Handlers
     const handleQuickPrompt = (text?: string) => {
         handleChatSubmit(text);
@@ -66,7 +60,29 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
         e.preventDefault();
         handleChatSubmit(chatInput);
     }
-    
+    const handleMessageFeedback = (index: number, feedbackType: 'positive' | 'negative') => {
+        setChatHistory(prev => {
+            const newHistory = [...prev];
+            if (newHistory[index]) {
+                const previousFeedback = newHistory[index].feedback;
+
+                newHistory[index] = {
+                    ...newHistory[index],
+                    feedback: newHistory[index].feedback === feedbackType ? null : feedbackType
+                };
+
+                // Asks what's wrong
+                if (feedbackType === 'negative' && previousFeedback !== 'negative') {
+                    newHistory.push({
+                        sender: 'ai',
+                        text: 'I\'m sorry that wasn\'t helpful. What went wrong? Your feedback helps me improve.'
+                    });
+                }
+            }
+            return newHistory;
+        });
+    };
+
     const handleChatSubmit = async (text?: string) => {
         if (!text?.trim()) return;
 
@@ -108,7 +124,7 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
                     />
                 )}
 
-                {/* Left Sidebar */}
+                {/* Sidebar */}
                 <Sidebar
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
@@ -121,82 +137,84 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
                 />
 
                 {/* Main Content Area */}
-                <div className="grow flex flex-col w-full" style={{ padding: 'var(--space-sm) var(--space-md)' }}>
-
-                    <header className="shrink-0 flex justify-between items-center" style={{ marginBottom: 'var(--space-md)' }}>
-                        <div className="flex items-center" style={{ gap: 'var(--space-sm)' }}>
-                            <button
-                                onClick={() => setSidebarOpen(!sidebarOpen)}
-                                className="flex items-center justify-center rounded-lg bg-surface shadow-sm hover:bg-primary/10 transition"
-                                style={{ width: 'var(--space-lg)', height: 'var(--space-lg)', fontSize: 'var(--font-body-lg)' }}
-                            >
-                                <span>{sidebarOpen ? '◀' : '▶'}</span>
-                            </button>
-                            <div className="flex items-center" style={{ gap: 'var(--space-xs)' }}>
-                                <span style={{ fontSize: 'var(--space-lg)' }}>🧠</span>
-                                <h1 className="text-h2 text-primary hidden sm:block">Therapy AI</h1>
+                <div className="grow lg:items-center flex flex-col w-1/2 md:w-full sm:w-full" style={{ padding: 'var(--space-sm) var(--space-md)' }}>
+                    <div className="w-full lg:w-1/2 flex flex-col min-h-full">
+                        <header className="shrink-0 flex justify-between items-center" style={{ marginBottom: 'var(--space-md)' }}>
+                            <div className="flex items-center" style={{ gap: 'var(--space-sm)' }}>
+                                <button
+                                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                                    className="flex items-center justify-center rounded-lg bg-surface shadow-sm hover:bg-primary/10 transition"
+                                    style={{ width: 'var(--space-lg)', height: 'var(--space-lg)', fontSize: 'var(--font-body-lg)' }}
+                                >
+                                    <span>{sidebarOpen ? '◀' : '▶'}</span>
+                                </button>
+                                <div className="flex items-center" style={{ gap: 'var(--space-xs)' }}>
+                                    <span style={{ fontSize: 'var(--space-lg)' }}>🧠</span>
+                                    <h1 className="text-h2 text-primary hidden sm:block">Therapy AI</h1>
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex items-center" style={{ gap: 'var(--space-sm)' }}>
-                            <button
-                                onClick={() => setIsDarkMode(!isDarkMode)}
-                                className="flex items-center justify-center rounded-full bg-surface shadow-sm"
-                                style={{ width: 'var(--space-lg)', height: 'var(--space-lg)', fontSize: 'var(--font-body-lg)' }}
-                            >
-                                <span>{isDarkMode ? '☀️' : '🌙'}</span>
-                            </button>
-                        </div>
-                    </header>
+                            <div className="flex items-center" style={{ gap: 'var(--space-sm)' }}>
+                                <button
+                                    onClick={() => setIsDarkMode(!isDarkMode)}
+                                    className="flex items-center justify-center rounded-full bg-surface shadow-sm"
+                                    style={{ width: 'var(--space-lg)', height: 'var(--space-lg)', fontSize: 'var(--font-body-lg)' }}
+                                >
+                                    <span>{isDarkMode ? '☀️' : '🌙'}</span>
+                                </button>
+                            </div>
+                        </header>
 
-                    {/* Main Content */}
-                    <main className="grow flex flex-col overflow-hidden">
+                        {/* Main Content */}
+                        <main className="grow flex flex-col overflow-hidden">
 
-                        <div className="shrink-0 border-b border-color" style={{ marginBottom: 'var(--space-sm)' }}>
-                            <button
-                                data-tab="chat"
-                                onClick={() => setCurrentDashboardTab('chat')}
-                                className={`tab-button text-body text-secondary transition border-b-2 border-transparent ${currentDashboardTab === 'chat' ? 'active' : ''
-                                    }`}
-                                style={{ padding: 'var(--space-xs) var(--space-sm)' }}
-                            >
-                                AI Chat
-                            </button>
-                            <button
-                                data-tab="journal"
-                                onClick={() => setCurrentDashboardTab('journal')}
-                                className={`tab-button text-body text-secondary transition border-b-2 border-transparent ${currentDashboardTab === 'journal' ? 'active' : ''
-                                    }`}
-                                style={{ padding: 'var(--space-xs) var(--space-sm)' }}
-                            >
-                                Journal
-                            </button>
-                        </div>
+                            <div className="shrink-0 border-b border-color" style={{ marginBottom: 'var(--space-sm)' }}>
+                                <button
+                                    data-tab="chat"
+                                    onClick={() => setCurrentDashboardTab('chat')}
+                                    className={`tab-button text-body text-secondary transition border-b-2 border-transparent ${currentDashboardTab === 'chat' ? 'active' : ''
+                                        }`}
+                                    style={{ padding: 'var(--space-xs) var(--space-sm)' }}
+                                >
+                                    AI Chat
+                                </button>
+                                <button
+                                    data-tab="journal"
+                                    onClick={() => setCurrentDashboardTab('journal')}
+                                    className={`tab-button text-body text-secondary transition border-b-2 border-transparent ${currentDashboardTab === 'journal' ? 'active' : ''
+                                        }`}
+                                    style={{ padding: 'var(--space-xs) var(--space-sm)' }}
+                                >
+                                    Journal
+                                </button>
+                            </div>
 
 
-                        {currentDashboardTab === 'chat' && (
-                            <Chat
-                                chatHistory={chatHistory}
-                                chatHistoryRef={chatHistoryRef}
-                                quickPrompts={quickPrompts}
-                                chatInput={chatInput}
-                                onChatInputChange={setChatInput}
-                                handleQuickPrompt={handleQuickPrompt}
-                                handleSubmitForm={handleSubmitForm}
-                            />
-                        )}
+                            {currentDashboardTab === 'chat' && (
+                                <Chat
+                                    chatHistory={chatHistory}
+                                    chatHistoryRef={chatHistoryRef}
+                                    quickPrompts={quickPrompts}
+                                    chatInput={chatInput}
+                                    onChatInputChange={setChatInput}
+                                    handleQuickPrompt={handleQuickPrompt}
+                                    handleSubmitForm={handleSubmitForm}
+                                    handleMessageFeedback={handleMessageFeedback}
+                                />
+                            )}
 
-                        {currentDashboardTab === 'journal' && (
-                            <Journal
-                                moodOptions={moodOptions}
-                            />
-                        )}
-                    </main>
+                            {currentDashboardTab === 'journal' && (
+                                <Journal
+                                    moodOptions={moodOptions}
+                                />
+                            )}
+                        </main>\
+                    </div>
                 </div>
             </div>
 
-            {/* Modals */}
-           
-            {/*. Settings Dialog*/}
+            {/* Insight */}
+
+            {/*. Settings*/}
             <Settings
                 isOpen={showSettingsDialog}
                 onClose={() => setShowSettingsDialog(false)}

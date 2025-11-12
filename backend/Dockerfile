@@ -1,10 +1,14 @@
 # Dependency Installation & Workspace Linking
 FROM node:20-alpine AS installer
+
+# Enable Corepack to use the Latest Yarn version in packageManger
+RUN  corepack enable
+
 WORKDIR /app
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY backend/ ./backend
 COPY frontend/ ./frontend
-RUN yarn install --frozen-lockfile 
+RUN yarn install --frozen-lockfile
 
 # ----------------------------------------------------
 # Build the Backend Code
@@ -27,3 +31,4 @@ COPY --from=build /app/backend/dist ./dist
 
 EXPOSE 3000
 CMD ["node", "dist/server.js"]
+

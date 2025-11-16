@@ -1,18 +1,11 @@
 import axios from "axios";
-import http from "http";
 import { Router, Request, Response } from "express";
+import chatRouter from "./chat"; //  NEW: chat routes for Mongo-backed chat
 
 const apiRouter = Router();
 const PYTHON_API_URL = "http://127.0.0.1:5000/chat";
 
-// Create Axios instance with keep-alive and timeout
-const axiosInstance = axios.create({
-  baseURL: PYTHON_API_URL,
-  timeout: 5000, // 5-second timeout
-  httpAgent: new http.Agent({ keepAlive: true }),
-});
-
-// Health check endpoint
+// Simple health/status endpoint
 apiRouter.get("/status", (req: Request, res: Response) => {
   res.status(200).json({
     status: "Backend API is running",
@@ -20,19 +13,21 @@ apiRouter.get("/status", (req: Request, res: Response) => {
   });
 });
 
-// Main route to communicate with Python AI backend
+// Main route to communicate with Flask AI (Python LLM backend)
 apiRouter.post("/message", async (req: Request, res: Response) => {
   const { message } = req.body;
-
   if (!message) return res.status(400).json({ error: "Message required" });
 
   try {
-    const response = await axiosInstance.post("", { message });
+    const response = await axios.post(PYTHON_API_URL, { message });
     res.status(200).json({ aiResponse: response.data.response });
-  } catch (err: any) {
-    console.error("[Error connecting to AI backend]", err.message || err);
+  } catch (err) {
+    console.error("[Error connecting to AI backend]", err);
     res.status(500).json({ error: "Failed to connect to AI backend" });
   }
 });
+
+// Chat routes for conversation persistence & history (Mongo-backed)
+apiRouter.use("/chat", chatRouter);
 
 export default apiRouter;

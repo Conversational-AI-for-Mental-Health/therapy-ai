@@ -85,11 +85,15 @@ export const attachSocketHandlers = (io: SocketIOServer) => {
     socket.on('userMessage', async (msg: { text: string }) => {
       await handleUserMessage(socket, msg.text);
     });
+  }
+};
 
     socket.on('disconnect', () => {
       console.log(`[Socket] User disconnected: ${socket.id}`);
     });
   });
+
+  console.log(' Socket.io handlers attached');
 };
 
 

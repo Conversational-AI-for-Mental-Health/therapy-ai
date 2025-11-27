@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -20,6 +20,11 @@ const config : AppConfig = {
 };
 
 if (isNaN(config.PORT)) {
+  throw new Error('Invalid PORT defined in environment variables.');
+}
+
+if (!config.MONGODB_URI) {
+  throw new Error('MONGODB_URI must be defined in environment variables.');
     throw new Error("Invalid PORT defined in environment variables.");
 }
 

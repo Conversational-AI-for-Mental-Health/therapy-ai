@@ -1,123 +1,49 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
-import { MessageSchema, IMessage } from './Message';
+import {model, Schema, Document} from 'mongoose';
 
-// Define instance methods interface
-interface IConversationMethods {
-  addMessage(sender: 'user' | 'ai', text: string): IMessage;
-  getRecentMessages(limit?: number): IMessage[];
+export interface IMessage {
+    role : 'user' | 'assistant';
+    content : string;
+    timestamp : Date;
 }
 
-// Combine Document with our interface and methods
-export interface IConversation extends Document, IConversationMethods {
-  _id: Types.ObjectId;
-  user_id: Types.ObjectId;
-  title: string;
-  started_at: Date;
-  last_message_at?: Date;
-  ended_at?: Date;
-  archived: boolean;
-  deleted: boolean;
-  messages: Types.DocumentArray<IMessage>;
-  message_count: number;
-  createdAt: Date;
-  updatedAt: Date;
+export interface IConversation extends Document {
+    socketId : string; // Using socket.id for now, could be a user ID
+    messages : IMessage[];
+    createdAt : Date;
+    isArchived : boolean;
 }
 
-// Create model type with methods
-type ConversationModel = mongoose.Model<
-  IConversation,
-  {},
-  IConversationMethods
->;
-
-const ConversationSchema = new Schema<
-  IConversation,
-  ConversationModel,
-  IConversationMethods
->(
-  {
-    user_id: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'User ID is required'],
+const MessageSchema = new Schema < IMessage > ({
+    role: {
+        type: String,
+        required: true,
+        enum: ['user', 'assistant']
     },
-    title: {
-      type: String,
-      default: 'New Conversation',
-      maxlength: [200, 'Title cannot exceed 200 characters'],
+    content: {
+        type: String,
+        required: true
     },
-    started_at: {
-      type: Date,
-      default: Date.now,
-      required: true,
-    },
-    last_message_at: {
-      type: Date,
-    },
-    ended_at: {
-      type: Date,
-    },
-    archived: {
-      type: Boolean,
-      default: false,
-    },
-    deleted: {
-      type: Boolean,
-      default: false,
-    },
-    messages: [MessageSchema],
-    message_count: {
-      type: Number,
-      default: 0,
-      min: [0, 'Message count cannot be negative'],
-    },
-  },
-  {
-    timestamps: true,
-  },
-);
-
-// Indexes
-ConversationSchema.index({ user_id: 1, last_message_at: -1 });
-ConversationSchema.index({ user_id: 1, archived: 1, last_message_at: -1 });
-ConversationSchema.index({ user_id: 1, deleted: 1, last_message_at: -1 });
-
-// Middleware: Update last_message_at and message_count when messages are added
-ConversationSchema.pre('save', function () {
-  if (this.messages && this.messages.length > 0) {
-    this.message_count = this.messages.length;
-    const lastMessage = this.messages[this.messages.length - 1];
-    this.last_message_at = lastMessage.timestamp;
-  }
+    timestamp: {
+        type: Date,
+        default: Date.now
+    }
 });
 
-// Instance Methods
-ConversationSchema.methods.addMessage = function (
-  sender: 'user' | 'ai',
-  text: string,
-): IMessage {
-  const message = {
-    sender,
-    text,
-    timestamp: new Date(),
-    metadata: {
-      liked: false,
-      copied: false,
-      regenerated: false,
-      edited: false,
+const ConversationSchema = new Schema < IConversation > ({
+    socketId: {
+        type: String,
+        required: true,
+        index: true
     },
-  };
-  this.messages.push(message);
-  return this.messages[this.messages.length - 1];
-};
+    messages: [MessageSchema],
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    isArchived: {
+        type: Boolean,
+        default: false
+    }
+});
 
-ConversationSchema.methods.getRecentMessages = function (
-  limit: number = 20,
-): IMessage[] {
-  return this.messages.slice(-limit);
-};
-
-export const Conversation = mongoose.model<IConversation, ConversationModel>(
-  'Conversation',
-  ConversationSchema,
-);
+export const Conversation = model < IConversation > ('Conversation', ConversationSchema);

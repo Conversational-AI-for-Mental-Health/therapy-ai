@@ -1,10 +1,21 @@
-import { createServer } from 'http';
-import { Server as SocketIOServer } from 'socket.io';
-import { createApp } from './app';
-import { attachSocketHandlers } from './socket';
-import { connectDatabase } from './config/database';
-import config from './config';
-import { console } from 'inspector';
+import { createServer } from "http";
+import { Server as SocketIOServer } from "socket.io";
+import { createApp } from "./app";
+import mongoose from 'mongoose';
+import { attachSocketHandlers } from "./socket";
+import config from "./config";
+
+
+mongoose
+  .connect(config.MONGODB_URI)
+  .then(() => {
+    console.log('[DB] Connected to MongoDB successfully.');
+  })
+  .catch((err) => {
+    console.error('[DB] Failed to connect to MongoDB', err);
+    process.exit(1);
+  });
+
 
 const startServer = async () => {
   try {

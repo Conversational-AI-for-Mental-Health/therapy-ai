@@ -32,4 +32,10 @@ if (!config.MONGODB_URI) {
     throw new Error('MONGODB_URI is not defined in environment variables.');
 }
 
+if (!config.MONGODB_URI) {
+  throw new Error(
+    "MONGODB_URI is not defined in environment variables. Please set it in your .env file."
+  );
+}
+
 export default config;

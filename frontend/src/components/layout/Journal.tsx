@@ -85,8 +85,7 @@ export default function Journal({
     };
 
     return (
-        <div className="overflow-y-auto">
-            {/* New Entry */}
+        <div className="h-full overflow-y-auto no-scrollbar">
             <div className="bg-surface rounded-2xl shadow-lg" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
                 <h2 className="text-h2">How are you feeling today?</h2>
                 <p className="text-body-lg text-secondary" style={{ marginTop: 'var(--space-xxs)', marginBottom: 'var(--space-md)' }}>
@@ -122,7 +121,7 @@ export default function Journal({
                 <div className="flex justify-end" style={{ marginTop: 'var(--space-sm)' }}>
                     <button
                         onClick={handleSaveEntry}
-                        className="bg-primary text-white text-body rounded-lg hover:opacity-90 transition"
+                        className="gradient-bg-primary text-white text-body rounded-lg hover:opacity-90 transition"
                         style={{ height: '44px', padding: '0 var(--space-md)' }}
                     >
                         Save Entry
@@ -133,7 +132,7 @@ export default function Journal({
             {showInsightsModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
                     <div className="bg-surface rounded-2xl shadow-xl max-w-lg w-full" style={{ padding: 'var(--space-md)' }}>
-                        <h3 className="text-h2 text-primary" style={{ marginBottom: 'var(--space-sm)' }}>✨ A Gentle Reflection</h3>
+                        <h3 className="text-h2 text-surface-light" style={{ marginBottom: 'var(--space-sm)' }}>✨ Reflection on your day</h3>
                         <div className="text-secondary" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
                             {isLoadingInsights ? (
                                 <div className="flex justify-center">
@@ -150,7 +149,7 @@ export default function Journal({
                         </div>
                         <button
                             onClick={() => setShowInsightsModal(false)}
-                            className="w-full bg-primary text-white text-body rounded-lg hover:opacity-90 transition"
+                            className="w-full gradient-bg-primary text-white text-body rounded-lg hover:opacity-90 transition"
                             style={{ marginTop: 'var(--space-md)', height: '44px' }}
                         >
                             Close

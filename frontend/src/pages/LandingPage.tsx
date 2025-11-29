@@ -86,7 +86,7 @@ export default function LandingPage({
                         <button
                             onClick={() => onNavigate('dashboard')}
                             type="submit"
-                            className="shrink-0 bg-primary text-white rounded-lg hover:opacity-90 transition flex items-center justify-center"
+                            className="shrink-0 gradient-bg-primary text-white rounded-lg hover:opacity-90 transition flex items-center justify-center"
                             style={{ height: 'var(--space-xl)', width: 'var(--space-xl)', fontSize: 'var(--font-h3)' }}
                         >
                             <span>&rarr;</span>
@@ -129,8 +129,8 @@ export default function LandingPage({
                     </motion.p>
                     <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 'var(--space-lg)' }}>
                         {[
-                            { icon: '💬', title: 'AI Consultation', desc: 'Engage in supportive conversations with an AI trained to listen and help you explore your feelings.' },
-                            { icon: '📝', title: 'Private Journaling', desc: 'Keep a secure log of your thoughts and moods to recognize patterns and progress.' },
+                            { icon: '💬', title: '✨ AI Consultation', desc: 'Engage in supportive conversations with an AI trained to listen and help you explore your feelings.' },
+                            { icon: '📝', title: '✨ Private Journaling', desc: 'Keep a secure log of your thoughts and moods to recognize patterns and progress.' },
                             { icon: '💡', title: '✨ Personalized Insights', desc: 'Our AI can help identify themes in your conversations and entries to foster self-awareness.' }
                         ].map((feature, index) => (
                             <motion.div
@@ -170,7 +170,7 @@ export default function LandingPage({
                     >
                         Get Started in <span className="gradient-text">3 Simple Steps</span>
                     </motion.h2>
-                    <div className="flex flex-col md:flex-row justify-center items-start" style={{ gap: 'var(--space-lg)' }}>
+                    <div className="flex flex-col md:flex-row justify-center items-center" style={{ gap: 'var(--space-lg)' }}>
                         {[
                             { num: '1', title: 'Start a Conversation', desc: 'Begin a conversation with the AI anytime you need to talk' },
                             { num: '2', title: 'Create an account', desc: 'Sign up securely with us to enjoy the full benefits' },
@@ -238,7 +238,7 @@ export default function LandingPage({
                                     <svg className="w-8 h-8 text-primary/30 mb-4 mx-auto md:mx-0" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                                     </svg>
-                                    <p className="text-h3 text-primary italic mb-4">
+                                    <p className="text-h3 text-secondary italic mb-4">
                                         "{reviews[currentReviewIndex].text}"
                                     </p>
                                     <div>
@@ -249,7 +249,8 @@ export default function LandingPage({
                                             {reviews[currentReviewIndex].role}
                                         </p>
                                     </div>
-                                </div>                            </motion.div>
+                                </div>
+                            </motion.div>                          
                         </div>
 
 
@@ -269,7 +270,7 @@ export default function LandingPage({
                                         key={index}
                                         onClick={() => setCurrentReviewIndex(index)}
                                         className={`rounded-full transition-all ${index === currentReviewIndex
-                                            ? 'bg-primary w-8 h-3'
+                                            ? 'gradient-bg-primary w-8 h-3'
                                             : 'bg-gray-300 w-3 h-3'
                                             }`}
                                         aria-label={`Go to review ${index + 1}`}

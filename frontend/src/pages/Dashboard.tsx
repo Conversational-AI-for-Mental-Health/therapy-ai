@@ -13,7 +13,8 @@ import Chat from '@/components/layout/Chat';
 import Journal from '@/components/layout/Journal';
 import { callBackendAPI } from '@/util/api';
 import Settings from '@/components/layout/Settings';
-
+import { Menu, X } from 'lucide-react';
+import logo from '../images/logo.png';
 
 
 export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }: DashboardPageProps) {
@@ -114,9 +115,34 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
         setChatSessions([newSession, ...chatSessions]);
     };
 
+    const handleRenameChat = (id: number, newTitle: string) => {
+        setChatSessions(prev => prev.map(session =>
+            session.id === id ? { ...session, title: newTitle } : session
+        ));
+    };
+
+    const handleDeleteChat = (id: number) => {
+        setChatSessions(prev => {
+            const updatedSessions = prev.filter(session => session.id !== id);
+
+            // If we deleted the active chat, switch to another one
+            if (currentChatId === id) {
+                if (updatedSessions.length > 0) {
+                    setCurrentChatId(updatedSessions[0].id);
+                    // In a real app, you'd load that chat's history here
+                    setChatHistory([{ sender: 'ai', text: 'Hello! I am here to listen.' }]);
+                } else {
+                    // If all deleted, create a fresh one
+                    handleNewConversation();
+                }
+            }
+            return updatedSessions;
+        });
+    };
+
     return (
         <>
-            <div className="h-screen flex flex-col md:flex-row relative overflow-hidden">
+            <div className="h-[100dvh] flex flex-col md:flex-row relative overflow-hidden">
                 {sidebarOpen && (
                     <div
                         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden"
@@ -134,10 +160,12 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
                     currentChatId={currentChatId}
                     onSelectChat={setCurrentChatId}
                     onNavigate={onNavigate}
+                    onRenameChat={handleRenameChat}
+                    onDeleteChat={handleDeleteChat}
                 />
 
                 {/* Main Content Area */}
-                <div className="grow lg:items-center flex flex-col w-1/2 md:w-full sm:w-full" style={{ padding: 'var(--space-sm) var(--space-md)' }}>
+                <div className="flex-1 overflow-hidden lg:items-center flex flex-col lg:w-1/2 md:w-full sm:w-full" style={{ padding: 'var(--space-sm) var(--space-md)' }}>
                     <div className="w-full lg:w-1/2 flex flex-col min-h-full">
                         <header className="shrink-0 flex justify-between items-center" style={{ marginBottom: 'var(--space-md)' }}>
                             <div className="flex items-center" style={{ gap: 'var(--space-sm)' }}>
@@ -146,12 +174,14 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
                                     className="flex items-center justify-center rounded-lg bg-surface shadow-sm hover:bg-primary/10 transition"
                                     style={{ width: 'var(--space-lg)', height: 'var(--space-lg)', fontSize: 'var(--font-body-lg)' }}
                                 >
-                                    <span>{sidebarOpen ? '◀' : '▶'}</span>
+                                    {sidebarOpen ? <X className="w-5 h-5 text-primary" /> : <Menu className="w-5 h-5 text-primary" />}
                                 </button>
-                                <div className="flex items-center" style={{ gap: 'var(--space-xs)' }}>
-                                    <span style={{ fontSize: 'var(--space-lg)' }}>🧠</span>
-                                    <h1 className="text-h2 text-primary hidden sm:block">Therapy AI</h1>
-                                </div>
+
+                                <img
+                                    src={logo}
+                                    alt="Therapy AI"
+                                    style={{ height: '10vh', width: 'auto', objectFit: 'contain' }}
+                                />
                             </div>
                             <div className="flex items-center" style={{ gap: 'var(--space-sm)' }}>
                                 <button
@@ -175,7 +205,7 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
                                         }`}
                                     style={{ padding: 'var(--space-xs) var(--space-sm)' }}
                                 >
-                                    AI Chat
+                                    Chat
                                 </button>
                                 <button
                                     data-tab="journal"
@@ -188,31 +218,31 @@ export default function DashboardPage({ onNavigate, isDarkMode, setIsDarkMode }:
                                 </button>
                             </div>
 
+                            <div className="flex-1 overflow-hidden relative flex flex-col">
+                                {currentDashboardTab === 'chat' && (
+                                    <Chat
+                                        chatHistory={chatHistory}
+                                        chatHistoryRef={chatHistoryRef}
+                                        quickPrompts={quickPrompts}
+                                        chatInput={chatInput}
+                                        onChatInputChange={setChatInput}
+                                        handleQuickPrompt={handleQuickPrompt}
+                                        handleSubmitForm={handleSubmitForm}
+                                        handleMessageFeedback={handleMessageFeedback}
+                                    />
+                                )}
 
-                            {currentDashboardTab === 'chat' && (
-                                <Chat
-                                    chatHistory={chatHistory}
-                                    chatHistoryRef={chatHistoryRef}
-                                    quickPrompts={quickPrompts}
-                                    chatInput={chatInput}
-                                    onChatInputChange={setChatInput}
-                                    handleQuickPrompt={handleQuickPrompt}
-                                    handleSubmitForm={handleSubmitForm}
-                                    handleMessageFeedback={handleMessageFeedback}
-                                />
-                            )}
+                                {currentDashboardTab === 'journal' && (
+                                    <Journal
+                                        moodOptions={moodOptions}
+                                    />
+                                )}
+                            </div>
 
-                            {currentDashboardTab === 'journal' && (
-                                <Journal
-                                    moodOptions={moodOptions}
-                                />
-                            )}
-                        </main>\
+                        </main>
                     </div>
                 </div>
             </div>
-
-            {/* Insight */}
 
             {/*. Settings*/}
             <Settings

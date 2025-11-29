@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import React, { FC } from "react";
 import { X, Menu } from 'lucide-react';
 
@@ -9,10 +9,13 @@ import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-import { Screens, DashboardTab, ChatMessage } from '@/util/types/index';
+import { Screens, ChatMessage } from '@/util/types/index';
 import DashboardPage from "./pages/Dashboard";
 import Story from "./pages/OurStory";
 import { callBackendAPI } from "./util/api";
+import logo from "./images/logo.png";
+import lightLogo from "./images/lightT.png";
+import darkLogo from "./images/darkT.png";
 
 /**
  * App component serves as the main container and entry point for all application routes and UI.
@@ -22,9 +25,7 @@ const App: FC = () => {
 
   //Navigation and UI state management
   const [currentScreen, setCurrentScreen] = useState<Screens>('landing');
-  const [currentDashboardTab, setCurrentDashboardTab] = useState<DashboardTab>('chat');
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
@@ -122,13 +123,17 @@ const App: FC = () => {
       />
     )
   }
+
   return (
     <div>
       <header className="bg-surface/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
         <nav className="container mx-auto flex justify-between items-center px-4 sm:px-6 md:px-8" style={{ padding: 'var(--space-sm) var(--space-md)' }}>
           <a href="/" className="flex items-center text-primary" style={{ gap: 'var(--space-xs)', fontSize: 'var(--font-h3)', fontWeight: 'var(--font-weight-bold)' }}>
-            <span>🧠</span>
-            <span>Therapy AI</span>
+            <img
+              src={isDarkMode ? darkLogo : lightLogo}
+              alt="Therapy AI"
+              style={{ height: '7vh', width: 'auto', objectFit: 'contain' }}
+            />     
           </a>
 
           {/* Desktop Navigation Links */}
@@ -158,7 +163,7 @@ const App: FC = () => {
             </button>
             <button
               onClick={() => setCurrentScreen('signup')}
-              className="bg-primary text-white rounded-full hover:opacity-90 transition text-body hidden lg:block"
+              className="gradient-bg-primary text-white rounded-full hover:opacity-90 transition text-body hidden lg:block"
               style={{ padding: 'var(--space-xs) var(--space-md)' }}
             >
               Sign Up
@@ -208,8 +213,11 @@ const App: FC = () => {
 
           {/* Logo */}
           <div className="flex items-center justify-center" style={{ marginBottom: 'var(--space-xl)', gap: 'var(--space-xs)' }}>
-            <span style={{ fontSize: 'var(--space-xl)' }}>🧠</span>
-            <span className="text-h2 text-primary">Therapy AI</span>
+            <img
+              src={isDarkMode ? darkLogo : lightLogo}
+              alt="Therapy AI"
+              style={{ height: '20vh', width: 'auto', objectFit: 'contain' }}
+            />
           </div>
 
           {/* Navigation Links */}
@@ -264,15 +272,16 @@ const App: FC = () => {
       {renderCurrentScreen()}
 
       <footer className="bg-surface border-t border-color px-4 sm:px-6 md:px-8" style={{ padding: 'var(--space-xxl) 0' }}>
-        <div className="container mx-auto" style={{ padding: '0 var(--space-md)' }}>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="container mx-auto flex-col items-center" style={{ padding: '0 var(--space-md)' }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             {/* Brand Section */}
             <div>
               <div className="flex items-center mb-4" style={{ gap: 'var(--space-xs)' }}>
-                <span style={{ fontSize: 'var(--space-lg)' }}>🧠</span>
-                <span className="text-primary" style={{ fontWeight: 'var(--font-weight-bold)', fontSize: 'var(--font-h3)' }}>
-                  Therapy AI
-                </span>
+                <img
+                  src={isDarkMode ? darkLogo : lightLogo}
+                  alt="Therapy AI"
+                  style={{ height: '10vh', width: 'auto', objectFit: 'contain' }}
+                />
               </div>
               <p className="text-body-sm text-secondary" style={{ lineHeight: '1.6' }}>
                 Your private space for mental wellness and personal growth, available 24/7.

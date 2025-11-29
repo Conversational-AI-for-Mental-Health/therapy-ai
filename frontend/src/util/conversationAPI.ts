@@ -38,9 +38,6 @@ export interface Message {
 }
 
 class ConversationAPI {
-  // Placeholder user ID - replace with real auth later
-  private userId: string = '507f1f77bcf86cd799439011';
-
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
@@ -71,13 +68,10 @@ class ConversationAPI {
    * Create a new conversation
    */
   async createConversation(title?: string): Promise<Conversation> {
-    const response = await this.request<Conversation>(
-      `/conversations?userId=${this.userId}`,
-      {
-        method: 'POST',
-        body: JSON.stringify({ title }),
-      },
-    );
+    const response = await this.request<Conversation>(`/conversations`, {
+      method: 'POST',
+      body: JSON.stringify({ title }),
+    });
 
     if (!response.data) {
       throw new Error('No data returned from API');
@@ -91,7 +85,7 @@ class ConversationAPI {
    */
   async getAllConversations(includeArchived = false): Promise<Conversation[]> {
     const response = await this.request<Conversation[]>(
-      `/conversations?userId=${this.userId}&archived=${includeArchived}`,
+      `/conversations?archived=${includeArchived}`,
     );
 
     return response.data || [];
@@ -105,7 +99,7 @@ class ConversationAPI {
     messageLimit = 50,
   ): Promise<Conversation> {
     const response = await this.request<Conversation>(
-      `/conversations/${conversationId}?userId=${this.userId}&limit=${messageLimit}`,
+      `/conversations/${conversationId}?limit=${messageLimit}`,
     );
 
     if (!response.data) {
@@ -113,6 +107,30 @@ class ConversationAPI {
     }
 
     return response.data;
+  }
+
+  /**
+   * Add a message to a conversation
+   */
+  async addMessage(
+    conversationId: string,
+    sender: 'user' | 'ai',
+    text: string,
+  ): Promise<Message> {
+    const response = await this.request<{
+      data: Message;
+      conversationId: string;
+      message_count: number;
+    }>(`/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ sender, text }),
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to add message');
+    }
+
+    return response.data as unknown as Message;
   }
 
   /**
@@ -127,7 +145,6 @@ class ConversationAPI {
       {
         method: 'PATCH',
         body: JSON.stringify({
-          userId: this.userId,
           title,
         }),
       },
@@ -148,9 +165,6 @@ class ConversationAPI {
       `/conversations/${conversationId}/archive`,
       {
         method: 'PATCH',
-        body: JSON.stringify({
-          userId: this.userId,
-        }),
       },
     );
 
@@ -169,9 +183,6 @@ class ConversationAPI {
       `/conversations/${conversationId}/unarchive`,
       {
         method: 'PATCH',
-        body: JSON.stringify({
-          userId: this.userId,
-        }),
       },
     );
 
@@ -188,9 +199,6 @@ class ConversationAPI {
   async deleteConversation(conversationId: string): Promise<void> {
     await this.request(`/conversations/${conversationId}`, {
       method: 'DELETE',
-      body: JSON.stringify({
-        userId: this.userId,
-      }),
     });
   }
 
@@ -199,7 +207,7 @@ class ConversationAPI {
    */
   async getConversationStats(conversationId: string): Promise<any> {
     const response = await this.request<any>(
-      `/conversations/${conversationId}/stats?userId=${this.userId}`,
+      `/conversations/${conversationId}/stats`,
     );
 
     return response.data;

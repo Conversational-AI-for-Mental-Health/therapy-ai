@@ -17,7 +17,7 @@ export type ChatMessage = {
 };
 
 export type ChatSession = {
-  id: number;
+  id: string;
   title: string;
   timestamp: string;
   preview: string;
@@ -62,11 +62,11 @@ export interface SidebarProps{
   onShowSettings: () => void;
   onNewConversation: () => void;
   chatSessions: ChatSession[]; 
-  currentChatId: number;      
-  onSelectChat: (id: number) => void;
+  currentChatId: string | null;      
+  onSelectChat: (id: string) => void;
   onNavigate: (screen: Screens) => void;
-  onRenameChat: (id: number, title: string) => void;
-  onDeleteChat: (id: number) => void;
+  onRenameChat: (id: string, title: string) => void;
+  onDeleteChat: (id: string) => void;
 };
 
 export type MoodOption = {

@@ -1,6 +1,8 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import axios from 'axios';
-import { Conversation, IMessage } from './models/Conversation';
+import { Types } from 'mongoose';
+import { Conversation } from './models';
+import { IMessage } from './models/Message';
 import config from './config';
 
 
@@ -14,29 +16,57 @@ const AI_API_URL = `${config.AI_SERVICE_URL}/chat`;
   4. Saves the AI's response to the DB.
   5. Emits the AI's response back to the client.
  */
+const getUserIdFromSocket = (socket: Socket) => {
+  const incomingUserId = socket.handshake.auth?.userId as string | undefined;
+  if (incomingUserId && Types.ObjectId.isValid(incomingUserId)) {
+    return incomingUserId;
+  }
+
+  // Fallback to the same placeholder as the HTTP auth middleware
+  return '507f1f77bcf86cd799439011';
+};
+
 const handleUserMessage = async (socket: Socket, text: string) => {
   console.log(`[Socket] Received message: ${text}`);
 
   try {
+    const userId = getUserIdFromSocket(socket);
+
     // 1. Find conversation or create a new one
-    let conversation = await Conversation.findOne({ socketId: socket.id, isArchived: false });
+    let conversation = await Conversation.findOne({
+      user_id: userId,
+      archived: false,
+      deleted: false,
+    });
+
     if (!conversation) {
-      conversation = new Conversation({ socketId: socket.id, messages: [] });
+      conversation = new Conversation({
+        user_id: userId,
+        title: 'New Conversation',
+        messages: [],
+        message_count: 0,
+      });
     }
 
     // 2. Create and save user message (Feature 3: Timestamping)
     const userMessage: IMessage = {
-      role: 'user',
-      content: text,
+      sender: 'user',
+      text,
       timestamp: new Date(),
-    };
+      metadata: {
+        liked: false,
+        copied: false,
+        regenerated: false,
+        edited: false,
+      },
+    } as any;
     conversation.messages.push(userMessage);
 
     // 3. Prepare history for AI service (Feature 1: State)
-    // AI service expects { role, content }
+    // AI service expects { role, content } where role = user|assistant
     const historyForAI = conversation.messages.map((msg) => ({
-      role: msg.role,
-      content: msg.content,
+      role: msg.sender === 'ai' ? 'assistant' : 'user',
+      content: msg.text,
     }));
 
     // 4. Call Python AI service
@@ -47,25 +77,32 @@ const handleUserMessage = async (socket: Socket, text: string) => {
       temperature: 0.7,
     });
 
-    const aiText = aiResponse.data.response;
+    const aiText = aiResponse.data.response as string;
 
     // 5. Create and save bot message (Features 2 & 3)
     const botMessage: IMessage = {
-      role: 'assistant',
-      content: aiText,
+      sender: 'ai',
+      text: aiText,
       timestamp: new Date(),
-    };
+      metadata: {
+        liked: false,
+        copied: false,
+        regenerated: false,
+        edited: false,
+      },
+    } as any;
     conversation.messages.push(botMessage);
+    conversation.message_count = conversation.messages.length;
+    conversation.last_message_at = new Date();
     await conversation.save(); // Save full conversation
 
     // 6. Emit *only* the new bot message
     socket.emit('botMessage', botMessage);
-
   } catch (error:any) {
     console.error('[Socket] Error handling message:', error?.message);
     socket.emit('botMessage', {
-      role: 'assistant',
-      content: 'Sorry, I encountered an error. Please try again.',
+      sender: 'ai',
+      text: 'Sorry, I encountered an error. Please try again.',
       timestamp: new Date(),
     });
   }
@@ -85,15 +122,13 @@ export const attachSocketHandlers = (io: SocketIOServer) => {
     socket.on('userMessage', async (msg: { text: string }) => {
       await handleUserMessage(socket, msg.text);
     });
-  }
-};
 
     socket.on('disconnect', () => {
       console.log(`[Socket] User disconnected: ${socket.id}`);
     });
   });
 
-  console.log(' Socket.io handlers attached');
+  console.log('Socket.io handlers attached');
 };
 
 

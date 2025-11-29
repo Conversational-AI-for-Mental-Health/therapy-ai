@@ -1,49 +1,91 @@
-import {model, Schema, Document} from 'mongoose';
-
-export interface IMessage {
-    role : 'user' | 'assistant';
-    content : string;
-    timestamp : Date;
-}
+import { model, Schema, Document, Types } from 'mongoose';
+import { IMessage, MessageSchema } from './Message';
 
 export interface IConversation extends Document {
-    socketId : string; // Using socket.id for now, could be a user ID
-    messages : IMessage[];
-    createdAt : Date;
-    isArchived : boolean;
+  _id: Types.ObjectId;
+  user_id: Types.ObjectId;
+  title: string;
+  started_at: Date;
+  ended_at?: Date;
+  archived: boolean;
+  deleted: boolean;
+  messages: IMessage[];
+  message_count: number;
+  last_message_at?: Date;
+  addMessage: (sender: 'user' | 'ai', text: string) => void;
 }
 
-const MessageSchema = new Schema < IMessage > ({
-    role: {
-        type: String,
-        required: true,
-        enum: ['user', 'assistant']
+const ConversationSchema = new Schema<IConversation>(
+  {
+    user_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
     },
-    content: {
-        type: String,
-        required: true
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 1,
+      maxlength: 200,
+      default: 'New Conversation',
     },
-    timestamp: {
-        type: Date,
-        default: Date.now
-    }
-});
-
-const ConversationSchema = new Schema < IConversation > ({
-    socketId: {
-        type: String,
-        required: true,
-        index: true
+    started_at: {
+      type: Date,
+      default: Date.now,
+      required: true,
+    },
+    ended_at: {
+      type: Date,
+    },
+    archived: {
+      type: Boolean,
+      default: false,
+    },
+    deleted: {
+      type: Boolean,
+      default: false,
     },
     messages: [MessageSchema],
-    createdAt: {
-        type: Date,
-        default: Date.now
+    message_count: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
-    isArchived: {
-        type: Boolean,
-        default: false
-    }
-});
+    last_message_at: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
-export const Conversation = model < IConversation > ('Conversation', ConversationSchema);
+ConversationSchema.methods.addMessage = function (
+  sender: 'user' | 'ai',
+  text: string,
+) {
+  const timestamp = new Date();
+  this.messages.push({
+    sender,
+    text,
+    timestamp,
+    metadata: {
+      liked: false,
+      copied: false,
+      regenerated: false,
+      edited: false,
+    },
+  } as any);
+  this.message_count = this.messages.length;
+  this.last_message_at = timestamp;
+};
+
+ConversationSchema.index({ user_id: 1, archived: 1, deleted: 1 });
+ConversationSchema.index({ last_message_at: -1 });
+
+export const Conversation = model<IConversation>(
+  'Conversation',
+  ConversationSchema,
+);

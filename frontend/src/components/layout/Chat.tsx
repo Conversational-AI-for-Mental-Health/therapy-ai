@@ -90,8 +90,8 @@ export default function Chat({
           </div>
         ))}
       </div>
+      {/* Quick prompts */}
       <div className="shrink-0 flex flex-col border-t border-color bg-surface-base" style={{ padding: 'var(--space-xs)' }}>
-        {/* Toggle Button for Quick Prompts */}
         <div className="flex justify-center -mt-6 mb-2 relative z-10">
           <button
             onClick={() => setShowPrompts(!showPrompts)}
@@ -103,7 +103,7 @@ export default function Chat({
           </button>
         </div>
 
-        {/* Quick Prompts (Now above input) */}
+        {/* Quick Prompts (above input) */}
         <AnimatePresence>
           {showPrompts && (
             <motion.div
@@ -118,7 +118,7 @@ export default function Chat({
                     key={index}
                     onClick={() => {
                       handleQuickPrompt(prompt);
-                      setShowPrompts(false); // Optional: close after clicking
+                      setShowPrompts(false);
                     }}
                     className="bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition text-body-sm whitespace-nowrap"
                     style={{ padding: 'var(--space-xxs) var(--space-sm)' }}

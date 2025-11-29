@@ -14,9 +14,9 @@ export default function Sidebar({
   onRenameChat,
   onDeleteChat,
 }: SidebarProps) {
-  const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [renamingId, setRenamingId] = useState<number | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const renameInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function Sidebar({
     }
   }, [renamingId]);
 
-  const startRenaming = (e: React.MouseEvent, id: number, currentTitle: string) => {
+  const startRenaming = (e: React.MouseEvent, id: string, currentTitle: string) => {
     e.stopPropagation();
     setRenamingId(id);
     setRenameValue(currentTitle);

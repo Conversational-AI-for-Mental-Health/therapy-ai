@@ -1,9 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import React, { FC } from "react";
 import { X, Menu } from 'lucide-react';
 
 import { motion } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
@@ -13,7 +14,6 @@ import { Screens, ChatMessage } from '@/util/types/index';
 import DashboardPage from "./pages/Dashboard";
 import Story from "./pages/OurStory";
 import { callBackendAPI } from "./util/api";
-import logo from "./images/logo.png";
 import lightLogo from "./images/lightT.png";
 import darkLogo from "./images/darkT.png";
 
@@ -23,8 +23,43 @@ import darkLogo from "./images/darkT.png";
  */
 const App: FC = () => {
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const pathToScreen = useMemo(() => (path: string): Screens => {
+    const normalized = path.toLowerCase();
+    if (normalized.startsWith('/dashboard')) return 'dashboard';
+    if (normalized.startsWith('/signup')) return 'signup';
+    if (normalized.startsWith('/login')) return 'login';
+    if (normalized.startsWith('/privacy')) return 'privacy';
+    if (normalized.startsWith('/story')) return 'story';
+    if (normalized.startsWith('/contact')) return 'contact';
+    return 'landing';
+  }, []);
+
+  const screenToPath = (screen: Screens) => {
+    switch (screen) {
+      case 'dashboard':
+        return '/dashboard';
+      case 'signup':
+        return '/signup';
+      case 'login':
+        return '/login';
+      case 'privacy':
+        return '/privacy';
+      case 'story':
+        return '/story';
+      case 'contact':
+        return '/contact';
+      default:
+        return '/';
+    }
+  };
+
   //Navigation and UI state management
-  const [currentScreen, setCurrentScreen] = useState<Screens>('landing');
+  const [currentScreen, setCurrentScreen] = useState<Screens>(() =>
+    pathToScreen(window.location.pathname),
+  );
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -33,7 +68,7 @@ const App: FC = () => {
   ]);
   const [chatInput, setChatInput] = useState('');
 
-  //Dark Mode toggle
+  //darkmode
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -42,11 +77,18 @@ const App: FC = () => {
     }
   }, [isDarkMode]);
 
-  // Scroll to top on screen change
+  //Scroll to top
   useEffect(() => {
     window.scrollTo(0, 0);
     setMobileMenuOpen(false);
   }, [currentScreen]);
+
+  useEffect(() => {
+    const screen = pathToScreen(location.pathname);
+    if (screen !== currentScreen) {
+      setCurrentScreen(screen);
+    }
+  }, [location.pathname, currentScreen, pathToScreen]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -58,6 +100,14 @@ const App: FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const navigateTo = (screen: Screens) => {
+    setCurrentScreen(screen);
+    const nextPath = screenToPath(screen);
+    if (location.pathname !== nextPath) {
+      navigate(nextPath);
+    }
+  };
 
   const handleChatSubmit = async (e?: React.FormEvent, promptText?: string) => {
     if (e) e.preventDefault();
@@ -82,17 +132,17 @@ const App: FC = () => {
   const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'contact':
-        return <Contact onNavigate={(s) => setCurrentScreen(s as Screens)}/>;
+        return <Contact onNavigate={(s) => navigateTo(s as Screens)}/>;
       case 'privacy':
         return <PrivacyPolicy />;
       case 'story':
         return <Story/>
       case 'landing':
-        return <LandingPage onNavigate={(s) => setCurrentScreen(s as Screens)} handleChatSubmit={handleChatSubmit} chatInput={chatInput} setChatInput={setChatInput} />;
+        return <LandingPage onNavigate={(s) => navigateTo(s as Screens)} handleChatSubmit={handleChatSubmit} chatInput={chatInput} setChatInput={setChatInput} />;
       default:
         return (
           <LandingPage
-            onNavigate={(s) => setCurrentScreen(s as Screens)}
+            onNavigate={(s) => navigateTo(s as Screens)}
             handleChatSubmit={handleChatSubmit}
             chatInput={chatInput}
             setChatInput={setChatInput}
@@ -103,21 +153,21 @@ const App: FC = () => {
   if(currentScreen === "signup") {
     return (
       <SignupPage
-        onNavigate={setCurrentScreen}
+        onNavigate={navigateTo}
       />
     )
   }
   if(currentScreen === "login") {
     return(
       <LoginPage
-        onNavigate={setCurrentScreen}
+        onNavigate={navigateTo}
       />
     )
   }
   if(currentScreen === "dashboard") {
     return(
       <DashboardPage
-        onNavigate={setCurrentScreen}
+        onNavigate={navigateTo}
         isDarkMode={isDarkMode}
         setIsDarkMode={setIsDarkMode}
       />
@@ -156,13 +206,13 @@ const App: FC = () => {
               <span>{isDarkMode ? '☀️' : '🌙'}</span>
             </button>
             <button
-              onClick={() => setCurrentScreen('login')}
+              onClick={() => navigateTo('login')}
               className="text-secondary hover:text-primary transition text-body hidden lg:block"
             >
               Log In
             </button>
             <button
-              onClick={() => setCurrentScreen('signup')}
+              onClick={() => navigateTo('signup')}
               className="gradient-bg-primary text-white rounded-full hover:opacity-90 transition text-body hidden lg:block"
               style={{ padding: 'var(--space-xs) var(--space-md)' }}
             >
@@ -243,7 +293,7 @@ const App: FC = () => {
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
-                setCurrentScreen('login');
+                navigateTo('login');
               }}
               className="w-full text-primary rounded-full hover:opacity-90 transition text-body-lg border-2 border-primary bg-primary/10"
               style={{
@@ -255,7 +305,7 @@ const App: FC = () => {
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
-                setCurrentScreen('signup');
+                navigateTo('signup');
               }}
               className="w-full gradient-bg-primary text-white rounded-full hover:opacity-90 transition-all hover:shadow-xl text-body-lg"
               style={{
@@ -294,10 +344,10 @@ const App: FC = () => {
                 Company
               </h3>
               <div className="flex flex-col gap-2">
-                <button onClick={() => setCurrentScreen('story')} className="text-body-sm text-secondary hover:text-primary transition text-left">
+                <button onClick={() => navigateTo('story')} className="text-body-sm text-secondary hover:text-primary transition text-left">
                   Our Story
                 </button>
-                <button onClick={() => setCurrentScreen('contact')} className="text-body-sm text-secondary hover:text-primary transition text-left">
+                <button onClick={() => navigateTo('contact')} className="text-body-sm text-secondary hover:text-primary transition text-left">
                   Contact Us
                 </button>
                 <a href="#" className="text-body-sm text-secondary hover:text-primary transition">
@@ -333,11 +383,11 @@ const App: FC = () => {
                 Legal
               </h3>
               <div className="flex flex-col gap-2">
-                <button onClick={() => setCurrentScreen('privacy')} className="text-body-sm text-secondary hover:text-primary transition text-left">
+                <button onClick={() => navigateTo('privacy')} className="text-body-sm text-secondary hover:text-primary transition text-left">
                   Privacy Policy
                 </button>
                 {/* Needs to be updated */}
-                <button onClick={() => setCurrentScreen('privacy')} className="text-body-sm text-secondary hover:text-primary transition text-left">
+                <button onClick={() => navigateTo('privacy')} className="text-body-sm text-secondary hover:text-primary transition text-left">
                   Terms & Conditions
                 </button>
                 <a href="#" className="text-body-sm text-secondary hover:text-primary transition">

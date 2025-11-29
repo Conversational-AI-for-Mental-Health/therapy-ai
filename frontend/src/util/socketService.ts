@@ -17,6 +17,9 @@ class SocketService {
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      auth: {
+        userId: this.userId,
+      },
     });
 
     this.socket.on('connect', () => {
@@ -40,41 +43,22 @@ class SocketService {
     }
   }
 
-  // Open a conversation
-  joinConversation(conversationId: string) {
-    if (!this.socket?.connected) {
-      throw new Error('Socket not connected');
-    }
-
-    console.log(' Joining conversation:', conversationId);
-    this.socket.emit('join_conversation', {
-      conversationId,
-      userId: this.userId,
-    });
-  }
-
-  // Send a message
-  sendMessage(conversationId: string, text: string) {
+  // Send a message (conversationId is optional for now; backend will create if missing)
+  sendMessage(conversationId: string | null, text: string) {
     if (!this.socket?.connected) {
       throw new Error('Socket not connected');
     }
 
     console.log('Sending message:', { conversationId, text });
-    this.socket.emit('send_message', {
+    this.socket.emit('userMessage', {
       conversationId,
-      userId: this.userId,
       text,
     });
   }
 
-  // Listen for conversation history
-  onConversationHistory(callback: (data: any) => void) {
-    this.socket?.on('conversation_history', callback);
-  }
-
   // Listen for AI responses
   onAIMessage(callback: (data: any) => void) {
-    this.socket?.on('receive_message', callback);
+    this.socket?.on('botMessage', callback);
   }
 
   // Listen for errors

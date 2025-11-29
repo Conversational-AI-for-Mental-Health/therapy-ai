@@ -26,9 +26,9 @@ export const createApp = () => {
     next();
   });
 
-  // Routes
-  app.use('/api', apiRouter);
+  // Routes (conversation routes first to avoid overlap with apiRouter)
   app.use('/api/conversations', conversationRoutes);
+  app.use('/api', apiRouter);
 
   // Health check
   app.get('/', (req: Request, res: Response) => {

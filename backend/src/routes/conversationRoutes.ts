@@ -6,6 +6,54 @@ const router = Router();
 
 router.use(authenticateUser);
 
+// Append a message to an existing conversation
+router.post(
+  '/:id/messages',
+  validateObjectId('id'),
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const conversationId = req.params.id;
+      const { sender, text } = req.body;
+
+      if (!text || typeof text !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: 'Message text is required',
+        });
+      }
+
+      if (sender !== 'user' && sender !== 'ai') {
+        return res.status(400).json({
+          success: false,
+          error: 'Sender must be either "user" or "ai"',
+        });
+      }
+
+      const conversation = await ConversationService.addMessage(
+        conversationId,
+        userId,
+        sender,
+        text,
+      );
+
+      const latestMessage = conversation.messages[conversation.messages.length - 1];
+
+      res.status(201).json({
+        success: true,
+        data: latestMessage,
+        conversationId: conversation._id,
+        message_count: conversation.message_count,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to add message',
+      });
+    }
+  },
+);
+
 // Create new conversation
 router.post('/', async (req: Request, res: Response) => {
   try {

@@ -102,7 +102,7 @@ export default function JournalView({
                   style={{ padding: 'var(--space-sm)', gap: 'var(--space-sm)' }}
                   onClick={() => !isEditing && handleViewToggle(entry.id)}
                 >
-                  <div className="flex items-center flex-1">
+                  <div className="flex items-center flex-1 lg:w-1/2 overflow-hidden">
                     <div style={{ fontSize: 'var(--space-lg)', marginRight: 'var(--space-sm)' }}>
                       {entry.moodIcon}
                     </div>
@@ -205,7 +205,7 @@ export default function JournalView({
                               {entry.text}
                             </p>
                             
-                            {/* Get Insights Button */}
+          
                             <div className="flex justify-center" style={{ marginTop: 'var(--space-md)' }}>
                               <button
                                 onClick={() => handleGetInsights(entry)}

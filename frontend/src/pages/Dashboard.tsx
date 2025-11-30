@@ -325,6 +325,48 @@ export default function DashboardPage({
       setIsLoadingConversation(false);
     }
   };
+  const handleRenameChat = async (id: number, newTitle: string) => {
+    try {
+      const conversations = await conversationAPI.getAllConversations();
+      const conversationToUpdate = conversations[id - 1];
+
+      if (conversationToUpdate) {
+        await conversationAPI.updateTitle(conversationToUpdate._id, newTitle);
+
+        setChatSessions((prevSessions) =>
+          prevSessions.map((session) =>
+            session.id === id ? { ...session, title: newTitle } : session,
+          ),
+        );
+
+        if (currentConversation?._id === conversationToUpdate._id) {
+          setCurrentConversation((prev) =>
+            prev ? { ...prev, title: newTitle } : null,
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Failed to rename conversation:', error);
+    }
+  };
+
+  const handleDeleteChat = async (id: number) => {
+    try {
+      const conversations = await conversationAPI.getAllConversations();
+      const conversationToDelete = conversations[id - 1];
+      if (conversationToDelete) {
+        await conversationAPI.deleteConversation(conversationToDelete._id);
+        setChatSessions((prevSessions) =>
+          prevSessions.filter((session) => session.id !== id),
+        );
+        if (currentChatId === id) {
+          handleNewConversation();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
+    }
+  };
 
   return (
     <>
@@ -346,6 +388,8 @@ export default function DashboardPage({
           currentChatId={currentChatId}
           onSelectChat={handleSelectChat}
           onNavigate={onNavigate}
+          onDeleteChat={handleDeleteChat}
+          onRenameChat={handleRenameChat}
         />
 
         {/* Main Content Area */}

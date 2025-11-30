@@ -104,8 +104,6 @@ const handleUserMessage = async (
       sender: 'ai',
       timestamp: new Date(),
     });
-  }
-};
 
     console.log('[Socket] AI response sent to room:', data.conversationId);
   } catch (error: any) {

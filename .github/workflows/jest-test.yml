@@ -11,9 +11,10 @@ jobs:
         with:
           node-version: '18'
           cache: 'yarn' 
-
-      - run: yarn install --frozen-lockfile 
-      
-      - run: yarn test -- --coverage       
-
+      - name: Enable Corepack
+        run: corepack enable 
+      - name: Install Dependencies
+        run: yarn install --immutable 
+      - name: Run Tests
+        run: yarn test -- --coverage
       - uses: codecov/codecov-action@v2

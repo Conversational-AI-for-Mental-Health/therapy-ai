@@ -58,9 +58,9 @@ module.exports = {
   coverageDirectory: 'coverage',
 
   testPathIgnorePatterns: [
-    '<rootDir>/node_modules/',
-    '<rootDir>/dist/',
-    '<rootDir>/build/',
+    '^<rootDir>/node_modules/',
+    '^<rootDir>/dist/',
+    '^<rootDir>/build/',
   ],
 
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],

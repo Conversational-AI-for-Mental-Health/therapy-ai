@@ -30,10 +30,7 @@ module.exports = {
     ],
   },
 
-  testMatch: [
-    '**/__tests__/**/*.+(ts|tsx|js)',
-    '**/?(*.)+(spec|test).+(ts|tsx|js)',
-  ],
+  testMatch: ['<rootDir>/src/**/?(*.)+(spec|test).+(ts|tsx|js)'],
 
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
@@ -57,7 +54,7 @@ module.exports = {
 
   coverageDirectory: 'coverage',
 
-  testPathIgnorePatterns: ['**/node_modules/**', '**/dist/**', '**/build/**'],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/build/'],
 
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
 

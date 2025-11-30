@@ -1,8 +1,6 @@
-import { X, Edit2 } from 'lucide-react';
-import { SettingsDialogProps } from '@/util/types';
-import React from 'react';
-
-
+import { X, Edit2 } from "lucide-react";
+import React, { useState } from "react";
+import { SettingsDialogProps } from "@/util/types";
 
 export default function Settings({
   isOpen,
@@ -17,188 +15,291 @@ export default function Settings({
 }: SettingsDialogProps) {
   if (!isOpen) return null;
 
-  const handleDeleteAllChats = () => {
-    if (confirm('Are you sure you want to delete all chat history? This action cannot be undone.')) {
-      alert('All chats deleted successfully');
+  /* Local UI state */
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [name, setName] = useState("Jamie R.");
+  const [email, setEmail] = useState("jamie.r@example.com");
+  const [username, setUsername] = useState("jamier_01");
+
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+
+  /* handle photo upload */
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProfilePhoto(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  /* handle delete account */
+  const handleDeleteAccount = () => {
+    if (confirm("Are you sure? This cannot be undone.")) {
+      alert("Account deleted (UI only).");
     }
   };
 
-  const handleDeleteAccount = () => {
-    if (confirm('Are you sure you want to delete your account? This action is permanent and cannot be undone.')) {
-      alert('Account deletion requested. You will receive a confirmation email.');
-    }
+  /* toggle helper */
+  const toggle = (value: boolean, setter: (v: boolean) => void) => {
+    setter(!value);
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ 
-        background: 'rgba(0, 0, 0, 0.4)',
-        backdropFilter: 'blur(8px)',
-        padding: 'var(--space-md)'
-      }}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fadeIn"
+      style={{ background: "rgba(0,0,0,0.35)", backdropFilter: "blur(10px)" }}
       onClick={onClose}
     >
-      <div 
-        className="bg-surface rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
-        style={{ 
-          padding: 'var(--space-lg)',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)'
-        }}
+      <div
+        className="w-full max-w-xl rounded-2xl shadow-xl overflow-y-auto max-h-[92vh] bg-white animate-slideUp"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          transition: "all 0.3s ease",
+        }}
       >
-        <div className="flex justify-end" style={{ marginBottom: 'var(--space-md)' }}>
+        {/* Close Button */}
+        <div className="flex justify-end p-4">
           <button
+            className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition"
             onClick={onClose}
-            className="rounded-full hover:bg-primary/10 transition flex items-center justify-center"
-            style={{ width: 'var(--space-lg)', height: 'var(--space-lg)' }}
           >
-            <X size={20} className="text-secondary" />
+            <X className="text-gray-600" />
           </button>
         </div>
 
         {/* Profile Section */}
-        <div className="flex flex-col items-center" style={{ marginBottom: 'var(--space-xl)' }}>
-          <div 
-            className="bg-primary rounded-full flex items-center justify-center text-white"
-            style={{ 
-              width: 'var(--space-xxl)', 
-              height: 'var(--space-xxl)', 
-              fontSize: 'var(--font-h1)',
-              fontWeight: 'var(--font-weight-semibold)',
-              marginBottom: 'var(--space-sm)'
-            }}
-          >
-            J
-          </div>
-          <div className="flex items-center" style={{ gap: 'var(--space-xs)' }}>
-            <h2 className="text-h2">Jamie R.</h2>
-            <button 
-              className="text-primary hover:bg-primary/10 rounded-full transition flex items-center justify-center" 
-              style={{ padding: 'var(--space-xxs)', width: 'var(--space-md)', height: 'var(--space-md)' }}
-            >
-              <Edit2 size={16} />
-            </button>
-          </div>
-          <p className="text-body-sm text-secondary">jamie.r@example.com</p>
+        <div className="px-8 pb-6 flex flex-col items-center">
+          <label htmlFor="profile-photo">
+            <div className="relative cursor-pointer">
+              <img
+                src={
+                  profilePhoto ||
+                  `https://ui-avatars.com/api/?name=${name}&background=6366F1&color=fff`
+                }
+                alt="profile"
+                className="w-24 h-24 rounded-full object-cover shadow"
+              />
+              <div className="absolute bottom-0 right-0 bg-primary text-white px-2 py-1 text-xs rounded-full shadow">
+                Edit
+              </div>
+            </div>
+          </label>
+
+          <input
+            id="profile-photo"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoChange}
+          />
+
+          <h2 className="text-xl font-semibold mt-4">{name}</h2>
+          <p className="text-gray-500 text-sm -mt-1">{email}</p>
         </div>
 
-        {/* Privacy Controls */}
-        <div style={{ marginBottom: 'var(--space-xl)' }}>
-          <h3 className="text-h3" style={{ marginBottom: 'var(--space-md)' }}>Privacy Controls</h3>
-          
-          {/* Analytics Tracking Toggle */}
-          <div 
-            className="border border-color rounded-lg flex items-center justify-between hover:bg-primary/5 transition"
-            style={{ padding: 'var(--space-sm)', marginBottom: 'var(--space-xs)' }}
-          >
-            <span className="text-body" style={{ fontWeight: 'var(--font-weight-medium)' }}>Analytics Tracking</span>
-            <button
-              onClick={() => setAnalyticsTracking(!analyticsTracking)}
-              className={`relative rounded-full transition-colors ${analyticsTracking ? 'bg-primary' : 'bg-gray-300'}`}
-              style={{ width: '44px', height: '24px' }}
-            >
-              <div
-                className="absolute bg-white rounded-full shadow-sm transition-transform"
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  top: '2px',
-                  left: analyticsTracking ? '22px' : '2px',
-                }}
+        {/* Settings Sections */}
+        <div className="px-8 pb-10 space-y-10">
+
+          {/* ACCOUNT */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Account</h3>
+
+            <div className="space-y-4">
+
+              {/* Name */}
+              <EditableRow label="Name" value={name} onChange={setName} />
+
+              {/* Email */}
+              <EditableRow label="Email" value={email} onChange={setEmail} />
+
+              {/* Username */}
+              <EditableRow
+                label="Username"
+                value={username}
+                onChange={setUsername}
               />
-            </button>
+
+              {/* Change Password */}
+              <button
+                onClick={() => setShowPasswordModal(true)}
+                className="w-full py-3 bg-gray-100 rounded-xl text-gray-700 font-medium hover:bg-gray-200 transition"
+              >
+                Change Password
+              </button>
+            </div>
           </div>
 
-          {/* Personalized Ads Toggle */}
-          <div 
-            className="border border-color rounded-lg flex items-center justify-between hover:bg-primary/5 transition"
-            style={{ padding: 'var(--space-sm)', marginBottom: 'var(--space-xs)' }}
-          >
-            <span className="text-body" style={{ fontWeight: 'var(--font-weight-medium)' }}>Personalized Ads</span>
-            <button
-              onClick={() => setPersonalizedAds(!personalizedAds)}
-              className={`relative rounded-full transition-colors ${personalizedAds ? 'bg-primary' : 'bg-gray-300'}`}
-              style={{ width: '44px', height: '24px' }}
-            >
-              <div
-                className="absolute bg-white rounded-full shadow-sm transition-transform"
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  top: '2px',
-                  left: personalizedAds ? '22px' : '2px',
-                }}
-              />
-            </button>
+          {/* NOTIFICATIONS */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Notifications</h3>
+
+            <ToggleRow
+              label="Push Notifications"
+              value={pushNotifications}
+              setter={setPushNotifications}
+            />
           </div>
 
-          {/* Push Notifications Toggle */}
-          <div 
-            className="border border-color rounded-lg flex items-center justify-between hover:bg-primary/5 transition"
-            style={{ padding: 'var(--space-sm)' }}
-          >
-            <span className="text-body" style={{ fontWeight: 'var(--font-weight-medium)' }}>Push Notifications</span>
-            <button
-              onClick={() => setPushNotifications(!pushNotifications)}
-              className={`relative rounded-full transition-colors ${pushNotifications ? 'bg-primary' : 'bg-gray-300'}`}
-              style={{ width: '44px', height: '24px' }}
-            >
-              <div
-                className="absolute bg-white rounded-full shadow-sm transition-transform"
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  top: '2px',
-                  left: pushNotifications ? '22px' : '2px',
-                }}
-              />
-            </button>
-          </div>
-        </div>
+          {/* PRIVACY */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Privacy</h3>
 
-        {/* Danger Zone */}
-        <div style={{ marginBottom: 'var(--space-lg)' }}>
-          <h3 className="text-h3" style={{ marginBottom: 'var(--space-md)' }}>Data Management</h3>
-          
+            <ToggleRow
+              label="Analytics Tracking"
+              value={analyticsTracking}
+              setter={setAnalyticsTracking}
+            />
+
+            <ToggleRow
+              label="Personalized Ads"
+              value={personalizedAds}
+              setter={setPersonalizedAds}
+            />
+          </div>
+
+          {/* DELETE ACCOUNT */}
           <button
-            onClick={handleDeleteAllChats}
-            className="w-full bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-body flex items-center justify-between"
-            style={{ padding: 'var(--space-sm)', marginBottom: 'var(--space-xs)' }}
-          >
-            <span style={{ fontWeight: 'var(--font-weight-medium)' }}>Delete All Chats</span>
-            <span className="text-body-sm">🗑️</span>
-          </button>
-
-          <button
+            className="w-full py-3 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 transition"
             onClick={handleDeleteAccount}
-            className="w-full bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-body flex items-center justify-between"
-            style={{ padding: 'var(--space-sm)' }}
           >
-            <span style={{ fontWeight: 'var(--font-weight-medium)' }}>Delete Account</span>
-            <span className="text-body-sm">⚠️</span>
+            Delete Account
           </button>
-        </div>
 
-        {/* Logout Button - Centered with padding */}
-        <div className="flex justify-center">
+          {/* LOGOUT */}
           <button
             onClick={onLogout}
-            className="bg-primary text-white rounded-lg hover:opacity-90 transition text-center"
-            style={{ padding: 'var(--space-sm) var(--space-xl)', fontWeight: 'var(--font-weight-semibold)' }}
+            className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 transition"
           >
             Log Out
           </button>
         </div>
       </div>
 
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <PasswordModal onClose={() => setShowPasswordModal(false)} />
+      )}
+
+      {/* Animations */}
       <style>{`
-        .dark .bg-surface {
-          background: rgba(45, 55, 72, 0.95) !important;
+        .animate-fadeIn { 
+          animation: fadeIn 0.25s ease-out;
+        }
+        .animate-slideUp {
+          animation: slideUp 0.35s ease-out;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(30px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
       `}</style>
+    </div>
+  );
+}
+
+/* Components */
+
+function EditableRow({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-gray-700 text-sm mb-1">{label}</span>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="border border-gray-300 rounded-xl px-4 py-2 text-gray-800 focus:ring-2 focus:ring-primary outline-none transition"
+      />
+    </div>
+  );
+}
+
+function ToggleRow({
+  label,
+  value,
+  setter,
+}: {
+  label: string;
+  value: boolean;
+  setter: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between py-2">
+      <span className="text-gray-700">{label}</span>
+      <button
+        onClick={() => setter(!value)}
+        className={`relative w-12 h-6 rounded-full transition ${
+          value ? "bg-primary" : "bg-gray-300"
+        }`}
+      >
+        <div
+          className="absolute top-1 left-1 bg-white w-4 h-4 rounded-full shadow transition"
+          style={{
+            transform: value ? "translateX(24px)" : "translateX(0px)",
+          }}
+        />
+      </button>
+    </div>
+  );
+}
+
+function PasswordModal({ onClose }: { onClose: () => void }) {
+  const [oldPw, setOldPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 animate-fadeIn"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white w-full max-w-sm rounded-2xl p-6 animate-slideUp"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-lg font-semibold mb-4">Change Password</h2>
+
+        <div className="space-y-4">
+          <input
+            type="password"
+            placeholder="Old Password"
+            value={oldPw}
+            onChange={(e) => setOldPw(e.target.value)}
+            className="w-full border border-gray-300 rounded-xl px-3 py-2"
+          />
+
+          <input
+            type="password"
+            placeholder="New Password"
+            value={newPw}
+            onChange={(e) => setNewPw(e.target.value)}
+            className="w-full border border-gray-300 rounded-xl px-3 py-2"
+          />
+
+          <button
+            className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 transition"
+            onClick={() => {
+              alert("Password updated (UI only).");
+              onClose();
+            }}
+          >
+            Save Password
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

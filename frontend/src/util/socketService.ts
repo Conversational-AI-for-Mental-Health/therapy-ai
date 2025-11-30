@@ -4,7 +4,19 @@ const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3000';
 
 class SocketService {
   private socket: Socket | null = null;
-  private userId: string = '507f1f77bcf86cd799439011'; // Placeholder user ID - replace with real auth
+  
+  private getUserId(): string {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user._id;
+      }
+    } catch (e) {
+      console.error('Failed to get user ID:', e);
+    }
+    return '507f1f77bcf86cd799439011'; // Fallback to placeholder if no user found (though user should be logged in)
+  }
 
   connect() {
     if (this.socket?.connected) {
@@ -12,13 +24,15 @@ class SocketService {
       return;
     }
 
+    const userId = this.getUserId();
+
     this.socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       auth: {
-        userId: this.userId,
+        userId: userId,
       },
     });
 

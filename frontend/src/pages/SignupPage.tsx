@@ -1,8 +1,45 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import { SignupPageProps } from '@/util/types';
 import logo from '../images/logo.png';
+import authAPI from '@/util/authAPI';
 
 export default function SignupPage({ onNavigate }: SignupPageProps) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSignup = async () => {
+    setError('');
+    setIsLoading(true);
+
+    if (!name || !email || !password) {
+      setError('Please fill in all fields');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await authAPI.register(name, email, password);
+      
+      if (response.success && response.data) {
+        // Store auth data
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Navigate to dashboard
+        onNavigate('dashboard');
+      } else {
+        setError(response.error || 'Registration failed');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 my-6">
       <div className="w-full max-w-sm">
@@ -19,8 +56,28 @@ export default function SignupPage({ onNavigate }: SignupPageProps) {
           <h2 className="text-h2 text-center" style={{ marginBottom: 'var(--space-xxs)' }}>Create Account ✨</h2>
           <p className="text-center text-body-sm text-secondary" style={{ marginBottom: 'var(--space-md)' }}>Start your journey to better mental health</p>
 
+          {error && (
+            <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm mb-4">
+              {error}
+            </div>
+          )}
+
           {/* Signup Form */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+            <div>
+              <label htmlFor="signup-name" className="text-body-sm text-secondary block" style={{ marginBottom: 'var(--space-xs)' }}>
+                Full Name
+              </label>
+              <input
+                type="text"
+                id="signup-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full rounded-lg bg-transparent border border-color ring-primary focus:ring-2 focus:outline-none transition text-body"
+                style={{ height: 'var(--space-xl)', padding: '0 var(--space-sm)' }}
+                placeholder="John Doe"
+              />
+            </div>
             <div>
               <label htmlFor="signup-email" className="text-body-sm text-secondary block" style={{ marginBottom: 'var(--space-xs)' }}>
                 Email
@@ -28,8 +85,11 @@ export default function SignupPage({ onNavigate }: SignupPageProps) {
               <input
                 type="email"
                 id="signup-email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-lg bg-transparent border border-color ring-primary focus:ring-2 focus:outline-none transition text-body"
                 style={{ height: 'var(--space-xl)', padding: '0 var(--space-sm)' }}
+                placeholder="you@example.com"
               />
             </div>
             <div>
@@ -39,19 +99,23 @@ export default function SignupPage({ onNavigate }: SignupPageProps) {
               <input
                 type="password"
                 id="signup-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg bg-transparent border border-color ring-primary focus:ring-2 focus:outline-none transition text-body"
                 style={{ height: 'var(--space-xl)', padding: '0 var(--space-sm)' }}
+                placeholder="••••••••"
               />
             </div>
           </div>
 
           {/* Create Account Button */}
           <button
-            onClick={() => onNavigate('dashboard')}
-            className="w-full gradient-bg-primary text-white rounded-lg hover:opacity-90 transition text-body flex items-center justify-center"
+            onClick={handleSignup}
+            disabled={isLoading}
+            className="w-full gradient-bg-primary text-white rounded-lg hover:opacity-90 transition text-body flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ height: 'var(--space-xl)', marginTop: 'var(--space-md)' }}
           >
-            Create Account
+            {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
 
           <div className="flex items-center" style={{ margin: 'var(--space-md) 0' }}>

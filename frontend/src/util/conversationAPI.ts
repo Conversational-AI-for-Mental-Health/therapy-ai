@@ -16,7 +16,6 @@ export interface Conversation {
   last_message_at?: string;
   ended_at?: string;
   archived: boolean;
-  deleted: boolean;
   message_count: number;
   messages?: Message[];
   createdAt: string;
@@ -43,10 +42,19 @@ class ConversationAPI {
     options: RequestInit = {},
   ): Promise<APIResponse<T>> {
     try {
+      const token = localStorage.getItem('token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_URL}${endpoint}`, {
         ...options,
         headers: {
-          'Content-Type': 'application/json',
+          ...headers,
           ...options.headers,
         },
       });

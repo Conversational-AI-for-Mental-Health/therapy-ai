@@ -15,6 +15,7 @@ import Settings from '@/components/layout/Settings';
 import { Menu, X } from 'lucide-react';
 import logo from '../images/logo.png'; import socketService from '@/util/socketService';
 import conversationAPI, { Conversation, Message } from '@/util/conversationAPI';
+import authAPI from '@/util/authAPI';
 
 export default function DashboardPage({
     onNavigate,
@@ -45,17 +46,60 @@ export default function DashboardPage({
     const [analyticsTracking, setAnalyticsTracking] = useState(true);
     const [personalizedAds, setPersonalizedAds] = useState(false);
     const [pushNotifications, setPushNotifications] = useState(true);
+    const [user, setUser] = useState<{ name: string; email: string } | undefined>(undefined);
 
     // chat history reference
     const chatHistoryRef = useRef<HTMLDivElement>(null);
 
-    // Initialize Socket.io 
+    // Socket.io
     useEffect(() => {
         socketService.connect();
-
-        // AI response
         socketService.onAIMessage((data) => {
             console.log('Received AI message:', data);
+
+            // Check if we need to set up a new conversation state
+            if ((!currentChatId || !currentConversation) && data.conversationId) {
+                const newConversationId = data.conversationId;
+
+                // Only create new session if we don't have this ID yet
+                if (currentChatId !== newConversationId) {
+                    setCurrentChatId(newConversationId);
+                    // Find the user's first message to generate title
+                    const userMsg = chatHistory.find(m => m.sender === 'user');
+                    const initialTitle = userMsg ? deriveTitleFromMessage(userMsg.text) : 'New Chat';
+
+                     // fetch the full conversation object stub
+                    const newConvStub: Conversation = {
+                        _id: newConversationId,
+                        user_id: '',
+                        title: initialTitle,
+                        started_at: new Date().toISOString(),
+                        archived: false,
+                        message_count: 2, // User + AI
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    };
+
+                    setCurrentConversation(newConvStub);
+
+                    const newSession: ChatSession = {
+                        id: newConversationId,
+                        title: initialTitle,
+                        timestamp: new Date().toLocaleDateString(),
+                        preview: data.text.substring(0, 80),
+                    };
+                    
+                    setChatSessions(prev => [newSession, ...prev]);
+                    if (initialTitle !== 'New Chat') {
+                        conversationAPI.updateTitle(newConversationId, initialTitle)
+                            .catch(err => console.error("Failed to auto-update title", err));
+                    }
+                }
+            } else if (currentChatId && data.text) {
+                 //update preview with AI response
+                 updateSessionPreview(currentChatId, data.text);
+            }
+
             setChatHistory((prev) => {
                 const withoutThinking = prev.filter((msg) => !msg.thinking);
 
@@ -88,16 +132,22 @@ export default function DashboardPage({
         };
     }, []);
 
-    // Create initial conversation
+    // Create initial conversation or load most recent one
     useEffect(() => {
         const initConversation = async () => {
             try {
+                // Get current user
+                const currentUser = authAPI.getCurrentUser();
+                if (currentUser) {
+                    setUser(currentUser);
+                }
+
                 setIsLoadingConversation(true);
 
                 // Try to get existing conversations first
                 const conversations = await conversationAPI.getAllConversations();
 
-                // Convert conversations to chat sessions for sidebar (no messages in list response)
+                // Convert conversations to chat sessions for sidebar
                 const sessions: ChatSession[] = conversations.map((conv) => ({
                     id: conv._id,
                     title: conv.title || 'Untitled Chat',
@@ -107,37 +157,34 @@ export default function DashboardPage({
                             ? 'Open to view messages'
                             : 'No messages yet',
                 }));
-                // Create a new conversation to start fresh
-                const conversation =
-                    await conversationAPI.createConversation('New Chat');
-                setCurrentConversation(conversation);
-                setCurrentChatId(conversation._id);
-                setChatHistory([
-                    {
-                        sender: 'ai',
-                        text: 'Hello! I am here to listen. How are you feeling today?',
-                    },
-                ]);
 
-                // Add new session to the list along with existing ones
-                setChatSessions([
-                    {
-                        id: conversation._id,
-                        title: conversation.title || 'New Chat',
-                        timestamp: new Date(conversation.started_at).toLocaleDateString(),
-                        preview: 'No messages yet',
-                    },
-                    ...sessions
-                ]);
+                setChatSessions(sessions);
+
+                // Check for a recent conversation (less than 3 hours old)
+                let recentConversation = null;
+                if (conversations.length > 0) {
+                    const mostRecent = conversations[0]; // Assuming sorted by date descending from API
+                    const lastActive = mostRecent.last_message_at ? new Date(mostRecent.last_message_at) : new Date(mostRecent.started_at);
+                    const now = new Date();
+                    const diffHours = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60);
+
+                    if (diffHours < 3) {
+                        recentConversation = mostRecent;
+                    }
+                }
+
+                if (recentConversation) {
+                    // Load the recent conversation
+                    await handleSelectChat(recentConversation._id);
+                } else {
+                    // Start a fresh, lazy conversation (not saved to DB yet)
+                    startNewLazyConversation();
+                }
+
             } catch (error) {
                 console.error('Failed to initialize conversation:', error);
                 // Fallback to local state
-                setChatHistory([
-                    {
-                        sender: 'ai',
-                        text: 'Hello! I am here to listen. How are you feeling today?',
-                    },
-                ]);
+                startNewLazyConversation();
             } finally {
                 setIsLoadingConversation(false);
             }
@@ -145,6 +192,17 @@ export default function DashboardPage({
 
         initConversation();
     }, []);
+
+    const startNewLazyConversation = () => {
+        setCurrentConversation(null); // No ID yet
+        setCurrentChatId(null);
+        setChatHistory([
+            {
+                sender: 'ai',
+                text: 'Hello! I am here to listen. How are you feeling today?',
+            },
+        ]);
+    };
 
     // Auto-scroll chat
     useEffect(() => {
@@ -208,13 +266,13 @@ export default function DashboardPage({
     };
 
     const deriveTitleFromMessage = (text: string) => {
-        const words = text.split(/\s+/).filter(Boolean).slice(0, 8);
-        const title = words.join(' ');
-        return title.length > 40 ? `${title.slice(0, 40)}…` : title || 'New Chat';
+        const maxLength = 30; // Shorten title
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
     };
 
     const handleChatSubmit = async (text?: string) => {
-        if (!text?.trim() || !currentConversation) return;
+        if (!text?.trim()) return;
 
         // Add user message to UI immediately
         setChatHistory((prev) => [
@@ -223,34 +281,17 @@ export default function DashboardPage({
             { sender: 'ai', text: '', thinking: true },
         ]);
         setChatInput('');
-        updateSessionPreview(currentConversation._id, text);
-        // If still default title, derive one from first user message
-        if (currentConversation.title === 'New Chat') {
-            const newTitle = deriveTitleFromMessage(text);
-            conversationAPI
-                .updateTitle(currentConversation._id, newTitle)
-                .then((updated) => {
-                    setCurrentConversation((prev) =>
-                        prev && prev._id === currentConversation._id
-                            ? { ...prev, title: updated.title }
-                            : prev,
-                    );
-                    setChatSessions((prev) =>
-                        prev.map((session) =>
-                            session.id === currentConversation._id
-                                ? { ...session, title: updated.title }
-                                : session,
-                        ),
-                    );
-                })
-                .catch((err) =>
-                    console.error('Failed to auto-rename conversation:', err),
-                );
-        }
 
-        // Send via Socket.io (will save to MongoDB and get AI response)
+        // If we have an active conversation, update preview
+        const activeChatId = currentConversation?._id || currentChatId;
+
+        if (activeChatId) {
+             updateSessionPreview(activeChatId, text);
+        }
+        const conversationId = activeChatId || null;
+
         try {
-            socketService.sendMessage(currentConversation._id, text);
+            socketService.sendMessage(conversationId, text);
         } catch (error: any) {
             console.error('Failed to send message:', error);
             setChatHistory((prev) => [
@@ -264,26 +305,8 @@ export default function DashboardPage({
     };
 
     const handleNewConversation = async () => {
-        try {
-            const conversation = await conversationAPI.createConversation('New Chat');
-            setCurrentConversation(conversation);
-            setChatHistory([
-                {
-                    sender: 'ai',
-                    text: 'Hello! I am here to listen. How are you feeling today?',
-                },
-            ]);
-            setCurrentChatId(conversation._id);
-            const newSession: ChatSession = {
-                id: conversation._id,
-                title: conversation.title || 'New Chat',
-                timestamp: new Date(conversation.started_at).toLocaleDateString(),
-                preview: 'No messages yet',
-            };
-            setChatSessions([newSession, ...chatSessions]);
-        } catch (error) {
-            console.error('Failed to create conversation:', error);
-        }
+       // reset state
+       startNewLazyConversation();
     };
 
     const handleSelectChat = async (id: string) => {
@@ -378,6 +401,7 @@ export default function DashboardPage({
                     onNavigate={onNavigate}
                     onRenameChat={handleRenameChat}
                     onDeleteChat={handleDeleteChat}
+                    user={user}
                 />
 
                 {/* Main Content Area */}
@@ -490,6 +514,7 @@ export default function DashboardPage({
                 isOpen={showSettingsDialog}
                 onClose={() => setShowSettingsDialog(false)}
                 onLogout={() => {
+                    authAPI.logout();
                     setShowSettingsDialog(false);
                     onNavigate('landing');
                 }}

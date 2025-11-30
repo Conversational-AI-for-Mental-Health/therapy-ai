@@ -61,12 +61,16 @@ export interface SidebarProps{
   onClose: () => void;
   onShowSettings: () => void;
   onNewConversation: () => void;
-  chatSessions: ChatSession[]; 
-  currentChatId: string | null;      
+  chatSessions: ChatSession[];
+  currentChatId: string | null;
   onSelectChat: (id: string) => void;
   onNavigate: (screen: Screens) => void;
   onRenameChat: (id: string, title: string) => void;
   onDeleteChat: (id: string) => void;
+  user?: {
+    name: string;
+    email: string;
+  };
 };
 
 export type MoodOption = {

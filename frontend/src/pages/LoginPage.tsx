@@ -1,7 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { LoginPageProps } from '@/util/types';
 import logo from '../images/logo.png';
+import authAPI from '@/util/authAPI';
+
 export default function LoginPage({ onNavigate }: LoginPageProps) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogin = async () => {
+    setError('');
+    setIsLoading(true);
+
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await authAPI.login(email, password);
+      
+      if (response.success && response.data) {
+        // Store auth data
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Navigate to dashboard
+        onNavigate('dashboard');
+      } else {
+        setError(response.error || 'Login failed');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 my-6">
       <div className="w-full max-w-sm">
@@ -18,6 +55,12 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
           <h2 className="text-h1 text-center" style={{ marginBottom: 'var(--space-xxs)' }}>Welcome Back👋</h2>
           <p className="text-center text-body-sm text-secondary" style={{ marginBottom: 'var(--space-md)' }}>Sign in to continue your journey</p>
 
+          {error && (
+            <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm mb-4">
+              {error}
+            </div>
+          )}
+
           {/* Login Form */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
             <div>
@@ -27,8 +70,11 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               <input
                 type="email"
                 id="login-email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-lg bg-transparent border border-color ring-primary focus:ring-2 focus:outline-none transition text-body"
                 style={{ height: 'var(--space-xl)', padding: '0 var(--space-sm)' }}
+                placeholder="you@example.com"
               />
             </div>
             <div>
@@ -38,19 +84,23 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               <input
                 type="password"
                 id="login-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg bg-transparent border border-color ring-primary focus:ring-2 focus:outline-none transition text-body"
                 style={{ height: 'var(--space-xl)', padding: '0 var(--space-sm)' }}
+                placeholder="••••••••"
               />
             </div>
           </div>
 
           {/* Login Button */}
           <button
-            onClick={() => onNavigate('dashboard')}
-            className="w-full gradient-bg-primary text-white rounded-lg hover:opacity-90 transition text-body flex items-center justify-center"
+            onClick={handleLogin}
+            disabled={isLoading}
+            className="w-full gradient-bg-primary text-white rounded-lg hover:opacity-90 transition text-body flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ height: 'var(--space-xl)', marginTop: 'var(--space-md)' }}
           >
-            Log In
+            {isLoading ? 'Logging in...' : 'Log In'}
           </button>
 
           <div className="flex items-center" style={{ margin: 'var(--space-md) 0' }}>

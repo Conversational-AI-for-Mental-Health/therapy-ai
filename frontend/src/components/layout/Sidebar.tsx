@@ -13,12 +13,17 @@ export default function Sidebar({
   onSelectChat,
   onRenameChat,
   onDeleteChat,
+  user,
 }: SidebarProps) {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const renameInputRef = useRef<HTMLInputElement>(null);
+
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'B';
+  const userName = user?.name ? user.name.split(' ')[0] : 'Bhuwan';
+  const userEmail = user?.email || 'bhuwan@mindguideai';
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -78,11 +83,11 @@ export default function Sidebar({
                 className="bg-primary rounded-full flex items-center justify-center text-white"
                 style={{ width: 'var(--space-xl)', height: 'var(--space-xl)', fontSize: 'var(--font-h3)', fontWeight: 'var(--font-weight-semibold)' }}
               >
-                B
+                {userInitial}
               </div>
-              <div>
-                <p className="text-body" style={{ fontWeight: 'var(--font-weight-semibold)' }}>Bhuwan</p>
-                <p className="text-caption text-secondary">bhuwan@mindguideai</p>
+              <div style={{ overflow: 'hidden' }}>
+                 <p className="text-body truncate" style={{ fontWeight: 'var(--font-weight-semibold)' }}>{userName}</p>
+                 <p className="text-caption text-secondary truncate">{userEmail}</p>
               </div>
             </button>
 
@@ -106,7 +111,7 @@ export default function Sidebar({
               className="bg-primary rounded-full flex items-center justify-center text-white"
               style={{ width: 'var(--space-lg)', height: 'var(--space-lg)', fontSize: 'var(--font-body)' }}
             >
-              B
+              {userInitial}
             </div>
           </button>
         )}
@@ -183,6 +188,7 @@ export default function Sidebar({
                       <div
                         ref={menuRef}
                         className="absolute right-0 top-full mt-1 w-32 bg-surface border border-color rounded-lg shadow-lg z-50 overflow-hidden"
+                        style={{zIndex: 9999}}
                       >
                         <button
                           onClick={(e) => startRenaming(e, session.id, session.title)}

@@ -512,3 +512,72 @@ aside::-webkit-scrollbar-thumb {
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
   border-left: 1px solid rgba(104, 179, 163, 0.2);
 }
+
+/* Markdown Content Styles */
+.markdown-content p {
+  margin-bottom: 0.5em;
+}
+
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.markdown-content ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.markdown-content li {
+  margin-bottom: 0.25em;
+}
+
+.markdown-content strong {
+  font-weight: 700;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid currentColor;
+  opacity: 0.8;
+  padding-left: 1em;
+  margin: 0.5em 0;
+}
+
+.markdown-content code {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.dark .markdown-content code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.markdown-content pre {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+
+.dark .markdown-content pre {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.markdown-content a {
+  text-decoration: underline;
+  font-weight: 500;
+}

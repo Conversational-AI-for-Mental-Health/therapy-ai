@@ -3,6 +3,8 @@ import { ChatProps } from '@/util/types';
 import { ChevronDown, ChevronUp, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+
 export default function Chat({
   chatHistory,
   chatHistoryRef,
@@ -47,13 +49,19 @@ export default function Chat({
             ) : (
               <div className="flex flex-col" style={{ gap: 'var(--space-xxs)', maxWidth: '85%' }}>
                 <div
-                  className={`sm:max-w-xs md:max-w-md rounded-2xl whitespace-pre-wrap text-body ${msg.sender === 'user' ? 'bg-primary text-white' : 'bg-surface'
+                  className={`sm:max-w-xs md:max-w-md rounded-2xl text-body ${msg.sender === 'user'
+                      ? 'bg-primary text-white whitespace-pre-wrap'
+                      : 'bg-surface markdown-content'
                     }`}
                   style={{ padding: 'var(--space-xs)' }}
                 >
-                  {msg.text}
+                  {msg.sender === 'ai' ? (
+                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  ) : (
+                    msg.text
+                  )}
                 </div>
-                {/* Feedback for ai messages */}
+                {/* Feedback */}
                 {msg.sender === 'ai' && !msg.thinking && (
                   <div className="flex items-center" style={{ gap: 'var(--space-xxs)', paddingLeft: 'var(--space-xs)' }}>
                     <button

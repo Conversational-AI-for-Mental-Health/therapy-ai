@@ -51,7 +51,7 @@ export default function DashboardPage({
     // chat history reference
     const chatHistoryRef = useRef<HTMLDivElement>(null);
     const deriveTitleFromMessage = (text: string) => {
-        const maxLength = 30;
+        const maxLength = 20;
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength) + '...';
     };
@@ -136,7 +136,6 @@ export default function DashboardPage({
     useEffect(() => {
         const initConversation = async () => {
             try {
-                // Get current user
                 const currentUser = authAPI.getCurrentUser();
                 if (currentUser) {
                     setUser(currentUser);
@@ -144,17 +143,17 @@ export default function DashboardPage({
 
                 setIsLoadingConversation(true);
 
-                // Try to get existing conversations first
+                // try to get existing conversations first
                 const conversations = await conversationAPI.getAllConversations();
 
-                // Convert conversations to chat sessions for sidebar
+                //convert conversations to chat sessions for sidebar
                 const sessions: ChatSession[] = conversations.map((conv) => ({
                     id: conv._id,
-                    title: conv.title || 'Untitled Chat',
+                    title: conv.title,
                     timestamp: new Date(conv.started_at || conv.createdAt).toLocaleDateString(),
                     preview:
                         conv.message_count > 0
-                            ? 'Open to view messages' // We'll update this when the conversation is loaded
+                            ? 'Open to view messages'
                             : 'No messages yet',
                 }));
 
@@ -174,16 +173,16 @@ export default function DashboardPage({
                 }
 
                 if (recentConversation) {
-                    // Load the recent conversation
+                    // load the recent conversation
                     await handleSelectChat(recentConversation._id);
                 } else {
-                    // Start a fresh conversation (not saved to DB yet)
+                    // start a fresh conversation (not saved to DB yet)
                     awaitStartConversation();
                 }
 
             } catch (error) {
                 console.error('Failed to initialize conversation:', error);
-                // Fallback to local state
+                // fallback to local state
                 awaitStartConversation();
             } finally {
                 setIsLoadingConversation(false);
@@ -524,6 +523,7 @@ export default function DashboardPage({
                 setPersonalizedAds={setPersonalizedAds}
                 pushNotifications={pushNotifications}
                 setPushNotifications={setPushNotifications}
+                user={user}
             />
         </>
     );

@@ -130,9 +130,7 @@ class ConversationAPI {
     return response.data as unknown as Message;
   }
 
-  /**
-   * Update conversation title
-   */
+  //update title
   async updateTitle(
     conversationId: string,
     title: string,

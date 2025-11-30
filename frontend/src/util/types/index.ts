@@ -110,4 +110,8 @@ export interface SettingsDialogProps {
   setPersonalizedAds: (value: boolean) => void;
   pushNotifications: boolean;
   setPushNotifications: (value: boolean) => void;
+  user?: {
+    name: string;
+    email: string;
+  };
 };

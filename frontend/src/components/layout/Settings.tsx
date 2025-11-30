@@ -12,18 +12,20 @@ export default function Settings({
   setPersonalizedAds,
   pushNotifications,
   setPushNotifications,
+  user
 }: SettingsDialogProps) {
   if (!isOpen) return null;
 
-  /* Local UI state */
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-  const [name, setName] = useState("Jamie R.");
-  const [email, setEmail] = useState("jamie.r@example.com");
-  const [username, setUsername] = useState("jamier_01");
+  /* dynamic UI state */
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
+
+  const [name, setName] = useState(user?.name ? user.name.split(' ')[0] : 'Bhuwan');
+  const [email, setEmail] = useState(user?.email || 'bhuwan@mindguideai');
+  const [username, setUsername] = useState('userName mock');
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
-  /* handle photo upload */
+  //photo upload
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -38,7 +40,6 @@ export default function Settings({
   /* handle delete account */
   const handleDeleteAccount = () => {
     if (confirm("Are you sure? This cannot be undone.")) {
-      alert("Account deleted (UI only).");
     }
   };
 
@@ -77,7 +78,7 @@ export default function Settings({
               <img
                 src={
                   profilePhoto ||
-                  `https://ui-avatars.com/api/?name=${name}&background=6366F1&color=fff`
+                  `https://ui-avatars.com/api/?name=${user?.name ? user.name.charAt(0).toUpperCase() : 'B'}&background=6366F1&color=fff`
                 }
                 alt="profile"
                 className="w-24 h-24 rounded-full object-cover shadow"

@@ -1,10 +1,8 @@
-import axios from "axios";
-import { Router, Request, Response } from "express";
-import { Conversation } from '../models/Conversation';
-
+import axios from 'axios';
+const PYTHON_API_URL = 'http://127.0.0.1:5000/chat';
+import { Router, Request, Response } from 'express';
 
 const apiRouter = Router();
-const PYTHON_API_URL = "http://127.0.0.1:5000/chat";
 
 apiRouter.get('/status', (req: Request, res: Response) => {
   res.status(200).json({
@@ -13,51 +11,18 @@ apiRouter.get('/status', (req: Request, res: Response) => {
   });
 });
 
+// main route to communicate with flask ai
+apiRouter.post('/message', async (req: Request, res: Response) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: 'Message required' });
 
-// Get all non-archived conversations (for a user, eventually)
-apiRouter.get('/conversations', async (req: Request, res: Response) => {
   try {
-    // TODO: This should be filtered by user ID, not socketId
-    const conversations = await Conversation.find({ isArchived: false }).select('-messages');
-    res.status(200).json(conversations);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch conversations' });
+    const response = await axios.post(PYTHON_API_URL, { message });
+    res.status(200).json({ aiResponse: response.data.response });
+  } catch (err) {
+    console.error('[Error connecting to AI backend]', err);
+    res.status(500).json({ error: 'Failed to connect to AI backend' });
   }
 });
-
-
-// Get a single conversation with all its messages
-apiRouter.get('/conversations/:id', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const conversation = await Conversation.findById(id);
-    if (!conversation) {
-      return res.status(404).json({ error: 'Conversation not found' });
-    }
-    res.status(200).json(conversation);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch conversation' });
-  }
-});
-
-// Archive (soft-delete) a conversation
-apiRouter.patch('/conversations/:id/archive', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const conversation = await Conversation.findByIdAndUpdate(
-      id,
-      { isArchived: true },
-      { new: true },
-    );
-    if (!conversation) {
-      return res.status(404).json({ error: 'Conversation not found' });
-    }
-    res.status(200).json({ status: 'archived', id });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to archive conversation' });
-  }
-});
-
-
 
 export default apiRouter;

@@ -20,6 +20,7 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
+    "docker:mongodb": "docker-compose up -d mongodb mongo-express",
     "docker:down": "docker compose down",
     "docker:start": "docker compose up --build -d",
     "docker:clean": "docker compose down --rmi all",

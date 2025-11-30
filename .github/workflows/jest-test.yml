@@ -12,7 +12,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'yarn' 
-          cache-dependency-path: '**/package.json' 
+          corepack-enable: true
       
       - name: Install Dependencies
         run: yarn install --immutable 

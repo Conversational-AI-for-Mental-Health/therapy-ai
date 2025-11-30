@@ -31,8 +31,7 @@ module.exports = {
   },
 
   testMatch: [
-    '**/tests/*.+(ts|tsx|js)',
-    '**/tests/**/*.+(ts|tsx|js)',
+    '**/__tests__/**/*.+(ts|tsx|js)',
     '**/?(*.)+(spec|test).+(ts|tsx|js)',
   ],
 
@@ -57,8 +56,6 @@ module.exports = {
   coverageReporters: ['text', 'lcov', 'html'],
 
   coverageDirectory: 'coverage',
-
-  testPathIgnorePatterns: ['^<rootDir>/node_modules/'],
 
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
 

@@ -72,9 +72,7 @@ class ConversationAPI {
     }
   }
 
-  /**
-   * Create a new conversation
-   */
+  //new convo
   async createConversation(title?: string): Promise<Conversation> {
     const response = await this.request<Conversation>(`/conversations`, {
       method: 'POST',
@@ -88,9 +86,7 @@ class ConversationAPI {
     return response.data;
   }
 
-  /**
-   * Get all conversations for the user
-   */
+  //all chats
   async getAllConversations(includeArchived = false): Promise<Conversation[]> {
     const response = await this.request<Conversation[]>(
       `/conversations?archived=${includeArchived}`,
@@ -98,10 +94,6 @@ class ConversationAPI {
 
     return response.data || [];
   }
-
-  /**
-   * Get a single conversation with messages
-   */
   async getConversation(
     conversationId: string,
     messageLimit = 50,
@@ -117,9 +109,6 @@ class ConversationAPI {
     return response.data;
   }
 
-  /**
-   * Add a message to a conversation
-   */
   async addMessage(
     conversationId: string,
     sender: 'user' | 'ai',
@@ -165,9 +154,7 @@ class ConversationAPI {
     return response.data;
   }
 
-  /**
-   * Archive a conversation
-   */
+  //archive
   async archiveConversation(conversationId: string): Promise<Conversation> {
     const response = await this.request<Conversation>(
       `/conversations/${conversationId}/archive`,
@@ -183,9 +170,7 @@ class ConversationAPI {
     return response.data;
   }
 
-  /**
-   * Unarchive a conversation
-   */
+  //undo archive (coming soon)
   async unarchiveConversation(conversationId: string): Promise<Conversation> {
     const response = await this.request<Conversation>(
       `/conversations/${conversationId}/unarchive`,
@@ -201,18 +186,14 @@ class ConversationAPI {
     return response.data;
   }
 
-  /**
-   * Delete a conversation
-   */
+  //delete
   async deleteConversation(conversationId: string): Promise<void> {
     await this.request(`/conversations/${conversationId}`, {
       method: 'DELETE',
     });
   }
 
-  /**
-   * Get conversation statistics
-   */
+  //stats?
   async getConversationStats(conversationId: string): Promise<any> {
     const response = await this.request<any>(
       `/conversations/${conversationId}/stats`,

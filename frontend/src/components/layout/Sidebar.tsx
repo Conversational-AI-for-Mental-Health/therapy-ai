@@ -64,7 +64,7 @@ export default function Sidebar({
   };
   return (
     <aside
-      className={`bg-surface overflow-hidden border-r border-color flex-shrink-0 flex flex-col transition-all duration-300 fixed top-0 left-0 bottom-0 z-40 ${isOpen ? 'translate-x-0  sm:w-3/5 md:w-[25%] lg:w-[25%]' : '-translate-x-full md:translate-x-0 md:w-[10%] lg:w-[8%]'
+      className={`bg-surface overflow-hidden border-r border-color flex-shrink-0 flex flex-col transition-all duration-300 fixed top-0 left-0 bottom-0 z-40 ${isOpen ? 'translate-x-0  sm:w-3/5 md:w-[20%] lg:w-[20%]' : '-translate-x-full md:translate-x-0 md:w-[10%] lg:w-[8%]'
         } md:relative lg:relative `}
     >
       <style>{`

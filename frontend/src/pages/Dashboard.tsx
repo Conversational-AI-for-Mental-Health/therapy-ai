@@ -50,7 +50,11 @@ export default function DashboardPage({
 
     // chat history reference
     const chatHistoryRef = useRef<HTMLDivElement>(null);
-
+    const deriveTitleFromMessage = (text: string) => {
+        const maxLength = 30;
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
+    };
     // Socket.io
     useEffect(() => {
         socketService.connect();
@@ -60,19 +64,19 @@ export default function DashboardPage({
             // Check if we need to set up a new conversation state
             if ((!currentChatId || !currentConversation) && data.conversationId) {
                 const newConversationId = data.conversationId;
-
                 // Only create new session if we don't have this ID yet
                 if (currentChatId !== newConversationId) {
                     setCurrentChatId(newConversationId);
-                    // Find the user's first message to generate title
-                    const userMsg = chatHistory.find(m => m.sender === 'user');
-                    const initialTitle = userMsg ? deriveTitleFromMessage(userMsg.text) : 'New Chat';
 
-                     // fetch the full conversation object stub
+                    // Find the user's first message to generate title (backend also does this)
+                    const userMsg = chatHistory.find(m => m.sender === 'user');
+                    const generatedTitle = userMsg ? deriveTitleFromMessage(userMsg.text) : 'New Conversation';
+
+                    // Create conversation stub with generated title - backend has same logic
                     const newConvStub: Conversation = {
                         _id: newConversationId,
                         user_id: '',
-                        title: initialTitle,
+                        title: generatedTitle,
                         started_at: new Date().toISOString(),
                         archived: false,
                         message_count: 2, // User + AI
@@ -84,20 +88,16 @@ export default function DashboardPage({
 
                     const newSession: ChatSession = {
                         id: newConversationId,
-                        title: initialTitle,
+                        title: generatedTitle,
                         timestamp: new Date().toLocaleDateString(),
                         preview: data.text.substring(0, 80),
                     };
-                    
+
                     setChatSessions(prev => [newSession, ...prev]);
-                    if (initialTitle !== 'New Chat') {
-                        conversationAPI.updateTitle(newConversationId, initialTitle)
-                            .catch(err => console.error("Failed to auto-update title", err));
-                    }
                 }
             } else if (currentChatId && data.text) {
-                 //update preview with AI response
-                 updateSessionPreview(currentChatId, data.text);
+                //update preview with AI response
+                updateSessionPreview(currentChatId, data.text);
             }
 
             setChatHistory((prev) => {
@@ -154,7 +154,7 @@ export default function DashboardPage({
                     timestamp: new Date(conv.started_at || conv.createdAt).toLocaleDateString(),
                     preview:
                         conv.message_count > 0
-                            ? 'Open to view messages'
+                            ? 'Open to view messages' // We'll update this when the conversation is loaded
                             : 'No messages yet',
                 }));
 
@@ -177,14 +177,14 @@ export default function DashboardPage({
                     // Load the recent conversation
                     await handleSelectChat(recentConversation._id);
                 } else {
-                    // Start a fresh, lazy conversation (not saved to DB yet)
-                    startNewLazyConversation();
+                    // Start a fresh conversation (not saved to DB yet)
+                    awaitStartConversation();
                 }
 
             } catch (error) {
                 console.error('Failed to initialize conversation:', error);
                 // Fallback to local state
-                startNewLazyConversation();
+                awaitStartConversation();
             } finally {
                 setIsLoadingConversation(false);
             }
@@ -193,7 +193,7 @@ export default function DashboardPage({
         initConversation();
     }, []);
 
-    const startNewLazyConversation = () => {
+    const awaitStartConversation = () => {
         setCurrentConversation(null); // No ID yet
         setCurrentChatId(null);
         setChatHistory([
@@ -265,12 +265,6 @@ export default function DashboardPage({
         });
     };
 
-    const deriveTitleFromMessage = (text: string) => {
-        const maxLength = 30; // Shorten title
-        if (text.length <= maxLength) return text;
-        return text.substring(0, maxLength) + '...';
-    };
-
     const handleChatSubmit = async (text?: string) => {
         if (!text?.trim()) return;
 
@@ -286,7 +280,7 @@ export default function DashboardPage({
         const activeChatId = currentConversation?._id || currentChatId;
 
         if (activeChatId) {
-             updateSessionPreview(activeChatId, text);
+            updateSessionPreview(activeChatId, text);
         }
         const conversationId = activeChatId || null;
 
@@ -305,8 +299,8 @@ export default function DashboardPage({
     };
 
     const handleNewConversation = async () => {
-       // reset state
-       startNewLazyConversation();
+        // reset state
+        awaitStartConversation();
     };
 
     const handleSelectChat = async (id: string) => {
@@ -331,6 +325,12 @@ export default function DashboardPage({
                 ];
 
             setChatHistory(messages);
+
+            // Update the preview to show the latest message
+            const latestMessage = messages[messages.length - 1];
+            if (latestMessage && latestMessage.sender == 'ai') {
+                updateSessionPreview(id, latestMessage.text);
+            }
         } catch (error) {
             console.error('Failed to load conversation:', error);
         } finally {

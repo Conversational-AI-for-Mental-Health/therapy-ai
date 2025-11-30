@@ -28,7 +28,13 @@ jobs:
       - name: Install Dependencies
         run: yarn install --immutable 
       
-      - name: Run Tests
+      - name: Run Frontend Tests and Coverage 
         run: yarn test -- --coverage
+        working-directory: frontend 
+
+      
+      - name: Run Backend Tests
+        run: yarn test 
+        working-directory: backend
         
       - uses: codecov/codecov-action@v4

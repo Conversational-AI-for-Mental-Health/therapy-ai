@@ -49,12 +49,12 @@ export default function Settings({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fadeIn no-scrollbar"
       style={{ background: "rgba(0,0,0,0.35)", backdropFilter: "blur(10px)" }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl rounded-2xl shadow-xl overflow-y-auto max-h-[92vh] bg-white animate-slideUp"
+        className="w-full max-w-xl rounded-2xl shadow-xl overflow-y-auto max-h-[92vh] bg-surface animate-slideUp"
         onClick={(e) => e.stopPropagation()}
         style={{
           transition: "all 0.3s ease",
@@ -66,7 +66,7 @@ export default function Settings({
             className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition"
             onClick={onClose}
           >
-            <X className="text-gray-600" />
+            <X className="text-secondary" />
           </button>
         </div>
 
@@ -97,7 +97,7 @@ export default function Settings({
           />
 
           <h2 className="text-xl font-semibold mt-4">{name}</h2>
-          <p className="text-gray-500 text-sm -mt-1">{email}</p>
+          <p className="text-secondary text-sm -mt-1">{email}</p>
         </div>
 
         {/* Settings Sections */}
@@ -125,7 +125,7 @@ export default function Settings({
               {/* Change Password */}
               <button
                 onClick={() => setShowPasswordModal(true)}
-                className="w-full py-3 bg-gray-100 rounded-xl text-gray-700 font-medium hover:bg-gray-200 transition"
+                className="w-full py-3 bg-gray-100 rounded-xl text-secondary font-medium hover:bg-gray-200 transition"
               >
                 Change Password
               </button>
@@ -133,8 +133,8 @@ export default function Settings({
           </div>
 
           {/* NOTIFICATIONS */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Notifications</h3>
+          <div >
+            <h3 className="text-lg font-semibold mb-4 ">Notifications</h3>
 
             <ToggleRow
               label="Push Notifications"
@@ -145,7 +145,7 @@ export default function Settings({
 
           {/* PRIVACY */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Privacy</h3>
+            <h3 className="text-lg font-semibold mb-4 ">Privacy</h3>
 
             <ToggleRow
               label="Analytics Tracking"

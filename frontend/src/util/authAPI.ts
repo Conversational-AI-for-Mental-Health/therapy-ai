@@ -51,6 +51,27 @@ class AuthAPI {
       };
     }
   }
+  //google or apple login
+  async socialLogin(provider: 'google' | 'apple', profile: any): Promise<AuthResponse> {
+    try {
+      const response = await fetch(`${API_URL}/users/social-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ provider, profile }),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.error('Social login error:', error);
+      return {
+        success: false,
+        error: error.message || 'Social login failed',
+      };
+    }
+  }
 
   logout() {
     localStorage.removeItem('token');

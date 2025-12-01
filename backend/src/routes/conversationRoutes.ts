@@ -109,7 +109,7 @@ router.get(
     try {
       const userId = req.user!.userId;
       const conversationId = req.params.id;
-      const messageLimit = parseInt(req.query.limit as string) || 50;
+      const messageLimit = parseInt(req.query.limit as string) || 100;
 
       const conversation =
         await ConversationService.getConversationWithRecentMessages(

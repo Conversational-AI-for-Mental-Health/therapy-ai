@@ -26,6 +26,49 @@ export class UserService {
     await user.save();
     return user;
   }
+  //from google api
+  static async findOrCreateSocialUser(
+    provider: 'google' | 'apple',
+    profile: {
+      id: string;
+      email: string;
+      name?: string;
+    }
+  ): Promise<IUser> {
+    const query = {
+      $or: [
+        { email: profile.email },
+        { [provider === 'google' ? 'googleId' : 'appleId']: profile.id }
+      ]
+    };
+
+    let user = await User.findOne(query).select('+googleId +appleId');
+    //find the ids if not create
+    if (user) {
+      if (provider === 'google' && !user.googleId) {
+        user.googleId = profile.id;
+        await user.save();
+      } else if (provider === 'apple' && !user.appleId) {
+        user.appleId = profile.id;
+        await user.save();
+      }
+      return user;
+    }
+
+    user = new User({
+      name: profile.name || 'User',
+      email: profile.email,
+      [provider === 'google' ? 'googleId' : 'appleId']: profile.id,
+      preferences: {
+        darkMode: true,
+        language: 'en',
+      },
+      conversations: [],
+    });
+
+    await user.save();
+    return user;
+  }
 
   static async findUserByEmail(email: string): Promise<IUser | null> {
     return User.findOne({ email }).select('+password_hash');

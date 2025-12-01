@@ -9,7 +9,9 @@ export interface IUser extends Document {
   _id: Types.ObjectId;
   name: string;
   email: string;
-  password_hash: string;
+  password_hash?: string;
+  googleId?: string;
+  appleId?: string;
   preferences: IUserPreferences;
   conversations: Types.ObjectId[];
   createdAt: Date;
@@ -40,8 +42,22 @@ const UserSchema = new Schema<IUser>(
     },
     password_hash: {
       type: String,
-      required: [true, 'Password hash is required'],
+      required: function (this: any) {
+        return !this.googleId && !this.appleId;
+      },
       minlength: [60, 'Password hash must be at least 60 characters (bcrypt)'],
+      select: false,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      select: false,
+    },
+    appleId: {
+      type: String,
+      unique: true,
+      sparse: true,
       select: false,
     },
     preferences: {

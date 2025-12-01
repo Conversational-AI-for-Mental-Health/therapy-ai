@@ -9,6 +9,7 @@ interface AppConfig {
     CORS_ORIGIN : string;
     MONGODB_URI : string;
     AI_SERVICE_URL : string;
+    JWT_SECRET: string;
 }
 
 const config : AppConfig = {
@@ -16,7 +17,8 @@ const config : AppConfig = {
     NODE_ENV: process.env.NODE_ENV || 'development',
     CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:8080',
     MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/therapy-ai',
-    AI_SERVICE_URL: process.env.AI_SERVICE_URL || 'http://localhost:5000'
+    AI_SERVICE_URL: process.env.AI_SERVICE_URL || 'http://localhost:5000',
+    JWT_SECRET: process.env.JWT_SECRET || 'needs key'
 };
 
 if (isNaN(config.PORT)) {

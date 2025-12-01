@@ -12,7 +12,6 @@ export class ConversationService {
       title,
       started_at: new Date(),
       archived: false,
-      deleted: false,
       messages: [],
       message_count: 0,
     });
@@ -30,7 +29,6 @@ export class ConversationService {
     return Conversation.findOne({
       _id: conversationId,
       user_id: userId,
-      deleted: false,
     });
   }
 
@@ -42,7 +40,6 @@ export class ConversationService {
     const conversation = await Conversation.findOne({
       _id: conversationId,
       user_id: userId,
-      deleted: false,
     });
 
     if (!conversation) return null;
@@ -61,7 +58,6 @@ export class ConversationService {
   ): Promise<IConversation[]> {
     const query: any = {
       user_id: userId,
-      deleted: false,
     };
 
     if (!includeArchived) {
@@ -129,11 +125,7 @@ export class ConversationService {
     conversationId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
   ): Promise<IConversation | null> {
-    return Conversation.findOneAndUpdate(
-      { _id: conversationId, user_id: userId },
-      { $set: { deleted: true, ended_at: new Date() } },
-      { new: true },
-    );
+    return Conversation.findOneAndDelete({ _id: conversationId, user_id: userId });
   }
 
   static async getConversationStats(

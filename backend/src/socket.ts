@@ -4,6 +4,7 @@ import { Types } from 'mongoose';
 import { Conversation } from './models';
 import { IMessage } from './models/Message';
 import config from './config';
+import { UserService } from './services/userService';
 
 
 const AI_API_URL = `${config.AI_SERVICE_URL}/chat`;
@@ -26,29 +27,53 @@ const getUserIdFromSocket = (socket: Socket) => {
   return '507f1f77bcf86cd799439011';
 };
 
-const handleUserMessage = async (socket: Socket, text: string) => {
+const handleUserMessage = async (
+  socket: Socket,
+  payload: { text: string; conversationId?: string },
+) => {
+  const { text, conversationId } = payload;
   console.log(`[Socket] Received message: ${text}`);
 
   try {
     const userId = getUserIdFromSocket(socket);
 
-    // 1. Find conversation or create a new one
-    let conversation = await Conversation.findOne({
-      user_id: userId,
-      archived: false,
-      deleted: false,
+    // find convo
+    let conversation = null;
+
+    if (conversationId && Types.ObjectId.isValid(conversationId)) {
+      conversation = await Conversation.findOne({
+        _id: conversationId,
+        user_id: userId,
+        archived: false,
+      });
+    }
+    const historyForAI = conversation
+      ? conversation.messages.map((msg) => ({
+          role: msg.sender === 'ai' ? 'assistant' : 'user',
+          content: msg.text,
+        }))
+      : [];
+    const aiResponse = await axios.post(AI_API_URL, {
+      message: text,
+      conversation_history: historyForAI,
+      max_tokens: 300,
+      temperature: 0.7,
     });
 
+    const aiText = aiResponse.data.response as string;
+    const formattedAiText = aiText.trim().replace(/\n{3,}/g, '\n\n');
+    let isNewConversation = false;
     if (!conversation) {
+      isNewConversation = true;
+      // Generate title from user's message
+      const titleFromMessage = text.length > 30 ? text.substring(0, 30) + '...' : text;
       conversation = new Conversation({
         user_id: userId,
-        title: 'New Conversation',
+        title: titleFromMessage,
         messages: [],
         message_count: 0,
       });
     }
-
-    // 2. Create and save user message (Feature 3: Timestamping)
     const userMessage: IMessage = {
       sender: 'user',
       text,
@@ -62,27 +87,9 @@ const handleUserMessage = async (socket: Socket, text: string) => {
     } as any;
     conversation.messages.push(userMessage);
 
-    // 3. Prepare history for AI service (Feature 1: State)
-    // AI service expects { role, content } where role = user|assistant
-    const historyForAI = conversation.messages.map((msg) => ({
-      role: msg.sender === 'ai' ? 'assistant' : 'user',
-      content: msg.text,
-    }));
-
-    // 4. Call Python AI service
-    const aiResponse = await axios.post(AI_API_URL, {
-      message: text,
-      conversation_history: historyForAI.slice(0, -1), // Send all *except* the new message
-      max_tokens: 300,
-      temperature: 0.7,
-    });
-
-    const aiText = aiResponse.data.response as string;
-
-    // 5. Create and save bot message (Features 2 & 3)
     const botMessage: IMessage = {
       sender: 'ai',
-      text: aiText,
+      text: formattedAiText,
       timestamp: new Date(),
       metadata: {
         liked: false,
@@ -92,12 +99,22 @@ const handleUserMessage = async (socket: Socket, text: string) => {
       },
     } as any;
     conversation.messages.push(botMessage);
+    
     conversation.message_count = conversation.messages.length;
     conversation.last_message_at = new Date();
-    await conversation.save(); // Save full conversation
+    await conversation.save();
 
-    // 6. Emit *only* the new bot message
-    socket.emit('botMessage', botMessage);
+    // cponersation added to user
+    if (isNewConversation) {
+        await UserService.addConversationToUser(userId, conversation._id);
+    }
+
+    // emit bot message to update state
+    const responsePayload = {
+      ...botMessage,
+      conversationId: conversation._id
+    };
+    socket.emit('botMessage', responsePayload);
   } catch (error:any) {
     console.error('[Socket] Error handling message:', error?.message);
     socket.emit('botMessage', {
@@ -112,15 +129,8 @@ export const attachSocketHandlers = (io: SocketIOServer) => {
   io.on('connection', (socket) => {
     console.log(`[Socket] User connected: ${socket.id}`);
 
-    // Send a welcome message
-    socket.emit('botMessage', {
-      role: 'assistant',
-      content: 'Welcome! How can I help you today?',
-      timestamp: new Date(),
-    });
-
-    socket.on('userMessage', async (msg: { text: string }) => {
-      await handleUserMessage(socket, msg.text);
+    socket.on('userMessage', async (msg: { text: string; conversationId?: string }) => {
+      await handleUserMessage(socket, msg);
     });
 
     socket.on('disconnect', () => {

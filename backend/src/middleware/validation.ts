@@ -27,14 +27,37 @@ export const validateObjectId = (paramName: string = 'id') => {
   };
 };
 
-// Placeholder authentication - replace with JWT later
+import jwt from 'jsonwebtoken';
+import config from '../config';
+
+// JWT verification
 export const authenticateUser = (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  // TODO: Implement JWT verification
-  // For now, mock authenticated user
-  req.user = { userId: '507f1f77bcf86cd799439011' };
-  next();
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized: No token provided',
+    });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, config.JWT_SECRET) as {
+      userId: string;
+      email: string;
+    };
+    req.user = { userId: decoded.userId };
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized: Invalid token',
+    });
+  }
 };

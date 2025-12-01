@@ -50,6 +50,18 @@ export default function DashboardPage({
 
     // chat history reference
     const chatHistoryRef = useRef<HTMLDivElement>(null);
+
+    // Refs to access latest state in socket callbacks
+    const currentChatIdRef = useRef(currentChatId);
+    const currentConversationRef = useRef(currentConversation);
+    const chatHistoryStateRef = useRef(chatHistory);
+
+    useEffect(() => {
+        currentChatIdRef.current = currentChatId;
+        currentConversationRef.current = currentConversation;
+        chatHistoryStateRef.current = chatHistory;
+    }, [currentChatId, currentConversation, chatHistory]);
+
     const deriveTitleFromMessage = (text: string) => {
         const maxLength = 20;
         if (text.length <= maxLength) return text;
@@ -61,15 +73,20 @@ export default function DashboardPage({
         socketService.onAIMessage((data) => {
             console.log('Received AI message:', data);
 
+            const currentId = currentChatIdRef.current;
+            const currentConv = currentConversationRef.current;
+            const history = chatHistoryStateRef.current;
+
             // Check if we need to set up a new conversation state
-            if ((!currentChatId || !currentConversation) && data.conversationId) {
+            if ((!currentId || !currentConv) && data.conversationId) {
                 const newConversationId = data.conversationId;
                 // Only create new session if we don't have this ID yet
-                if (currentChatId !== newConversationId) {
+                if (currentId !== newConversationId) {
                     setCurrentChatId(newConversationId);
+                    currentChatIdRef.current = newConversationId;
 
                     // Find the user's first message to generate title (backend also does this)
-                    const userMsg = chatHistory.find(m => m.sender === 'user');
+                    const userMsg = history.find(m => m.sender === 'user');
                     const generatedTitle = userMsg ? deriveTitleFromMessage(userMsg.text) : 'New Conversation';
 
                     // Create conversation stub with generated title - backend has same logic
@@ -93,11 +110,14 @@ export default function DashboardPage({
                         preview: data.text.substring(0, 80),
                     };
 
-                    setChatSessions(prev => [newSession, ...prev]);
+                    setChatSessions(prev => {
+                        if (prev.some(s => s.id === newConversationId)) return prev;
+                        return [newSession, ...prev];
+                    });
                 }
-            } else if (currentChatId && data.text) {
+            } else if (currentId && data.text) {
                 //update preview with AI response
-                updateSessionPreview(currentChatId, data.text);
+                updateSessionPreview(currentId, data.text);
             }
 
             setChatHistory((prev) => {

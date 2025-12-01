@@ -48,17 +48,17 @@ Remember to be supportive, validating, and encouraging while maintaining safety.
 
 
 def load_model():
-    """Load Qwen 2.5 1.5B Instruct model into memory at startup"""
+    """Load Qwen 2.5 0.5B Instruct model into memory at startup"""
     global model, tokenizer
 
     logger.info("=" * 60)
-    logger.info("Loading Qwen 2.5 1.5B Instruct model locally...")
+    logger.info("Loading Qwen 2.5 0.5B Instruct model locally...")
     logger.info("=" * 60)
 
-    model_name = "Qwen/Qwen2.5-1.5B-Instruct"
+    model_name = "Qwen/Qwen2.5-0.5B-Instruct"
 
     logger.info(f"Model: {model_name}")
-    logger.info("This may take a few minutes on first run (~3GB download)...")
+    logger.info("This may take a few minutes on first run (~1GB download)...")
 
     if torch.cuda.is_available() and CUDA_DEVICE is not None:
         device = f"cuda:{CUDA_DEVICE}"
@@ -103,7 +103,7 @@ def load_model():
     logger.info("=" * 60)
     logger.info("✓ MODEL LOADED SUCCESSFULLY AND READY FOR INFERENCE!")
     logger.info(f"✓ Device: {device}")
-    logger.info(f"✓ Model parameters: ~1.5 billion")
+    logger.info(f"✓ Model parameters: ~0.5 billion")
     logger.info(f"✓ Model is now in memory and ready to serve requests")
     logger.info("=" * 60)
 
@@ -169,7 +169,7 @@ def health_check():
     return jsonify({
         "status": "healthy",
         "model_loaded": model is not None,
-        "model": "Qwen 2.5 1.5B Instruct",
+        "model": "Qwen 2.5 0.5B Instruct",
         "device": device_info,
         "cuda_device": CUDA_DEVICE
     })
@@ -187,7 +187,7 @@ def chat():
             {"role": "user", "content": "Previous message"},
             {"role": "assistant", "content": "Previous response"}
         ],
-        "max_tokens": 512,  # Optional, default 512
+        "max_tokens": 300,  # Optional, default 512
         "temperature": 0.7  # Optional, default 0.7
     }
     """
@@ -207,7 +207,7 @@ def chat():
 
         user_message = data['message']
         conversation_history = data.get('conversation_history', None)
-        max_tokens = data.get('max_tokens', 512)
+        max_tokens = data.get('max_tokens', 300)
         temperature = data.get('temperature', 0.7)
 
         if not isinstance(user_message, str) or len(user_message.strip()) == 0:

@@ -8,11 +8,11 @@ export interface IConversation extends Document {
   started_at: Date;
   ended_at?: Date;
   archived: boolean;
-  deleted: boolean;
   messages: IMessage[];
   message_count: number;
   last_message_at?: Date;
   addMessage: (sender: 'user' | 'ai', text: string) => void;
+  getRecentMessages: (limit?: number) => IMessage[];
 }
 
 const ConversationSchema = new Schema<IConversation>(
@@ -28,7 +28,7 @@ const ConversationSchema = new Schema<IConversation>(
       required: true,
       trim: true,
       minlength: 1,
-      maxlength: 200,
+      maxlength: 50,
       default: 'New Conversation',
     },
     started_at: {
@@ -40,10 +40,6 @@ const ConversationSchema = new Schema<IConversation>(
       type: Date,
     },
     archived: {
-      type: Boolean,
-      default: false,
-    },
-    deleted: {
       type: Boolean,
       default: false,
     },
@@ -82,7 +78,11 @@ ConversationSchema.methods.addMessage = function (
   this.last_message_at = timestamp;
 };
 
-ConversationSchema.index({ user_id: 1, archived: 1, deleted: 1 });
+ConversationSchema.methods.getRecentMessages = function (limit: number = 50) {
+  return this.messages.slice(-limit);
+};
+
+ConversationSchema.index({ user_id: 1, archived: 1 });
 ConversationSchema.index({ last_message_at: -1 });
 
 export const Conversation = model<IConversation>(

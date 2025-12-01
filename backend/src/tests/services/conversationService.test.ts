@@ -50,7 +50,7 @@ describe('ConversationService', () => {
       expect(conversations[0].messages).toBeUndefined();
     });
 
-    it('should exclude deleted conversations', async () => {
+    it('should delete conversation permanently', async () => {
       const conv1 = await ConversationService.createConversation(userId);
       const conv2 = await ConversationService.createConversation(userId);
 

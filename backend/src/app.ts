@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { isDatabaseConnected } from './config/database';
 import apiRouter from './routes/api';
 import conversationRoutes from './routes/conversationRoutes';
+import userRoutes from './routes/userRoutes';
 import config from './config';
 
 export const createApp = () => {
@@ -27,6 +28,7 @@ export const createApp = () => {
   });
 
   // Routes (conversation routes first to avoid overlap with apiRouter)
+  app.use('/api/users', userRoutes);
   app.use('/api/conversations', conversationRoutes);
   app.use('/api', apiRouter);
 

@@ -20,10 +20,9 @@ export const moodOptions = [
 export const reviews = [
   {
     text: "Being able to talk to the AI whenever I feel overwhelmed has been a game-changer. It's incredibly helpful for processing my thoughts.",
-    author: "Jamie R.",
-    role: "Beta Tester",
+    author: "Jane S",
+    role: "Student",
     imageUrl: "https://images.unsplash.com/photo-1694299352873-0c29d862e87a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3b21hbiUyMHNtaWxpbmclMjBwb3J0cmFpdHxlbnwxfHx8fDE3NjIzMjE2NjR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-
   },
   {
     text: "The journaling feature has helped me identify patterns in my mood that I never noticed before. Highly recommend!",
@@ -37,7 +36,6 @@ export const reviews = [
     author: "Alex K.",
     role: "Mental Health Advocate",
     imageUrl: "https://images.unsplash.com/photo-1672685667592-0392f458f46f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYW4lMjBwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdHxlbnwxfHx8fDE3NjIzNDE0ODJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-
   },
   {
     text: "The AI insights are surprisingly thoughtful. It's like having a therapist available 24/7.",

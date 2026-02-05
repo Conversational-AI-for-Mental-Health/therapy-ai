@@ -27,7 +27,7 @@ def test_single_message():
     response = requests.post(f"{BASE_URL}/chat", json=data)
     print(f"Status: {response.status_code}")
     result = response.json()
-    print(f"Response: {result['response']}\n")
+
 
 def test_conversation():
     """Test multi-turn conversation"""
@@ -49,7 +49,7 @@ def test_conversation():
     response = requests.post(f"{BASE_URL}/chat", json=data)
     print(f"Status: {response.status_code}")
     result = response.json()
-    print(f"Response: {result['response']}\n")
+
 
 def interactive_chat():
     """Interactive chat session"""

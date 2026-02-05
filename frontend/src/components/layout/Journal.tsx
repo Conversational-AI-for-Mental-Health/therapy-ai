@@ -33,7 +33,7 @@ export default function Journal({
             text: 'Felt pretty relaxed today. Worked on a new feature and it went smoothly.',
         },
     ]);
-    // Insights Modal State
+    // Insights State
     const [showInsightsModal, setShowInsightsModal] = useState(false);
     const [insightsContent, setInsightsContent] = useState('');
     const [isLoadingInsights, setIsLoadingInsights] = useState(false);
@@ -83,9 +83,9 @@ export default function Journal({
         setInsightsContent(insights);
         setIsLoadingInsights(false);
     };
+
     return (
-        <div className="overflow-y-auto">
-            {/* New Entry Section */}
+        <div className="h-full overflow-y-auto no-scrollbar">
             <div className="bg-surface rounded-2xl shadow-lg" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
                 <h2 className="text-h2">How are you feeling today?</h2>
                 <p className="text-body-lg text-secondary" style={{ marginTop: 'var(--space-xxs)', marginBottom: 'var(--space-md)' }}>
@@ -121,15 +121,43 @@ export default function Journal({
                 <div className="flex justify-end" style={{ marginTop: 'var(--space-sm)' }}>
                     <button
                         onClick={handleSaveEntry}
-                        className="bg-primary text-white text-body rounded-lg hover:opacity-90 transition"
+                        className="gradient-bg-primary text-white text-body rounded-lg hover:opacity-90 transition"
                         style={{ height: '44px', padding: '0 var(--space-md)' }}
                     >
                         Save Entry
                     </button>
                 </div>
             </div>
-
-            {/* Recent Entries Section */}
+            
+            {showInsightsModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+                    <div className="bg-surface rounded-2xl shadow-xl max-w-lg w-full" style={{ padding: 'var(--space-md)' }}>
+                        <h3 className="text-h2 text-surface-light" style={{ marginBottom: 'var(--space-sm)' }}>✨ Reflection on your day</h3>
+                        <div className="text-secondary" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                            {isLoadingInsights ? (
+                                <div className="flex justify-center">
+                                    <div className="lds-ellipsis">
+                                        <div></div>
+                                        <div></div>
+                                        <div></div>
+                                        <div></div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-body">{insightsContent}</p>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => setShowInsightsModal(false)}
+                            className="w-full gradient-bg-primary text-white text-body rounded-lg hover:opacity-90 transition"
+                            style={{ marginTop: 'var(--space-md)', height: '44px' }}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+            {/* Recent Entries */}
             <JournalView
                 journalEntries={journalEntries}
                 onUpdateEntry={handleUpdateEntry}

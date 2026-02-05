@@ -1,17 +1,21 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import React, { FC } from "react";
 import { X, Menu } from 'lucide-react';
 
 import { motion } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-import { Screens, DashboardTab, ChatMessage } from '@/util/types/index';
+import { Screens, ChatMessage } from '@/util/types/index';
 import DashboardPage from "./pages/Dashboard";
 import Story from "./pages/OurStory";
+import { callBackendAPI } from "./util/api";
+import lightLogo from "./images/lightT.png";
+import darkLogo from "./images/darkT.png";
 
 /**
  * App component serves as the main container and entry point for all application routes and UI.
@@ -19,11 +23,44 @@ import Story from "./pages/OurStory";
  */
 const App: FC = () => {
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const pathToScreen = useMemo(() => (path: string): Screens => {
+    const normalized = path.toLowerCase();
+    if (normalized.startsWith('/dashboard')) return 'dashboard';
+    if (normalized.startsWith('/signup')) return 'signup';
+    if (normalized.startsWith('/login')) return 'login';
+    if (normalized.startsWith('/privacy')) return 'privacy';
+    if (normalized.startsWith('/story')) return 'story';
+    if (normalized.startsWith('/contact')) return 'contact';
+    return 'landing';
+  }, []);
+
+  const screenToPath = (screen: Screens) => {
+    switch (screen) {
+      case 'dashboard':
+        return '/dashboard';
+      case 'signup':
+        return '/signup';
+      case 'login':
+        return '/login';
+      case 'privacy':
+        return '/privacy';
+      case 'story':
+        return '/story';
+      case 'contact':
+        return '/contact';
+      default:
+        return '/';
+    }
+  };
+
   //Navigation and UI state management
-  const [currentScreen, setCurrentScreen] = useState<Screens>('landing');
-  const [currentDashboardTab, setCurrentDashboardTab] = useState<DashboardTab>('chat');
+  const [currentScreen, setCurrentScreen] = useState<Screens>(() =>
+    pathToScreen(window.location.pathname),
+  );
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
@@ -31,7 +68,7 @@ const App: FC = () => {
   ]);
   const [chatInput, setChatInput] = useState('');
 
-  //Dark Mode toggle
+  //darkmode
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -40,11 +77,18 @@ const App: FC = () => {
     }
   }, [isDarkMode]);
 
-  // Scroll to top on screen change
+  //Scroll to top
   useEffect(() => {
     window.scrollTo(0, 0);
     setMobileMenuOpen(false);
   }, [currentScreen]);
+
+  useEffect(() => {
+    const screen = pathToScreen(location.pathname);
+    if (screen !== currentScreen) {
+      setCurrentScreen(screen);
+    }
+  }, [location.pathname, currentScreen, pathToScreen]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -57,22 +101,48 @@ const App: FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleChatSubmit = async (e: React.FormEvent) => { }
+  const navigateTo = (screen: Screens) => {
+    setCurrentScreen(screen);
+    const nextPath = screenToPath(screen);
+    if (location.pathname !== nextPath) {
+      navigate(nextPath);
+    }
+  };
+
+  const handleChatSubmit = async (e?: React.FormEvent, promptText?: string) => {
+    if (e) e.preventDefault();
+    const text = promptText || chatInput.trim();
+    if (!text) return;
+
+    setChatHistory([...chatHistory, { sender: 'user', text }, { sender: 'ai', text: '', thinking: true }]);
+    setChatInput('');
+
+    const systemInstruction =
+      'You are an empathetic AI companion named Kai, designed to provide supportive and gentle mental health counseling. Listen carefully, validate feelings, and ask open-ended questions to help the user explore their thoughts. Do not give medical advice. Keep your responses concise and conversational.';
+    const response = await callBackendAPI(text, systemInstruction);
+
+    setChatHistory((prev) => {
+      const newHistory = [...prev];
+      newHistory.pop();
+      newHistory.push({ sender: 'ai', text: response });
+      return newHistory;
+    });
+  };
 
   const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'contact':
-        return <Contact onNavigate={(s) => setCurrentScreen(s as Screens)}/>;
+        return <Contact onNavigate={(s) => navigateTo(s as Screens)}/>;
       case 'privacy':
         return <PrivacyPolicy />;
       case 'story':
         return <Story/>
       case 'landing':
-        return <LandingPage onNavigate={(s) => setCurrentScreen(s as Screens)} handleChatSubmit={handleChatSubmit} chatInput={chatInput} setChatInput={setChatInput} />;
+        return <LandingPage onNavigate={(s) => navigateTo(s as Screens)} handleChatSubmit={handleChatSubmit} chatInput={chatInput} setChatInput={setChatInput} />;
       default:
         return (
           <LandingPage
-            onNavigate={(s) => setCurrentScreen(s as Screens)}
+            onNavigate={(s) => navigateTo(s as Screens)}
             handleChatSubmit={handleChatSubmit}
             chatInput={chatInput}
             setChatInput={setChatInput}
@@ -83,33 +153,49 @@ const App: FC = () => {
   if(currentScreen === "signup") {
     return (
       <SignupPage
-        onNavigate={setCurrentScreen}
+        onNavigate={navigateTo}
       />
     )
   }
   if(currentScreen === "login") {
     return(
       <LoginPage
-        onNavigate={setCurrentScreen}
+        onNavigate={navigateTo}
       />
     )
   }
   if(currentScreen === "dashboard") {
     return(
       <DashboardPage
-        onNavigate={setCurrentScreen}
+        onNavigate={navigateTo}
         isDarkMode={isDarkMode}
         setIsDarkMode={setIsDarkMode}
       />
     )
   }
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+
   return (
     <div>
       <header className="bg-surface/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
         <nav className="container mx-auto flex justify-between items-center px-4 sm:px-6 md:px-8" style={{ padding: 'var(--space-sm) var(--space-md)' }}>
           <a href="/" className="flex items-center text-primary" style={{ gap: 'var(--space-xs)', fontSize: 'var(--font-h3)', fontWeight: 'var(--font-weight-bold)' }}>
-            <span>🧠</span>
-            <span>Therapy AI</span>
+            <img
+              src={isDarkMode ? darkLogo : lightLogo}
+              alt="Therapy AI"
+              style={{ height: '7vh', width: 'auto', objectFit: 'contain' }}
+            />     
           </a>
 
           {/* Desktop Navigation Links */}
@@ -132,14 +218,14 @@ const App: FC = () => {
               <span>{isDarkMode ? '☀️' : '🌙'}</span>
             </button>
             <button
-              onClick={() => setCurrentScreen('login')}
+              onClick={() => navigateTo('login')}
               className="text-secondary hover:text-primary transition text-body hidden lg:block"
             >
               Log In
             </button>
             <button
-              onClick={() => setCurrentScreen('signup')}
-              className="bg-primary text-white rounded-full hover:opacity-90 transition text-body hidden lg:block"
+              onClick={() => navigateTo('signup')}
+              className="gradient-bg-primary text-white rounded-full hover:opacity-90 transition text-body hidden lg:block"
               style={{ padding: 'var(--space-xs) var(--space-md)' }}
             >
               Sign Up
@@ -189,8 +275,11 @@ const App: FC = () => {
 
           {/* Logo */}
           <div className="flex items-center justify-center" style={{ marginBottom: 'var(--space-xl)', gap: 'var(--space-xs)' }}>
-            <span style={{ fontSize: 'var(--space-xl)' }}>🧠</span>
-            <span className="text-h2 text-primary">Therapy AI</span>
+            <img
+              src={isDarkMode ? darkLogo : lightLogo}
+              alt="Therapy AI"
+              style={{ height: '20vh', width: 'auto', objectFit: 'contain' }}
+            />
           </div>
 
           {/* Navigation Links */}
@@ -216,7 +305,7 @@ const App: FC = () => {
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
-                setCurrentScreen('login');
+                navigateTo('login');
               }}
               className="w-full text-primary rounded-full hover:opacity-90 transition text-body-lg border-2 border-primary bg-primary/10"
               style={{
@@ -228,7 +317,7 @@ const App: FC = () => {
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
-                setCurrentScreen('signup');
+                navigateTo('signup');
               }}
               className="w-full gradient-bg-primary text-white rounded-full hover:opacity-90 transition-all hover:shadow-xl text-body-lg"
               style={{
@@ -245,15 +334,16 @@ const App: FC = () => {
       {renderCurrentScreen()}
 
       <footer className="bg-surface border-t border-color px-4 sm:px-6 md:px-8" style={{ padding: 'var(--space-xxl) 0' }}>
-        <div className="container mx-auto" style={{ padding: '0 var(--space-md)' }}>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="container mx-auto flex-col items-center" style={{ padding: '0 var(--space-md)' }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             {/* Brand Section */}
             <div>
               <div className="flex items-center mb-4" style={{ gap: 'var(--space-xs)' }}>
-                <span style={{ fontSize: 'var(--space-lg)' }}>🧠</span>
-                <span className="text-primary" style={{ fontWeight: 'var(--font-weight-bold)', fontSize: 'var(--font-h3)' }}>
-                  Therapy AI
-                </span>
+                <img
+                  src={isDarkMode ? darkLogo : lightLogo}
+                  alt="Therapy AI"
+                  style={{ height: '10vh', width: 'auto', objectFit: 'contain' }}
+                />
               </div>
               <p className="text-body-sm text-secondary" style={{ lineHeight: '1.6' }}>
                 Your private space for mental wellness and personal growth, available 24/7.
@@ -266,10 +356,10 @@ const App: FC = () => {
                 Company
               </h3>
               <div className="flex flex-col gap-2">
-                <button onClick={() => setCurrentScreen('story')} className="text-body-sm text-secondary hover:text-primary transition text-left">
+                <button onClick={() => navigateTo('story')} className="text-body-sm text-secondary hover:text-primary transition text-left">
                   Our Story
                 </button>
-                <button onClick={() => setCurrentScreen('contact')} className="text-body-sm text-secondary hover:text-primary transition text-left">
+                <button onClick={() => navigateTo('contact')} className="text-body-sm text-secondary hover:text-primary transition text-left">
                   Contact Us
                 </button>
                 <a href="#" className="text-body-sm text-secondary hover:text-primary transition">
@@ -305,10 +395,11 @@ const App: FC = () => {
                 Legal
               </h3>
               <div className="flex flex-col gap-2">
-                <button onClick={() => setCurrentScreen('privacy')} className="text-body-sm text-secondary hover:text-primary transition text-left">
+                <button onClick={() => navigateTo('privacy')} className="text-body-sm text-secondary hover:text-primary transition text-left">
                   Privacy Policy
                 </button>
-                <button onClick={() => setCurrentScreen('terms')} className="text-body-sm text-secondary hover:text-primary transition text-left">
+                {/* Needs to be updated */}
+                <button onClick={() => navigateTo('privacy')} className="text-body-sm text-secondary hover:text-primary transition text-left">
                   Terms & Conditions
                 </button>
                 <a href="#" className="text-body-sm text-secondary hover:text-primary transition">

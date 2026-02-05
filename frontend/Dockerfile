@@ -1,5 +1,7 @@
 # Dependency Installation & Workspace Linking
 FROM node:20-alpine AS installer
+# Enable Corepack to use the Latest Yarn version in packageManager
+RUN corepack enable
 WORKDIR /app
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY backend/ ./backend

@@ -13,10 +13,11 @@ export type ChatMessage = {
   sender: 'user' | 'ai';
   text: string;
   thinking?: boolean;
+  feedback?: 'positive' | 'negative' | null;
 };
 
 export type ChatSession = {
-  id: number;
+  id: string;
   title: string;
   timestamp: string;
   preview: string;
@@ -55,21 +56,21 @@ export interface DashboardPageProps{
   setIsDarkMode: (value: boolean) => void;
 };
 
-export type FeedbackProps = {
-  isOpen: boolean;
-  onClose: () => void;
-};
-
 export interface SidebarProps{
   isOpen: boolean;
   onClose: () => void;
   onShowSettings: () => void;
   onNewConversation: () => void;
-  chatSessions: ChatSession[]; 
-  currentChatId: number;      
-  onSelectChat: (id: number) => void;
+  chatSessions: ChatSession[];
+  currentChatId: string | null;
+  onSelectChat: (id: string) => void;
   onNavigate: (screen: Screens) => void;
-  showFeedback: ()=> void;
+  onRenameChat: (id: string, title: string) => void;
+  onDeleteChat: (id: string) => void;
+  user?: {
+    name: string;
+    email: string;
+  };
 };
 
 export type MoodOption = {
@@ -96,6 +97,7 @@ export interface ChatProps {
   onChatInputChange: (value: string) => void;
   handleQuickPrompt: (text?: string) => void;
   handleSubmitForm: (e: React.FormEvent<HTMLFormElement>) => void;
+  handleMessageFeedback: (index: number, feedbackType: 'positive' | 'negative') => void;
 };
 
 export interface SettingsDialogProps {
@@ -108,4 +110,8 @@ export interface SettingsDialogProps {
   setPersonalizedAds: (value: boolean) => void;
   pushNotifications: boolean;
   setPushNotifications: (value: boolean) => void;
+  user?: {
+    name: string;
+    email: string;
+  };
 };

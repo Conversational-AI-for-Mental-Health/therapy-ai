@@ -14,39 +14,21 @@ export default function Settings({
   setPushNotifications,
   user
 }: SettingsDialogProps) {
-  if (!isOpen) return null;
-
   /* dynamic UI state */
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
 
-  const [name, setName] = useState(user?.name ? user.name.split(' ')[0] : 'Bhuwan');
-  const [email, setEmail] = useState(user?.email || 'bhuwan@mindguideai');
-  const [username, setUsername] = useState('userName mock');
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'B';
+  const userName = user?.name ? user.name.split(' ')[0] : 'Bhuwan';
+  const userEmail = user?.email || 'bhuwan@mindguideai';
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
-  //photo upload
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setProfilePhoto(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
+  if (!isOpen) return null;
 
   /* handle delete account */
   const handleDeleteAccount = () => {
     if (confirm("Are you sure? This cannot be undone.")) {
       alert("Account deleted (UI only).");
     }
-  };
-
-  /* toggle helper */
-  const toggle = (value: boolean, setter: (v: boolean) => void) => {
-    setter(!value);
   };
 
   return (
@@ -65,7 +47,7 @@ export default function Settings({
         {/* Close Button */}
         <div className="flex justify-end p-4">
           <button
-            className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition"
+            className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-primary/10 transition"
             onClick={onClose}
           >
             <X className="text-secondary" />
@@ -78,8 +60,8 @@ export default function Settings({
             <div className="relative cursor-pointer">
               <img
                 src={
-                  profilePhoto ||
-                  `https://ui-avatars.com/api/?name=${user?.name ? user.name.charAt(0).toUpperCase() : 'B'}&background=6366F1&color=fff`
+
+                  `https://ui-avatars.com/api/?name=${userName ? userName.charAt(0).toUpperCase() : 'B'}&background=6366F1&color=fff`
                 }
                 alt="profile"
                 className="w-24 h-24 rounded-full object-cover shadow"
@@ -95,43 +77,23 @@ export default function Settings({
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={handlePhotoChange}
           />
 
-          <h2 className="text-xl font-semibold mt-4">{name}</h2>
-          <p className="text-secondary text-sm -mt-1">{email}</p>
+          <h2 className="text-xl font-semibold mt-4">{userName}</h2>
+          <p className="text-secondary text-sm -mt-1">{userEmail}</p>
         </div>
 
         {/* Settings Sections */}
         <div className="px-8 pb-10 space-y-10">
-
-          {/* ACCOUNT */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Account</h3>
 
-            <div className="space-y-4">
-
-              {/* Name */}
-              <EditableRow label="Name" value={name} onChange={setName} />
-
-              {/* Email */}
-              <EditableRow label="Email" value={email} onChange={setEmail} />
-
-              {/* Username */}
-              <EditableRow
-                label="Username"
-                value={username}
-                onChange={setUsername}
-              />
-
-              {/* Change Password */}
-              <button
-                onClick={() => setShowPasswordModal(true)}
-                className="w-full py-3 bg-gray-100 rounded-xl text-secondary font-medium hover:bg-gray-200 transition"
-              >
-                Change Password
-              </button>
-            </div>
+            <button
+              onClick={() => setShowPasswordModal(true)}
+              className="w-full py-3 bg-surface-base rounded-xl text-secondary font-medium hover:bg-primary/10 transition"
+            >
+              Change Password
+            </button>
           </div>
 
           {/* NOTIFICATIONS */}
@@ -219,12 +181,12 @@ function EditableRow({
 }) {
   return (
     <div className="flex flex-col">
-      <span className="text-gray-700 text-sm mb-1">{label}</span>
+      <span className="text-secondary text-sm mb-1">{label}</span>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="border border-gray-300 rounded-xl px-4 py-2 text-gray-800 focus:ring-2 focus:ring-primary outline-none transition"
+        className="border border-color rounded-xl px-4 py-2 bg-background text-foreground focus:ring-2 focus:ring-primary outline-none transition"
       />
     </div>
   );
@@ -241,15 +203,14 @@ function ToggleRow({
 }) {
   return (
     <div className="flex items-center justify-between py-2">
-      <span className="text-gray-700">{label}</span>
+      <span className="text-secondary">{label}</span>
       <button
         onClick={() => setter(!value)}
-        className={`relative w-12 h-6 rounded-full transition ${
-          value ? "bg-primary" : "bg-gray-300"
-        }`}
+        className={`relative w-12 h-6 rounded-full transition ${value ? "bg-primary" : "bg-muted"
+          }`}
       >
         <div
-          className="absolute top-1 left-1 bg-white w-4 h-4 rounded-full shadow transition"
+          className="absolute top-1 left-1 bg-background w-4 h-4 rounded-full shadow transition"
           style={{
             transform: value ? "translateX(24px)" : "translateX(0px)",
           }}
@@ -269,7 +230,7 @@ function PasswordModal({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
-        className="bg-white w-full max-w-sm rounded-2xl p-6 animate-slideUp"
+        className="bg-surface w-full max-w-sm rounded-2xl p-6 animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold mb-4">Change Password</h2>
@@ -280,7 +241,7 @@ function PasswordModal({ onClose }: { onClose: () => void }) {
             placeholder="Old Password"
             value={oldPw}
             onChange={(e) => setOldPw(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-3 py-2"
+            className="w-full border border-color bg-background text-foreground rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none transition"
           />
 
           <input
@@ -288,7 +249,7 @@ function PasswordModal({ onClose }: { onClose: () => void }) {
             placeholder="New Password"
             value={newPw}
             onChange={(e) => setNewPw(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-3 py-2"
+            className="w-full border border-color bg-background text-foreground rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none transition"
           />
 
           <button

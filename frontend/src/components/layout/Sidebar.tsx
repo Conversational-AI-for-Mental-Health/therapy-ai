@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageSquare, MoreHorizontal, Pencil, PenSquare, Trash2, X } from 'lucide-react';
+import {MoreHorizontal, Pencil, PenSquare, Trash2, X } from 'lucide-react';
 import { SidebarProps } from '@/util/types';
 
 export default function Sidebar({
@@ -14,6 +14,7 @@ export default function Sidebar({
   onRenameChat,
   onDeleteChat,
   user,
+  onContactProfessional,
 }: SidebarProps) {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -224,6 +225,7 @@ export default function Sidebar({
         {isOpen ? (
           <>
             <button
+              onClick={onContactProfessional}
               className="w-full gradient-bg-primary text-white rounded-lg hover:opacity-90 transition flex items-center justify-center"
               style={{ padding: 'var(--space-xs) var(--space-sm)', gap: 'var(--space-xs)' }}
             >
@@ -246,6 +248,7 @@ export default function Sidebar({
         ) : (
           <div className="hidden md:flex flex-col items-center gap-2">
             <button
+              onClick={onContactProfessional}
               className="flex items-center justify-center rounded-lg bg-primary text-white hover:opacity-90 transition w-full"
               style={{ padding: 'var(--space-xs)' }}
               title="Contact Professional"

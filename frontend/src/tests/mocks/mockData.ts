@@ -56,19 +56,19 @@ export const mockLongJournalEntry: JournalEntry = {
 
 export const mockChatSessions: ChatSession[] = [
   {
-    id: 1,
+    id: '1',
     title: 'Anxiety Discussion',
     timestamp: 'Nov 28, 2025',
     preview: 'I am feeling a bit anxious today...',
   },
   {
-    id: 2,
+    id: '2',
     title: 'Morning Check-in',
     timestamp: 'Nov 27, 2025',
     preview: 'Good morning! How are you feeling?',
   },
   {
-    id: 3,
+    id: '3',
     title: 'Evening Reflection',
     timestamp: 'Nov 26, 2025',
     preview: 'Today was challenging but I made it through...',
@@ -82,8 +82,9 @@ export const mockConversation: Conversation = {
   started_at: '2025-11-28T10:00:00Z',
   last_message_at: '2025-11-28T10:30:00Z',
   archived: false,
-  deleted: false,
   message_count: 3,
+  createdAt: '2025-11-28T10:00:00Z',
+  updatedAt: '2025-11-28T10:30:00Z',
   messages: [
     {
       _id: '1',
@@ -110,8 +111,6 @@ export const mockConversation: Conversation = {
       },
     },
   ],
-  createdAt: '2025-11-28T10:00:00Z',
-  updatedAt: '2025-11-28T10:30:00Z',
 };
 
 export const mockConversations: Conversation[] = [

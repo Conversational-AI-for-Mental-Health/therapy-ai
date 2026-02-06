@@ -16,6 +16,7 @@ import { Menu, X } from 'lucide-react';
 import logo from '../images/logo.png'; import socketService from '@/util/socketService';
 import conversationAPI, { Conversation, Message } from '@/util/conversationAPI';
 import authAPI from '@/util/authAPI';
+import emergencyAPI from '@/util/emergencyAPI';
 
 export default function DashboardPage({
     onNavigate,
@@ -48,6 +49,11 @@ export default function DashboardPage({
     const [personalizedAds, setPersonalizedAds] = useState(false);
     const [pushNotifications, setPushNotifications] = useState(true);
     const [user, setUser] = useState<{ name: string; email: string } | undefined>(undefined);
+
+    // Emergency Support State
+    const [showPhoneModal, setShowPhoneModal] = useState(false);
+    const [userPhone, setUserPhone] = useState('');
+    const [isRequestingSupport, setIsRequestingSupport] = useState(false);
 
     // chat history reference
     const chatHistoryRef = useRef<HTMLDivElement>(null);
@@ -412,6 +418,58 @@ export default function DashboardPage({
         }
     };
 
+    const handleContactProfessional = () => {
+        setShowPhoneModal(true);
+    };
+
+    const handleSendSupportRequest = async () => {
+        if (isRequestingSupport) return;
+
+        setIsRequestingSupport(true);
+        try {
+            const response = await emergencyAPI.requestProfessionalSupport({
+                userPhone: userPhone.trim() || undefined,
+                reason: 'User requested professional mental health support from chat interface'
+            });
+
+            if (response.success) {
+                alert(response.message || 'Professional support has been notified. Someone will contact you soon.');
+                setShowPhoneModal(false);
+                setUserPhone('');
+            } else {
+                alert(response.message || 'Failed to contact support. Please try again.');
+            }
+        } catch (error: any) {
+            console.error('Failed to contact professional:', error);
+            alert('An error occurred. Please try calling 988 (Suicide & Crisis Lifeline) or 911 if this is an emergency.');
+        } finally {
+            setIsRequestingSupport(false);
+        }
+    };
+
+    const handleSkipPhone = async () => {
+        if (isRequestingSupport) return;
+
+        setIsRequestingSupport(true);
+        try {
+            const response = await emergencyAPI.requestProfessionalSupport({
+                reason: 'User requested professional mental health support from chat interface'
+            });
+
+            if (response.success) {
+                alert(response.message || 'Professional support has been notified.');
+                setShowPhoneModal(false);
+            } else {
+                alert(response.message || 'Failed to contact support. Please try again.');
+            }
+        } catch (error: any) {
+            console.error('Failed to contact professional:', error);
+            alert('An error occurred. Please try calling 988 (Suicide & Crisis Lifeline) or 911 if this is an emergency.');
+        } finally {
+            setIsRequestingSupport(false);
+        }
+    };
+
     return (
         <>
             <div className="h-dvh flex flex-col md:flex-row relative overflow-hidden">
@@ -434,6 +492,7 @@ export default function DashboardPage({
                     onNavigate={onNavigate}
                     onRenameChat={handleRenameChat}
                     onDeleteChat={handleDeleteChat}
+                    onContactProfessional={handleContactProfessional}
                     user={user}
                 />
 
@@ -561,6 +620,73 @@ export default function DashboardPage({
                 setPushNotifications={setPushNotifications}
                 user={user}
             />
+
+            {/* Phone Number Modal */}
+            {showPhoneModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" style={{ padding: 'var(--space-md)' }}>
+                    <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md" style={{ padding: 'var(--space-lg)' }}>
+                        <div className="flex justify-between items-center" style={{ marginBottom: 'var(--space-md)' }}>
+                            <h3 className="text-h3 text-primary">Contact Professional Support</h3>
+                            <button
+                                onClick={() => setShowPhoneModal(false)}
+                                className="flex items-center justify-center rounded-full hover:bg-primary/10 transition"
+                                style={{ width: 'var(--space-lg)', height: 'var(--space-lg)' }}
+                            >
+                                <X size={20} className="text-secondary" />
+                            </button>
+                        </div>
+                        
+                        <p className="text-body text-secondary" style={{ marginBottom: 'var(--space-md)' }}>
+                            A mental health professional will be notified and will contact you soon.
+                        </p>
+
+                        <div className="bg-background rounded-lg" style={{ padding: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
+                            <p className="text-body-sm text-secondary" style={{ marginBottom: 'var(--space-xs)' }}>
+                                🚨 <strong>If this is an emergency:</strong>
+                            </p>
+                            <p className="text-body-sm text-secondary">
+                                Call <strong>988</strong> (Suicide & Crisis Lifeline) or <strong>911</strong> immediately.
+                            </p>
+                        </div>
+
+                        <div style={{ marginBottom: 'var(--space-md)' }}>
+                            <label className="text-body-sm text-secondary block" style={{ marginBottom: 'var(--space-xs)' }}>
+                                Your Phone Number (Optional)
+                            </label>
+                            <input
+                                type="tel"
+                                value={userPhone}
+                                onChange={(e) => setUserPhone(e.target.value)}
+                                placeholder="+1 (555) 123-4567"
+                                className="w-full rounded-lg bg-background border border-color ring-primary focus:ring-2 focus:outline-none transition text-body"
+                                style={{ padding: 'var(--space-xs) var(--space-sm)' }}
+                            />
+                            <p className="text-caption text-secondary" style={{ marginTop: 'var(--space-xxs)' }}>
+                                Providing your number helps professionals reach you faster
+                            </p>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+                            <button
+                                onClick={handleSkipPhone}
+                                disabled={isRequestingSupport}
+                                className="flex-1 bg-surface border border-color text-secondary rounded-lg hover:bg-primary/10 transition disabled:opacity-50"
+                                style={{ padding: 'var(--space-xs) var(--space-sm)' }}
+                            >
+                                Skip
+                            </button>
+                            <button
+                                onClick={handleSendSupportRequest}
+                                disabled={isRequestingSupport}
+                                className="flex-1 gradient-bg-primary text-white rounded-lg hover:opacity-90 transition disabled:opacity-50"
+                                style={{ padding: 'var(--space-xs) var(--space-sm)' }}
+                            >
+                                {isRequestingSupport ? 'Sending...' : 'Send Request'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

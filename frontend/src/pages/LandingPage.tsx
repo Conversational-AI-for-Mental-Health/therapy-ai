@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import {
@@ -223,7 +223,7 @@ export default function LandingPage({
                                 transition={{ duration: 0.3 }}
                                 className="flex flex-col md:flex-row items-center gap-8"
                             >
-                                <div className="flex-shrink-0">
+                                <div className="shrink-0">
                                     <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden ring-4 ring-primary/20 shadow-xl">
                                         <img
                                             src={reviews[currentReviewIndex].imageUrl}

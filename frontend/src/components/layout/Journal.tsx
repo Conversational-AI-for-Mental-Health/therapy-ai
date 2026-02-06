@@ -1,5 +1,5 @@
 import { JournalEntry, JournalProps } from '@/util/types';
-import React, { FC, useState } from 'react';
+import React, { useState } from 'react';
 import JournalView from './RecentJournal';
 import { callBackendAPI } from '@/util/api';
 

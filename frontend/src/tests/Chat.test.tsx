@@ -15,6 +15,8 @@ describe('Chat Component', () => {
   const mockHandleMessageFeedback = jest.fn();
   const mockOnChatInputChange = jest.fn();
 
+  const mockOnStopGeneration = jest.fn();
+
   const defaultProps = {
     chatHistory: mockChatMessages,
     chatHistoryRef: mockChatHistoryRef,
@@ -24,6 +26,8 @@ describe('Chat Component', () => {
     handleQuickPrompt: mockHandleQuickPrompt,
     handleSubmitForm: mockHandleSubmitForm,
     handleMessageFeedback: mockHandleMessageFeedback,
+    isGenerating: false,
+    onStopGeneration: mockOnStopGeneration,
   };
 
   beforeEach(() => {

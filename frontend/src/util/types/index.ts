@@ -67,6 +67,7 @@ export interface SidebarProps{
   onNavigate: (screen: Screens) => void;
   onRenameChat: (id: string, title: string) => void;
   onDeleteChat: (id: string) => void;
+  onContactProfessional: () => void;
   user?: {
     name: string;
     email: string;
@@ -100,6 +101,11 @@ export interface ChatProps {
   handleMessageFeedback: (index: number, feedbackType: 'positive' | 'negative') => void;
   isGenerating: boolean;
   onStopGeneration: () => void;
+};
+
+export interface FeedbackProps {
+  isOpen: boolean;
+  onClose: () => void;
 };
 
 export interface SettingsDialogProps {

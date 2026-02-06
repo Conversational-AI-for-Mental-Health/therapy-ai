@@ -1,9 +1,10 @@
-import { createServer } from "http";
-import { Server as SocketIOServer } from "socket.io";
-import { createApp } from "./app";
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import { createApp } from './app';
+import { attachSocketHandlers } from './socket';
 import { connectDatabase } from './config/database';
-import { attachSocketHandlers } from "./socket";
-import config from "./config";
+import config from './config';
+import { console } from 'inspector';
 
 const startServer = async () => {
   try {

@@ -14,6 +14,8 @@ export default function Chat({
   handleQuickPrompt,
   handleSubmitForm,
   handleMessageFeedback,
+  isGenerating,
+  onStopGeneration,
 }: ChatProps) {
 
   const [showPrompts, setShowPrompts] = useState(false);
@@ -128,7 +130,8 @@ export default function Chat({
                       handleQuickPrompt(prompt);
                       setShowPrompts(false);
                     }}
-                    className="bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition text-body-sm whitespace-nowrap"
+                    disabled={isGenerating}
+                    className="bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition text-body-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ padding: 'var(--space-xxs) var(--space-sm)' }}
                   >
                     {prompt}
@@ -144,17 +147,37 @@ export default function Chat({
             value={chatInput}
             onChange={(e) => onChatInputChange(e.target.value)}
             type="text"
-            placeholder="Type your message..."
-            className="w-full rounded-lg bg-surface border border-color ring-primary focus:ring-2 focus:outline-none transition text-body"
+            placeholder={isGenerating ? "AI is responding..." : "Type your message..."}
+            disabled={isGenerating}
+            className="w-full rounded-lg bg-surface border border-color ring-primary focus:ring-2 focus:outline-none transition text-body disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ height: 'var(--space-xl)', padding: '0 var(--space-sm)' }}
           />
-          <button
-            type="submit"
-            className="shrink-0 gradient-bg-primary text-white rounded-lg hover:opacity-90 transition flex items-center justify-center"
-            style={{ height: 'var(--space-xl)', width: 'var(--space-xl)', fontSize: 'var(--font-h3)' }}
-          >
-            <span>&rarr;</span>
-          </button>
+          {isGenerating ? (
+            <button
+              type="button"
+              onClick={onStopGeneration}
+              className="shrink-0 rounded-lg hover:opacity-90 transition flex items-center justify-center"
+              style={{ 
+                height: 'var(--space-xl)', 
+                width: 'var(--space-xl)', 
+                fontSize: 'var(--font-body)',
+                backgroundColor: 'var(--destructive)',
+                color: 'var(--destructive-foreground)'
+              }}
+              title="Stop generating"
+            >
+              <span>■</span>
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!chatInput.trim()}
+              className="shrink-0 gradient-bg-primary text-white rounded-lg hover:opacity-90 transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ height: 'var(--space-xl)', width: 'var(--space-xl)', fontSize: 'var(--font-h3)' }}
+            >
+              <span>&rarr;</span>
+            </button>
+          )}
         </motion.form>
       </div>
     </div>

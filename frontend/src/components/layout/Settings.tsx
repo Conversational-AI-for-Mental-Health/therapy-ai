@@ -40,6 +40,7 @@ export default function Settings({
   /* handle delete account */
   const handleDeleteAccount = () => {
     if (confirm("Are you sure? This cannot be undone.")) {
+      alert("Account deleted (UI only).");
     }
   };
 
@@ -264,7 +265,7 @@ function PasswordModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 animate-fadeIn"
+      className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 animate-fadeIn"
       onClick={onClose}
     >
       <div

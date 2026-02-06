@@ -1,0 +1,40 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4 
+        with:
+          node-version: '18'
+
+      - name: Enable Corepack (Activates yarn@4.10.3)
+        run: corepack enable 
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+
+          path: |
+            ${{ github.workspace }}/.yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install Dependencies
+        run: yarn install --immutable 
+      
+      - name: Run Frontend Tests and Coverage 
+        run: yarn test -- --coverage
+        working-directory: frontend 
+
+      
+      - name: Run Backend Tests
+        run: yarn test 
+        working-directory: backend
+        
+      - uses: codecov/codecov-action@v4

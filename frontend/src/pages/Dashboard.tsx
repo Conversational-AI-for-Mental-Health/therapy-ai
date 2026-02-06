@@ -40,6 +40,7 @@ export default function DashboardPage({
     const [currentChatId, setCurrentChatId] = useState<string | null>(null);
     const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
     const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     // Settings State
     const [showSettingsDialog, setShowSettingsDialog] = useState(false);
@@ -131,6 +132,7 @@ export default function DashboardPage({
                     },
                 ];
             });
+            setIsGenerating(false);
         });
 
         // Listen for errors
@@ -144,6 +146,7 @@ export default function DashboardPage({
                         error.message || 'Sorry, something went wrong. Please try again.',
                 },
             ]);
+            setIsGenerating(false);
         });
 
         return () => {
@@ -294,6 +297,7 @@ export default function DashboardPage({
             { sender: 'ai', text: '', thinking: true },
         ]);
         setChatInput('');
+        setIsGenerating(true);
 
         // If we have an active conversation, update preview
         const activeChatId = currentConversation?._id || currentChatId;
@@ -314,7 +318,17 @@ export default function DashboardPage({
                     text: 'Failed to send message. Please check your connection.',
                 },
             ]);
+            setIsGenerating(false);
         }
+    };
+
+    const handleStopGeneration = () => {
+        // Remove thinking message and stop generation
+        setChatHistory((prev) => prev.filter((msg) => !msg.thinking));
+        setIsGenerating(false);
+        // Optionally disconnect/reconnect socket to stop server-side processing
+        socketService.disconnect();
+        socketService.connect();
     };
 
     const handleNewConversation = async () => {
@@ -400,7 +414,7 @@ export default function DashboardPage({
 
     return (
         <>
-            <div className="h-[100dvh] flex flex-col md:flex-row relative overflow-hidden">
+            <div className="h-dvh flex flex-col md:flex-row relative overflow-hidden">
                 {sidebarOpen && (
                     <div
                         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden"
@@ -515,6 +529,8 @@ export default function DashboardPage({
                                             handleQuickPrompt={handleQuickPrompt}
                                             handleSubmitForm={handleSubmitForm}
                                             handleMessageFeedback={handleMessageFeedback}
+                                            isGenerating={isGenerating}
+                                            onStopGeneration={handleStopGeneration}
                                         />
                                     )}
 

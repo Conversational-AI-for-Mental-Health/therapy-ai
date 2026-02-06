@@ -1,0 +1,236 @@
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import LoginPage from '../pages/LoginPage';
+
+describe('LoginPage', () => {
+  const mockOnNavigate = jest.fn();
+
+  const defaultProps = {
+    onNavigate: mockOnNavigate,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Rendering', () => {
+    it('should render login page with all elements', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      expect(screen.getByText('Welcome Back 👋')).toBeInTheDocument();
+      expect(
+        screen.getByText('Sign in to continue your journey'),
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText('Email')).toBeInTheDocument();
+      expect(screen.getByLabelText('Password')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Log In' }),
+      ).toBeInTheDocument();
+    });
+
+    it('should render brain emoji logo', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      expect(screen.getByText('🧠')).toBeInTheDocument();
+    });
+
+    it('should render email input field', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      const emailInput = screen.getByLabelText('Email');
+      expect(emailInput).toHaveAttribute('type', 'email');
+      expect(emailInput).toHaveAttribute('id', 'login-email');
+    });
+
+    it('should render password input field', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      const passwordInput = screen.getByLabelText('Password');
+      expect(passwordInput).toHaveAttribute('type', 'password');
+      expect(passwordInput).toHaveAttribute('id', 'login-password');
+    });
+
+    it('should render social login buttons', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      expect(screen.getByText('Continue with Google')).toBeInTheDocument();
+      expect(screen.getByText('Continue with Apple')).toBeInTheDocument();
+    });
+
+    it('should render or divider', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      expect(screen.getByText('or')).toBeInTheDocument();
+    });
+
+    it('should render navigation links', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      expect(screen.getByText(/No account\?/)).toBeInTheDocument();
+      expect(screen.getByText('Sign up')).toBeInTheDocument();
+      expect(screen.getByText('Home')).toBeInTheDocument();
+    });
+  });
+
+  describe('Navigation', () => {
+    it('should navigate to dashboard when login button is clicked', async () => {
+      const user = userEvent.setup();
+      render(<LoginPage {...defaultProps} />);
+
+      const loginButton = screen.getByRole('button', { name: 'Log In' });
+      await user.click(loginButton);
+
+      expect(mockOnNavigate).toHaveBeenCalledWith('dashboard');
+    });
+
+    it('should navigate to signup when sign up link is clicked', async () => {
+      const user = userEvent.setup();
+      render(<LoginPage {...defaultProps} />);
+
+      const signupLink = screen.getByText('Sign up');
+      await user.click(signupLink);
+
+      expect(mockOnNavigate).toHaveBeenCalledWith('signup');
+    });
+
+    it('should navigate to landing when home link is clicked', async () => {
+      const user = userEvent.setup();
+      render(<LoginPage {...defaultProps} />);
+
+      const homeLink = screen.getByText('Home');
+      await user.click(homeLink);
+
+      expect(mockOnNavigate).toHaveBeenCalledWith('landing');
+    });
+  });
+
+  describe('Form Inputs', () => {
+    it('should allow typing in email field', async () => {
+      const user = userEvent.setup();
+      render(<LoginPage {...defaultProps} />);
+
+      const emailInput = screen.getByLabelText('Email') as HTMLInputElement;
+      await user.type(emailInput, 'test@example.com');
+
+      expect(emailInput.value).toBe('test@example.com');
+    });
+
+    it('should allow typing in password field', async () => {
+      const user = userEvent.setup();
+      render(<LoginPage {...defaultProps} />);
+
+      const passwordInput = screen.getByLabelText(
+        'Password',
+      ) as HTMLInputElement;
+      await user.type(passwordInput, 'password123');
+
+      expect(passwordInput.value).toBe('password123');
+    });
+
+    it('should have proper input types for security', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      const emailInput = screen.getByLabelText('Email');
+      const passwordInput = screen.getByLabelText('Password');
+
+      expect(emailInput).toHaveAttribute('type', 'email');
+      expect(passwordInput).toHaveAttribute('type', 'password');
+    });
+  });
+
+  describe('Styling', () => {
+    it('should apply primary styling to login button', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      const loginButton = screen.getByRole('button', { name: 'Log In' });
+      expect(loginButton).toHaveClass('bg-primary', 'text-white');
+    });
+
+    it('should apply correct styling to form container', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      const heading = screen.getByText('Welcome Back 👋');
+      expect(heading).toHaveClass('text-h1', 'text-primary');
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should have proper labels for form inputs', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      expect(screen.getByLabelText('Email')).toBeInTheDocument();
+      expect(screen.getByLabelText('Password')).toBeInTheDocument();
+    });
+
+    it('should have accessible buttons', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      const buttons = screen.getAllByRole('button');
+      expect(buttons.length).toBeGreaterThan(0);
+    });
+
+    it('should have proper link text', () => {
+      render(<LoginPage {...defaultProps} />);
+
+      const links = screen.getAllByRole('link');
+      links.forEach((link) => {
+        expect(link.textContent).toBeTruthy();
+      });
+    });
+  });
+
+  describe('Social Login Buttons', () => {
+    it('should render Google login button with icon', () => {
+      const { container } = render(<LoginPage {...defaultProps} />);
+
+      const googleButton = screen
+        .getByText('Continue with Google')
+        .closest('button');
+      expect(googleButton).toBeInTheDocument();
+
+      const googleIcon = googleButton?.querySelector('svg');
+      expect(googleIcon).toBeInTheDocument();
+    });
+
+    it('should render Apple login button with icon', () => {
+      const { container } = render(<LoginPage {...defaultProps} />);
+
+      const appleButton = screen
+        .getByText('Continue with Apple')
+        .closest('button');
+      expect(appleButton).toBeInTheDocument();
+
+      const appleIcon = appleButton?.querySelector('svg');
+      expect(appleIcon).toBeInTheDocument();
+    });
+  });
+
+  describe('Layout', () => {
+    it('should center the login form on the page', () => {
+      const { container } = render(<LoginPage {...defaultProps} />);
+
+      const wrapper = container.firstChild;
+      expect(wrapper).toHaveClass(
+        'min-h-screen',
+        'flex',
+        'items-center',
+        'justify-center',
+      );
+    });
+
+    it('should have responsive padding', () => {
+      const { container } = render(<LoginPage {...defaultProps} />);
+
+      const wrapper = container.firstChild;
+      expect(wrapper).toHaveClass('px-4', 'sm:px-6', 'md:px-8');
+    });
+
+    it('should have constrained max width', () => {
+      const { container } = render(<LoginPage {...defaultProps} />);
+
+      const formContainer = container.querySelector('.max-w-sm');
+      expect(formContainer).toBeInTheDocument();
+    });
+  });
+});

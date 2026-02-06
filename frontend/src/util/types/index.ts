@@ -98,6 +98,8 @@ export interface ChatProps {
   handleQuickPrompt: (text?: string) => void;
   handleSubmitForm: (e: React.FormEvent<HTMLFormElement>) => void;
   handleMessageFeedback: (index: number, feedbackType: 'positive' | 'negative') => void;
+  isGenerating: boolean;
+  onStopGeneration: () => void;
 };
 
 export interface SettingsDialogProps {

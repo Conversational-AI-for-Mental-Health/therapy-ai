@@ -58,21 +58,34 @@ class SocketService {
   }
 
   // Send a message (conversationId is optional for now; backend will create if missing)
-  sendMessage(conversationId: string | null, text: string) {
+  sendMessage(conversationId: string, text: string) {
     if (!this.socket?.connected) {
       throw new Error('Socket not connected');
     }
 
+    const userId = this.getUserId();
+
     console.log('Sending message:', { conversationId, text });
-    this.socket.emit('userMessage', {
+    this.socket.emit('send_message', {
       conversationId,
       text,
+      userId,
     });
+  }
+
+  // Join a backend conversation room to receive room emits
+  joinConversation(conversationId: string) {
+    if (!this.socket?.connected) {
+      throw new Error('Socket not connected');
+    }
+
+    const userId = this.getUserId();
+    this.socket.emit('join_conversation', { conversationId, userId });
   }
 
   // Listen for AI responses
   onAIMessage(callback: (data: any) => void) {
-    this.socket?.on('botMessage', callback);
+    this.socket?.on('receive_message', callback);
   }
 
   // Listen for errors

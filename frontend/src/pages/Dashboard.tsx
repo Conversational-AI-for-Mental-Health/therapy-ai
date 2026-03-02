@@ -311,9 +311,36 @@ export default function DashboardPage({
         if (activeChatId) {
             updateSessionPreview(activeChatId, text);
         }
-        const conversationId = activeChatId || null;
+        let conversationId = activeChatId || null;
 
         try {
+            // Backend requires a valid conversationId for send_message.
+            if (!conversationId) {
+                const createdConversation = await conversationAPI.createConversation(
+                    deriveTitleFromMessage(text),
+                );
+                conversationId = createdConversation._id;
+                setCurrentConversation(createdConversation);
+                setCurrentChatId(createdConversation._id);
+                socketService.joinConversation(createdConversation._id);
+
+                const newSession: ChatSession = {
+                    id: createdConversation._id,
+                    title: createdConversation.title,
+                    timestamp: new Date(
+                        createdConversation.started_at || createdConversation.createdAt,
+                    ).toLocaleDateString(),
+                    preview: text.substring(0, 80),
+                };
+
+                setChatSessions((prev) => {
+                    if (prev.some((session) => session.id === createdConversation._id)) {
+                        return prev;
+                    }
+                    return [newSession, ...prev];
+                });
+            }
+
             socketService.sendMessage(conversationId, text);
         } catch (error: any) {
             console.error('Failed to send message:', error);
@@ -346,6 +373,7 @@ export default function DashboardPage({
         try {
             setIsLoadingConversation(true);
             setCurrentChatId(id);
+            socketService.joinConversation(id);
 
             const fullConversation = await conversationAPI.getConversation(id);
             setCurrentConversation(fullConversation);

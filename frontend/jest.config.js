@@ -11,6 +11,7 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
 
     '^framer-motion$': '<rootDir>/src/tests/mocks/framer-motion.tsx',
+    '^react-markdown$': '<rootDir>/src/tests/mocks/react-markdown.tsx',
 
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
 

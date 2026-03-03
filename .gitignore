@@ -6,4 +6,3 @@ dist/
 npm-debug.log
 **/.env
 .yarn/
-.mongodb-binaries/

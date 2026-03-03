@@ -1,7 +1,29 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import LoginPage from '../pages/LoginPage';
+import authAPI from '@/util/authAPI';
+
+jest.mock('@/util/authAPI', () => ({
+  __esModule: true,
+  default: {
+    login: jest.fn().mockResolvedValue({
+      success: true,
+      data: {
+        token: 'mock-token',
+        user: { name: 'Jamie', email: 'jamie.r@example.com' },
+      },
+    }),
+    forgotPassword: jest.fn().mockResolvedValue({ success: true }),
+    socialLogin: jest.fn().mockResolvedValue({
+      success: true,
+      data: {
+        token: 'mock-token',
+        user: { name: 'Jamie', email: 'jamie.r@example.com' },
+      },
+    }),
+  },
+}));
 
 describe('LoginPage', () => {
   const mockOnNavigate = jest.fn();
@@ -12,13 +34,28 @@ describe('LoginPage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (authAPI.login as jest.Mock).mockResolvedValue({
+      success: true,
+      data: {
+        token: 'mock-token',
+        user: { name: 'Jamie', email: 'jamie.r@example.com' },
+      },
+    });
+    (authAPI.forgotPassword as jest.Mock).mockResolvedValue({ success: true });
+    (authAPI.socialLogin as jest.Mock).mockResolvedValue({
+      success: true,
+      data: {
+        token: 'mock-token',
+        user: { name: 'Jamie', email: 'jamie.r@example.com' },
+      },
+    });
   });
 
   describe('Rendering', () => {
     it('should render login page with all elements', () => {
       render(<LoginPage {...defaultProps} />);
 
-      expect(screen.getByText('Welcome Back 👋')).toBeInTheDocument();
+      expect(screen.getByText('Welcome Back👋')).toBeInTheDocument();
       expect(
         screen.getByText('Sign in to continue your journey'),
       ).toBeInTheDocument();
@@ -29,10 +66,10 @@ describe('LoginPage', () => {
       ).toBeInTheDocument();
     });
 
-    it('should render brain emoji logo', () => {
+    it('should render therapy logo', () => {
       render(<LoginPage {...defaultProps} />);
 
-      expect(screen.getByText('🧠')).toBeInTheDocument();
+      expect(screen.getByAltText('Therapy AI')).toBeInTheDocument();
     });
 
     it('should render email input field', () => {
@@ -78,10 +115,15 @@ describe('LoginPage', () => {
       const user = userEvent.setup();
       render(<LoginPage {...defaultProps} />);
 
+      await user.type(screen.getByLabelText('Email'), 'jamie@example.com');
+      await user.type(screen.getByLabelText('Password'), 'password123');
       const loginButton = screen.getByRole('button', { name: 'Log In' });
       await user.click(loginButton);
 
-      expect(mockOnNavigate).toHaveBeenCalledWith('dashboard');
+      expect(authAPI.login).toHaveBeenCalledWith('jamie@example.com', 'password123');
+      await waitFor(() => {
+        expect(mockOnNavigate).toHaveBeenCalledWith('dashboard');
+      });
     });
 
     it('should navigate to signup when sign up link is clicked', async () => {
@@ -144,14 +186,14 @@ describe('LoginPage', () => {
       render(<LoginPage {...defaultProps} />);
 
       const loginButton = screen.getByRole('button', { name: 'Log In' });
-      expect(loginButton).toHaveClass('bg-primary', 'text-white');
+      expect(loginButton).toHaveClass('gradient-bg-primary', 'text-white');
     });
 
     it('should apply correct styling to form container', () => {
       render(<LoginPage {...defaultProps} />);
 
-      const heading = screen.getByText('Welcome Back 👋');
-      expect(heading).toHaveClass('text-h1', 'text-primary');
+      const heading = screen.getByText('Welcome Back👋');
+      expect(heading).toHaveClass('text-h1');
     });
   });
 

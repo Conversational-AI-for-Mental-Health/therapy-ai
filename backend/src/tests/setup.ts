@@ -20,13 +20,14 @@ beforeAll(async () => {
         downloadDir: mongoDownloadDir,
       },
       instance: {
-        dbName: 'test-therapy-ai',
+        dbName: `test-therapy-ai-${process.pid}`,
+        port: 0,
       },
     });
 
     const mongoUri = mongoServer.getUri();
 
-    // Connect to in-memory database
+    //connect to in-memory database
     await mongoose.connect(mongoUri);
 
     console.log('Test database connected');
@@ -38,12 +39,9 @@ beforeAll(async () => {
 
 afterAll(async () => {
   try {
-    // Disconnect mongoose
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
     }
-
-    // Stop mongo server if it exists
     if (mongoServer) {
       await mongoServer.stop();
     }
@@ -60,7 +58,7 @@ afterEach(async () => {
       return;
     }
 
-    // Clear all collections after each test
+    //clear all collections after each test
     const collections = mongoose.connection.collections;
     for (const key in collections) {
       await collections[key].deleteMany({});

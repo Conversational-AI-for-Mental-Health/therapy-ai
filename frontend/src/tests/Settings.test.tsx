@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Settings from '../components/layout/Settings';
 
@@ -20,6 +20,10 @@ describe('Settings Component', () => {
     setPersonalizedAds: mockSetPersonalizedAds,
     pushNotifications: true,
     setPushNotifications: mockSetPushNotifications,
+    user: {
+      name: 'Jamie Reed',
+      email: 'jamie.r@example.com',
+    },
   };
 
   beforeEach(() => {
@@ -30,15 +34,15 @@ describe('Settings Component', () => {
     it('should render settings dialog when isOpen is true', () => {
       render(<Settings {...defaultProps} />);
 
-      expect(screen.getByText('Jamie R.')).toBeInTheDocument();
+      expect(screen.getByText('Jamie')).toBeInTheDocument();
       expect(screen.getByText('jamie.r@example.com')).toBeInTheDocument();
-      expect(screen.getByText('Privacy Controls')).toBeInTheDocument();
+      expect(screen.getByText('Privacy')).toBeInTheDocument();
     });
 
     it('should not render when isOpen is false', () => {
       render(<Settings {...defaultProps} isOpen={false} />);
 
-      expect(screen.queryByText('Jamie R.')).not.toBeInTheDocument();
+      expect(screen.queryByText('Jamie')).not.toBeInTheDocument();
     });
 
     it('should render all privacy control toggles', () => {
@@ -47,14 +51,6 @@ describe('Settings Component', () => {
       expect(screen.getByText('Analytics Tracking')).toBeInTheDocument();
       expect(screen.getByText('Personalized Ads')).toBeInTheDocument();
       expect(screen.getByText('Push Notifications')).toBeInTheDocument();
-    });
-
-    it('should render data management section', () => {
-      render(<Settings {...defaultProps} />);
-
-      expect(screen.getByText('Data Management')).toBeInTheDocument();
-      expect(screen.getByText('Delete All Chats')).toBeInTheDocument();
-      expect(screen.getByText('Delete Account')).toBeInTheDocument();
     });
 
     it('should render logout button', () => {
@@ -70,6 +66,14 @@ describe('Settings Component', () => {
         .getAllByRole('button')
         .filter((button) => button.querySelector('svg'));
       expect(closeButtons.length).toBeGreaterThan(0);
+    });
+
+    it('should render account actions', () => {
+      render(<Settings {...defaultProps} />);
+
+      expect(screen.getByText('Account')).toBeInTheDocument();
+      expect(screen.getByText('Change Password')).toBeInTheDocument();
+      expect(screen.getByText('Delete Account')).toBeInTheDocument();
     });
   });
 
@@ -132,7 +136,7 @@ describe('Settings Component', () => {
         .getByText('Personalized Ads')
         .closest('div')
         ?.querySelector('button');
-      expect(adsToggle).toHaveClass('bg-gray-300');
+      expect(adsToggle).toHaveClass('bg-muted');
 
       const notificationsToggle = screen
         .getByText('Push Notifications')
@@ -172,7 +176,7 @@ describe('Settings Component', () => {
       const user = userEvent.setup();
       render(<Settings {...defaultProps} />);
 
-      const dialog = screen.getByText('Jamie R.').closest('div');
+      const dialog = screen.getByText('Jamie').closest('div');
       if (dialog) {
         await user.click(dialog);
         expect(mockOnClose).not.toHaveBeenCalled();
@@ -193,16 +197,16 @@ describe('Settings Component', () => {
   });
 
   describe('Profile Section', () => {
-    it('should display user avatar with initial', () => {
+    it('should display user avatar image', () => {
       render(<Settings {...defaultProps} />);
 
-      expect(screen.getByText('J')).toBeInTheDocument();
+      expect(screen.getByAltText('profile')).toBeInTheDocument();
     });
 
     it('should display user name', () => {
       render(<Settings {...defaultProps} />);
 
-      expect(screen.getByText('Jamie R.')).toBeInTheDocument();
+      expect(screen.getByText('Jamie')).toBeInTheDocument();
     });
 
     it('should display user email', () => {
@@ -211,13 +215,10 @@ describe('Settings Component', () => {
       expect(screen.getByText('jamie.r@example.com')).toBeInTheDocument();
     });
 
-    it('should render edit button for profile', () => {
+    it('should render edit badge for profile', () => {
       render(<Settings {...defaultProps} />);
 
-      const editButtons = screen
-        .getAllByRole('button')
-        .filter((button) => button.querySelector('svg[class*="lucide"]'));
-      expect(editButtons.length).toBeGreaterThan(0);
+      expect(screen.getByText('Edit')).toBeInTheDocument();
     });
   });
 
@@ -233,7 +234,7 @@ describe('Settings Component', () => {
       const user = userEvent.setup();
       render(<Settings {...defaultProps} />);
 
-      const privacyHeading = screen.getByText('Privacy Controls');
+      const privacyHeading = screen.getByText('Privacy');
       await user.click(privacyHeading);
 
       expect(mockOnClose).not.toHaveBeenCalled();

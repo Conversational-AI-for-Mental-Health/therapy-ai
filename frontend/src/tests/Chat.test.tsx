@@ -44,15 +44,18 @@ describe('Chat Component', () => {
     it('should render chat component with all elements', () => {
       render(<Chat {...defaultProps} />);
 
-      expect(screen.getByText('Quick Prompts')).toBeInTheDocument();
+      expect(screen.getByTitle('Show Suggestions')).toBeInTheDocument();
       expect(
         screen.getByPlaceholderText('Type your message...'),
       ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: '→' })).toBeInTheDocument();
     });
 
-    it('should render all quick prompts', () => {
+    it('should render all quick prompts', async () => {
+      const user = userEvent.setup();
       render(<Chat {...defaultProps} />);
+
+      await user.click(screen.getByTitle('Show Suggestions'));
 
       mockQuickPrompts.forEach((prompt) => {
         expect(screen.getByText(prompt)).toBeInTheDocument();
@@ -110,6 +113,7 @@ describe('Chat Component', () => {
       const user = userEvent.setup();
       render(<Chat {...defaultProps} />);
 
+      await user.click(screen.getByTitle('Show Suggestions'));
       const quickPromptButton = screen.getByText(mockQuickPrompts[0]);
       await user.click(quickPromptButton);
 

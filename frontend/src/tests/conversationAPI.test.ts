@@ -3,7 +3,6 @@ import { mockConversation, mockConversations } from './mocks/mockData';
 
 describe('ConversationAPI', () => {
   const API_URL = 'http://localhost:3000/api';
-  const userId = '507f1f77bcf86cd799439011';
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -28,7 +27,7 @@ describe('ConversationAPI', () => {
       const result = await conversationAPI.createConversation('New Chat');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_URL}/conversations?userId=${userId}`,
+        `${API_URL}/conversations`,
         expect.objectContaining({
           method: 'POST',
           headers: {
@@ -71,7 +70,7 @@ describe('ConversationAPI', () => {
       const result = await conversationAPI.getAllConversations();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_URL}/conversations?userId=${userId}&archived=false`,
+        `${API_URL}/conversations?archived=false`,
         expect.any(Object),
       );
       expect(result).toEqual(mockConversations);
@@ -91,7 +90,7 @@ describe('ConversationAPI', () => {
       await conversationAPI.getAllConversations(true);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_URL}/conversations?userId=${userId}&archived=true`,
+        `${API_URL}/conversations?archived=true`,
         expect.any(Object),
       );
     });
@@ -129,7 +128,7 @@ describe('ConversationAPI', () => {
       );
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_URL}/conversations/${mockConversation._id}?userId=${userId}&limit=50`,
+        `${API_URL}/conversations/${mockConversation._id}?limit=50`,
         expect.any(Object),
       );
       expect(result).toEqual(mockConversation);
@@ -149,7 +148,7 @@ describe('ConversationAPI', () => {
       await conversationAPI.getConversation(mockConversation._id, 100);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_URL}/conversations/${mockConversation._id}?userId=${userId}&limit=100`,
+        `${API_URL}/conversations/${mockConversation._id}?limit=100`,
         expect.any(Object),
       );
     });
@@ -192,7 +191,6 @@ describe('ConversationAPI', () => {
         expect.objectContaining({
           method: 'PATCH',
           body: JSON.stringify({
-            userId,
             title: 'Updated Title',
           }),
         }),
@@ -267,9 +265,6 @@ describe('ConversationAPI', () => {
         `${API_URL}/conversations/${mockConversation._id}`,
         expect.objectContaining({
           method: 'DELETE',
-          body: JSON.stringify({
-            userId,
-          }),
         }),
       );
     });

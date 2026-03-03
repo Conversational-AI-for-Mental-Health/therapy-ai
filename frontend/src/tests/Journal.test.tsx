@@ -307,7 +307,7 @@ describe('Journal Component', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('✨ A Gentle Reflection')).toBeInTheDocument();
+        expect(screen.getByText('✨ Reflection on your day')).toBeInTheDocument();
       });
     });
 
@@ -371,7 +371,7 @@ describe('Journal Component', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('✨ A Gentle Reflection')).toBeInTheDocument();
+        expect(screen.getByText('✨ Reflection on your day')).toBeInTheDocument();
       });
 
       const closeButtons = screen.getAllByText('Close');
@@ -379,7 +379,7 @@ describe('Journal Component', () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByText('✨ A Gentle Reflection'),
+          screen.queryByText('✨ Reflection on your day'),
         ).not.toBeInTheDocument();
       });
     });

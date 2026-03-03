@@ -17,13 +17,13 @@ const handleUserMessage = async (
   );
 
   try {
-    // 1. Validate input
+    // validate input
     if (!data.text || data.text.trim().length === 0) {
       socket.emit('error', { message: 'Message text cannot be empty' });
       return;
     }
 
-    // 2. Save user message to database
+    // save user message
     await ConversationService.addMessage(
       data.conversationId,
       data.userId,
@@ -33,12 +33,12 @@ const handleUserMessage = async (
 
     console.log('[Socket] User message saved to database');
 
-    // 3. Get conversation history for context
+    // get recent conversation context
     const conversation =
       await ConversationService.getConversationWithRecentMessages(
         data.conversationId,
         data.userId,
-        20, // Last 20 messages for context
+        20, // last 20 messages
       );
 
     if (!conversation) {
@@ -46,10 +46,10 @@ const handleUserMessage = async (
       return;
     }
 
-    // 4. Format conversation history for Python AI
-    // Exclude the message we just added
+    // build history for python ai
+    // skip the latest user message
     const conversationHistory = conversation.messages
-      .slice(0, -1) // Remove last message (the one we just added)
+      .slice(0, -1) // remove last user message
       .map((msg) => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
         content: msg.text,
@@ -59,14 +59,14 @@ const handleUserMessage = async (
       `[Socket] Calling Python AI with ${conversationHistory.length} previous messages`,
     );
 
-    // 5. Call Python AI backend with conversation history
+    // call python ai with history
     let aiResponse: string;
     try {
       const response = await axios.post(
         config.PYTHON_AI_URL,
         {
           message: data.text,
-          conversation_history: conversationHistory, // Send full history
+          conversation_history: conversationHistory, // send full history
           max_tokens: 512,
           temperature: 0.7,
         },
@@ -88,7 +88,7 @@ const handleUserMessage = async (
         "I'm having trouble connecting to my AI service. Please try again in a moment.";
     }
 
-    // 6. Save AI response to database
+    // save ai response
     await ConversationService.addMessage(
       data.conversationId,
       data.userId,
@@ -98,7 +98,7 @@ const handleUserMessage = async (
 
     console.log('[Socket] AI message saved to database');
 
-    // 7. Send AI response back to user
+    // emit ai response
     io.to(data.conversationId).emit('receive_message', {
       conversationId: data.conversationId,
       text: aiResponse,
@@ -127,24 +127,24 @@ const handleJoinConversation = async (
   );
 
   try {
-    // Validate input
+    // validate input
     if (!data.conversationId || !data.userId) {
       socket.emit('error', { message: 'Missing conversationId or userId' });
       return;
     }
 
-    // Join the Socket.io room
+    // join room
     socket.join(data.conversationId);
     console.log(
       `[Socket] Client ${socket.id} joined room: ${data.conversationId}`,
     );
 
-    // Get conversation with messages
+    // get conversation with messages
     const conversation =
       await ConversationService.getConversationWithRecentMessages(
         data.conversationId,
         data.userId,
-        50, // Last 50 messages
+        50, // last 50 messages
       );
 
     if (!conversation) {
@@ -152,7 +152,7 @@ const handleJoinConversation = async (
       return;
     }
 
-    // Send conversation history to this client only
+    // send history to this client
     socket.emit('conversation_history', {
       conversationId: data.conversationId,
       messages: conversation.messages || [],
@@ -177,7 +177,7 @@ export const attachSocketHandlers = (io: SocketIOServer) => {
   io.on('connection', (socket: Socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`);
 
-    // Listen for join_conversation event
+    // listen for join_conversation
     socket.on(
       'join_conversation',
       async (data: { conversationId: string; userId: string }) => {
@@ -185,7 +185,7 @@ export const attachSocketHandlers = (io: SocketIOServer) => {
       },
     );
 
-    // Listen for send_message event
+    // listen for send_message
     socket.on(
       'send_message',
       async (data: {
@@ -197,12 +197,12 @@ export const attachSocketHandlers = (io: SocketIOServer) => {
       },
     );
 
-    // Handle disconnect
+    // handle disconnect
     socket.on('disconnect', () => {
       console.log(`[Socket] Client disconnected: ${socket.id}`);
     });
 
-    // Handle errors
+    // handle errors
     socket.on('error', (error) => {
       console.error('[Socket] Socket error:', error);
     });

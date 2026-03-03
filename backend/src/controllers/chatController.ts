@@ -6,7 +6,7 @@ import { Message } from "../db/models/Message";
 import config from "../config";
 
 interface ChatRequestBody {
-  userId?: string;        // optional external identity
+  userId?: string; // optional external identity
   conversationId?: string;
   message: string;
 }
@@ -28,7 +28,7 @@ export const handleChat = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Missing or invalid 'message' field." });
     }
 
-    // 1) Ensure there is a User
+    // ensure user exists
     let user = await User.findOne({ authId: userId || "dev-anonymous-user" });
 
     if (!user) {
@@ -39,7 +39,7 @@ export const handleChat = async (req: Request, res: Response) => {
       });
     }
 
-    // 2) Ensure there is a Conversation
+    // ensure conversation exists
     let conversation;
 
     if (conversationId) {
@@ -53,7 +53,7 @@ export const handleChat = async (req: Request, res: Response) => {
       });
     }
 
-    // 3) Save the user message
+    // save user message
     await Message.create({
       conversation: conversation._id,
       user: user._id,
@@ -61,27 +61,27 @@ export const handleChat = async (req: Request, res: Response) => {
       text: message,
     });
 
-    // 4) Call the Python LLM backend to get a real AI reply
+    // call python llm
     let botText: string;
 
     try {
       const response = await axios.post(config.PYTHON_AI_URL, { message });
-      // Assuming Flask returns: { "response": "..." }
+      // flask returns { response: "..." }
       botText = response.data.response ?? "I'm having trouble understanding right now.";
     } catch (err) {
       console.error("[CHAT] Error calling Python LLM backend:", err);
-      // You can choose: either send a fallback message, or 502
+      // fallback reply when ai call fails
       botText = "I'm sorry, but I'm unable to reach the AI service at the moment.";
     }
 
-    // 5) Save the bot message
+    // save bot message
     const botMessage = await Message.create({
       conversation: conversation._id,
       role: "bot",
       text: botText,
     });
 
-    // 6) Return reply to frontend
+    // return reply
     return res.json({
       conversationId: conversation._id,
       botMessage: {

@@ -13,6 +13,9 @@ describe('Chat Component', () => {
   const mockHandleQuickPrompt = jest.fn();
   const mockHandleSubmitForm = jest.fn();
   const mockHandleMessageFeedback = jest.fn();
+  const mockHandleEditUserMessage = jest.fn();
+  const mockHandleSelectUserMessageVersion = jest.fn();
+  const mockHandleCopyMessage = jest.fn();
   const mockOnChatInputChange = jest.fn();
 
   const mockOnStopGeneration = jest.fn();
@@ -26,6 +29,9 @@ describe('Chat Component', () => {
     handleQuickPrompt: mockHandleQuickPrompt,
     handleSubmitForm: mockHandleSubmitForm,
     handleMessageFeedback: mockHandleMessageFeedback,
+    handleEditUserMessage: mockHandleEditUserMessage,
+    handleSelectUserMessageVersion: mockHandleSelectUserMessageVersion,
+    handleCopyMessage: mockHandleCopyMessage,
     isGenerating: false,
     onStopGeneration: mockOnStopGeneration,
   };

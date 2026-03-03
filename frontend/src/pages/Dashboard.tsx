@@ -62,6 +62,13 @@ export default function DashboardPage({
     const currentChatIdRef = useRef(currentChatId);
     const currentConversationRef = useRef(currentConversation);
     const chatHistoryStateRef = useRef(chatHistory);
+    const pendingEditedReplyRef = useRef<{
+        active: boolean;
+        aiIndex: number;
+    }>({
+        active: false,
+        aiIndex: -1,
+    });
 
     useEffect(() => {
         currentChatIdRef.current = currentChatId;
@@ -84,19 +91,19 @@ export default function DashboardPage({
             const currentConv = currentConversationRef.current;
             const history = chatHistoryStateRef.current;
 
-            // Check if we need to set up a new conversation state
+            //check if we need to set up a new conversation state
             if ((!currentId || !currentConv) && data.conversationId) {
                 const newConversationId = data.conversationId;
-                // Only create new session if we don't have this ID yet
+                //only create new session if we don't have this ID yet
                 if (currentId !== newConversationId) {
                     setCurrentChatId(newConversationId);
                     currentChatIdRef.current = newConversationId;
 
-                    // Find the user's first message to generate title (backend also does this)
+                    //find the user's first message to generate title (backend also does this)
                     const userMsg = history.find(m => m.sender === 'user');
                     const generatedTitle = userMsg ? deriveTitleFromMessage(userMsg.text) : 'New Conversation';
 
-                    // Create conversation stub with generated title - backend has same logic
+                    //create conversation stub with generated title - backend has same logic
                     const newConvStub: Conversation = {
                         _id: newConversationId,
                         user_id: '',
@@ -128,8 +135,27 @@ export default function DashboardPage({
             }
 
             setChatHistory((prev) => {
-                const withoutThinking = prev.filter((msg) => !msg.thinking);
+                if (pendingEditedReplyRef.current.active) {
+                    const updated = [...prev];
+                    const targetIndex = pendingEditedReplyRef.current.aiIndex;
 
+                    if (targetIndex >= 0 && targetIndex < updated.length) {
+                        updated[targetIndex] = {
+                            sender: 'ai',
+                            text: data.text,
+                        };
+                    } else {
+                        updated.push({
+                            sender: 'ai',
+                            text: data.text,
+                        });
+                    }
+
+                    pendingEditedReplyRef.current = { active: false, aiIndex: -1 };
+                    return updated;
+                }
+
+                const withoutThinking = prev.filter((msg) => !msg.thinking);
                 return [
                     ...withoutThinking,
                     {
@@ -144,14 +170,31 @@ export default function DashboardPage({
         // Listen for errors
         socketService.onError((error) => {
             console.error('Socket error:', error);
-            setChatHistory((prev) => [
-                ...prev.filter((msg) => !msg.thinking),
-                {
-                    sender: 'ai',
-                    text:
-                        error.message || 'Sorry, something went wrong. Please try again.',
-                },
-            ]);
+            setChatHistory((prev) => {
+                if (pendingEditedReplyRef.current.active) {
+                    const updated = [...prev];
+                    const targetIndex = pendingEditedReplyRef.current.aiIndex;
+
+                    if (targetIndex >= 0 && targetIndex < updated.length) {
+                        updated[targetIndex] = {
+                            sender: 'ai',
+                            text: error.message || 'Sorry, something went wrong. Please try again.',
+                        };
+                    }
+
+                    pendingEditedReplyRef.current = { active: false, aiIndex: -1 };
+                    return updated;
+                }
+
+                return [
+                    ...prev.filter((msg) => !msg.thinking),
+                    {
+                        sender: 'ai',
+                        text:
+                            error.message || 'Sorry, something went wrong. Please try again.',
+                    },
+                ];
+            });
             setIsGenerating(false);
         });
 
@@ -161,7 +204,7 @@ export default function DashboardPage({
         };
     }, []);
 
-    // Create initial conversation or load most recent one
+    //create initial conversation or load most recent one
     useEffect(() => {
         const initConversation = async () => {
             try {
@@ -172,7 +215,7 @@ export default function DashboardPage({
 
                 setIsLoadingConversation(true);
 
-                // try to get existing conversations first
+                //try to get existing conversations first
                 const conversations = await conversationAPI.getAllConversations();
 
                 //convert conversations to chat sessions for sidebar
@@ -276,6 +319,116 @@ export default function DashboardPage({
         });
     };
 
+    const handleCopyMessage = async (index: number) => {
+        const message = chatHistory[index];
+        if (!message?.text) return;
+
+        try {
+            await navigator.clipboard.writeText(message.text);
+        } catch (error) {
+            console.error('Failed to copy message:', error);
+        }
+    };
+
+    const handleEditUserMessage = (index: number, newText: string) => {
+        const trimmedText = newText.trim();
+        if (!trimmedText || isGenerating) return;
+
+        let editedUserText = trimmedText;
+        let targetAiIndex = -1;
+
+        setChatHistory((prev) => {
+            let lastUserIndex = -1;
+            for (let i = prev.length - 1; i >= 0; i -= 1) {
+                if (prev[i].sender === 'user') {
+                    lastUserIndex = i;
+                    break;
+                }
+            }
+
+            if (index !== lastUserIndex || !prev[index] || prev[index].sender !== 'user') {
+                return prev;
+            }
+
+            const updated = [...prev];
+            const target = updated[index];
+            targetAiIndex = index + 1;
+            const versions = target.versions?.length
+                ? [...target.versions]
+                : [target.text];
+
+            if (versions[versions.length - 1] !== trimmedText) {
+                versions.push(trimmedText);
+            }
+
+            updated[index] = {
+                ...target,
+                text: trimmedText,
+                versions,
+                versionIndex: versions.length - 1,
+            };
+
+            editedUserText = updated[index].text;
+
+            if (targetAiIndex >= 0 && targetAiIndex < updated.length && updated[targetAiIndex].sender === 'ai') {
+                updated[targetAiIndex] = {
+                    sender: 'ai',
+                    text: '',
+                    thinking: true,
+                };
+            }
+
+            return updated;
+        });
+
+        const conversationId = currentConversation?._id || currentChatIdRef.current;
+        if (!conversationId || targetAiIndex < 0) {
+            return;
+        }
+
+        pendingEditedReplyRef.current = { active: true, aiIndex: targetAiIndex };
+        setIsGenerating(true);
+        updateSessionPreview(conversationId, editedUserText);
+        try {
+            socketService.joinConversation(conversationId);
+            socketService.sendMessage(conversationId, editedUserText);
+        } catch (error) {
+            pendingEditedReplyRef.current = { active: false, aiIndex: -1 };
+            setIsGenerating(false);
+            console.error('Failed to resend edited message:', error);
+        }
+    };
+
+    const handleSelectUserMessageVersion = (
+        index: number,
+        versionIndex: number,
+    ) => {
+        setChatHistory((prev) => {
+            if (!prev[index] || prev[index].sender !== 'user') {
+                return prev;
+            }
+
+            const target = prev[index];
+            const versions = target.versions?.length
+                ? target.versions
+                : [target.text];
+
+            if (versionIndex < 0 || versionIndex >= versions.length) {
+                return prev;
+            }
+
+            const updated = [...prev];
+            updated[index] = {
+                ...target,
+                text: versions[versionIndex],
+                versions: [...versions],
+                versionIndex,
+            };
+
+            return updated;
+        });
+    };
+
     const updateSessionPreview = (chatId: string, previewText: string) => {
         setChatSessions((prev) => {
             const updated = prev.map((session) =>
@@ -287,7 +440,6 @@ export default function DashboardPage({
                     }
                     : session,
             );
-
             // If session not found, return original array
             return updated.length ? updated : prev;
         });
@@ -295,11 +447,10 @@ export default function DashboardPage({
 
     const handleChatSubmit = async (text?: string) => {
         if (!text?.trim()) return;
-
-        // Add user message to UI immediately
+        //add user message to UI immediately
         setChatHistory((prev) => [
             ...prev,
-            { sender: 'user', text },
+            { sender: 'user', text, versions: [text], versionIndex: 0 },
             { sender: 'ai', text: '', thinking: true },
         ]);
         setChatInput('');
@@ -314,7 +465,7 @@ export default function DashboardPage({
         let conversationId = activeChatId || null;
 
         try {
-            // Backend requires a valid conversationId for send_message.
+            //backend requires a valid conversationId for send_message
             if (!conversationId) {
                 const createdConversation = await conversationAPI.createConversation(
                     deriveTitleFromMessage(text),
@@ -341,6 +492,7 @@ export default function DashboardPage({
                 });
             }
 
+            socketService.joinConversation(conversationId);
             socketService.sendMessage(conversationId, text);
         } catch (error: any) {
             console.error('Failed to send message:', error);
@@ -383,6 +535,8 @@ export default function DashboardPage({
                     sender: msg.sender,
                     text: msg.text,
                     feedback: null,
+                    versions: msg.sender === 'user' ? [msg.text] : undefined,
+                    versionIndex: msg.sender === 'user' ? 0 : undefined,
                 }))
                 : [
                     {
@@ -616,6 +770,9 @@ export default function DashboardPage({
                                             handleQuickPrompt={handleQuickPrompt}
                                             handleSubmitForm={handleSubmitForm}
                                             handleMessageFeedback={handleMessageFeedback}
+                                            handleEditUserMessage={handleEditUserMessage}
+                                            handleSelectUserMessageVersion={handleSelectUserMessageVersion}
+                                            handleCopyMessage={handleCopyMessage}
                                             isGenerating={isGenerating}
                                             onStopGeneration={handleStopGeneration}
                                         />

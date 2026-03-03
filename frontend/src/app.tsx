@@ -8,6 +8,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { Screens, ChatMessage } from '@/util/types/index';
@@ -16,6 +17,8 @@ import Story from "./pages/OurStory";
 import { callBackendAPI } from "./util/api";
 import lightLogo from "./images/lightT.png";
 import darkLogo from "./images/darkT.png";
+
+const THEME_STORAGE_KEY = 'therapy-ai-theme-dark-mode';
 
 /**
  * App component serves as the main container and entry point for all application routes and UI.
@@ -31,6 +34,7 @@ const App: FC = () => {
     if (normalized.startsWith('/dashboard')) return 'dashboard';
     if (normalized.startsWith('/signup')) return 'signup';
     if (normalized.startsWith('/login')) return 'login';
+    if (normalized.startsWith('/reset-password')) return 'reset-password';
     if (normalized.startsWith('/privacy')) return 'privacy';
     if (normalized.startsWith('/story')) return 'story';
     if (normalized.startsWith('/contact')) return 'contact';
@@ -47,6 +51,8 @@ const App: FC = () => {
         return '/login';
       case 'privacy':
         return '/privacy';
+      case 'reset-password':
+        return '/reset-password';
       case 'story':
         return '/story';
       case 'contact':
@@ -60,7 +66,10 @@ const App: FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screens>(() =>
     pathToScreen(window.location.pathname),
   );
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const storedMode = localStorage.getItem(THEME_STORAGE_KEY);
+    return storedMode === 'true';
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
@@ -75,6 +84,8 @@ const App: FC = () => {
     } else {
       document.documentElement.classList.remove('dark');
     }
+
+    localStorage.setItem(THEME_STORAGE_KEY, String(isDarkMode));
   }, [isDarkMode]);
 
   //Scroll to top
@@ -170,6 +181,13 @@ const App: FC = () => {
         onNavigate={navigateTo}
         isDarkMode={isDarkMode}
         setIsDarkMode={setIsDarkMode}
+      />
+    )
+  }
+  if(currentScreen === "reset-password") {
+    return(
+      <ResetPasswordPage
+        onNavigate={navigateTo}
       />
     )
   }

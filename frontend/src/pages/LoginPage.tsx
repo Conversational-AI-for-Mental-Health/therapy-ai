@@ -4,13 +4,16 @@ import logo from '../images/logo.png';
 import authAPI from '@/util/authAPI';
 
 export default function LoginPage({ onNavigate }: LoginPageProps) {
+  const RESET_EMAIL_KEY = 'therapy-ai-reset-email';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     setError('');
+    setInfo('');
     setIsLoading(true);
 
     if (!email || !password) {
@@ -31,6 +34,31 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
         onNavigate('dashboard');
       } else {
         setError(response.error || 'Login failed');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setError('');
+    setInfo('');
+
+    if (!email.trim()) {
+      setError('Please enter your email first');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await authAPI.forgotPassword(email.trim());
+      if (response.success) {
+        localStorage.setItem(RESET_EMAIL_KEY, email.trim());
+        onNavigate('reset-password');
+      } else {
+        setError(response.error || 'Unable to process forgot password request');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');
@@ -92,6 +120,11 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               {error}
             </div>
           )}
+          {info && (
+            <div className="bg-green-50 text-green-700 p-3 rounded-lg text-sm mb-4">
+              {info}
+            </div>
+          )}
 
           {/* Login Form */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
@@ -110,9 +143,22 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
               />
             </div>
             <div>
-              <label htmlFor="login-password" className="text-body-sm text-secondary block" style={{ marginBottom: 'var(--space-xs)' }}>
-                Password
-              </label>
+              <div
+                className="flex items-center justify-between"
+                style={{ marginBottom: 'var(--space-xs)' }}
+              >
+                <label htmlFor="login-password" className="text-body-sm text-secondary block">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={isLoading}
+                  className="text-primary hover:underline text-body-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <input
                 type="password"
                 id="login-password"

@@ -2,6 +2,7 @@ import { JournalEntry, JournalProps } from '@/util/types';
 import React, { useState } from 'react';
 import JournalView from './RecentJournal';
 import { callBackendAPI } from '@/util/api';
+import ReactMarkdown from 'react-markdown';
 
 export default function Journal({
     moodOptions
@@ -86,6 +87,17 @@ export default function Journal({
 
     return (
         <div className="h-full overflow-y-auto no-scrollbar">
+            <style>{`
+                .no-scrollbar::-webkit-scrollbar {
+                    display: none;
+                    width: 0;
+                    height: 0;
+                }
+                .no-scrollbar {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+            `}</style>
             <div className="bg-surface rounded-2xl shadow-lg" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
                 <h2 className="text-h2">How are you feeling today?</h2>
                 <p className="text-body-lg text-secondary" style={{ marginTop: 'var(--space-xxs)', marginBottom: 'var(--space-md)' }}>
@@ -131,9 +143,26 @@ export default function Journal({
             
             {showInsightsModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-                    <div className="bg-surface rounded-2xl shadow-xl max-w-lg w-full" style={{ padding: 'var(--space-md)' }}>
+                    <div
+                        className="bg-surface rounded-2xl shadow-xl max-w-lg w-full"
+                        style={{
+                            padding: 'var(--space-md)',
+                            maxHeight: '80vh',
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }}
+                    >
                         <h3 className="text-h2 text-surface-light" style={{ marginBottom: 'var(--space-sm)' }}>✨ Reflection on your day</h3>
-                        <div className="text-secondary" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                        <div
+                            className="text-secondary overflow-y-auto no-scrollbar"
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 'var(--space-sm)',
+                                maxHeight: 'calc(80vh - 170px)',
+                                paddingRight: '4px',
+                            }}
+                        >
                             {isLoadingInsights ? (
                                 <div className="flex justify-center">
                                     <div className="lds-ellipsis">
@@ -144,7 +173,7 @@ export default function Journal({
                                     </div>
                                 </div>
                             ) : (
-                                <p className="text-body">{insightsContent}</p>
+                                <ReactMarkdown>{insightsContent}</ReactMarkdown>
                             )}
                         </div>
                         <button

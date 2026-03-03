@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChatProps } from '@/util/types';
-import { ChevronDown, ChevronUp, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Pencil, StopCircleIcon, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -14,16 +14,27 @@ export default function Chat({
   handleQuickPrompt,
   handleSubmitForm,
   handleMessageFeedback,
+  handleEditUserMessage,
+  handleSelectUserMessageVersion,
+  handleCopyMessage,
   isGenerating,
   onStopGeneration,
 }: ChatProps) {
 
   const [showPrompts, setShowPrompts] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingText, setEditingText] = useState('');
+  const lastUserMessageIndex = [...chatHistory]
+    .map((msg, index) => ({ msg, index }))
+    .reverse()
+    .find(({ msg }) => msg.sender === 'user')?.index ?? -1;
   return (
     <div className="grow flex flex-col overflow-hidden h-full">
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
+          width: 0;
+          height: 0;
         }
         .no-scrollbar {
           -ms-overflow-style: none;  /* IE and Edge */
@@ -41,7 +52,7 @@ export default function Chat({
           <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.thinking ? (
               <div className="rounded-2xl bg-surface text-secondary" style={{ padding: 'var(--space-xs)' }}>
-                <div className="lds-ellipsis">
+                <div className="lds-ellipsis px-3">
                   <div></div>
                   <div></div>
                   <div></div>
@@ -57,12 +68,109 @@ export default function Chat({
                     }`}
                   style={{ padding: 'var(--space-xs)' }}
                 >
-                  {msg.sender === 'ai' ? (
+                  {msg.sender === 'user' && editingIndex === index ? (
+                    <div className="flex flex-col" style={{ gap: 'var(--space-xxs)' }}>
+                      <textarea
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        className="w-full bg-transparent text-white resize-y border-none outline-none focus:outline-none focus:ring-0"
+                        style={{ minHeight: '150px', padding: 'var(--space-xxs)' }}
+                      />
+                      <div className="flex justify-end" style={{ gap: 'var(--space-xxs)' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingIndex(null);
+                            setEditingText('');
+                          }}
+                          className="rounded-md bg-white/20 hover:bg-white/30"
+                          style={{ padding: '2px 8px' }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleEditUserMessage(index, editingText);
+                            setEditingIndex(null);
+                            setEditingText('');
+                          }}
+                          className="rounded-md bg-white/20 hover:bg-white/30"
+                          style={{ padding: '2px 8px' }}
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  ) : msg.sender === 'ai' ? (
                     <ReactMarkdown>{msg.text}</ReactMarkdown>
                   ) : (
                     msg.text
                   )}
                 </div>
+                {msg.sender === 'user' && !msg.thinking && (
+                  <div className="flex items-center justify-end text-secondary" style={{ gap: 'var(--space-xxs)' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyMessage(index)}
+                      className="flex items-center justify-center rounded-full transition hover:bg-primary/20 bg-surface"
+                      style={{ width: 'var(--space-md)', height: 'var(--space-md)' }}
+                      title="Copy message"
+                    >
+                      <Copy size={13} />
+                    </button>
+                    {index === lastUserMessageIndex && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingIndex(index);
+                          setEditingText(msg.text);
+                        }}
+                        className="flex items-center justify-center rounded-full transition hover:bg-primary/20 bg-surface"
+                        style={{ width: 'var(--space-md)', height: 'var(--space-md)' }}
+                        title="Edit message"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                    )}
+                    {(msg.versions?.length || 0) > 1 && (
+                      <div className="flex items-center rounded-md bg-surface border border-color" style={{ gap: '4px', padding: '2px 6px' }}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleSelectUserMessageVersion(
+                              index,
+                              Math.max(0, (msg.versionIndex ?? 0) - 1),
+                            )
+                          }
+                          disabled={(msg.versionIndex ?? 0) <= 0}
+                          className="disabled:opacity-40"
+                        >
+                          {'<'}
+                        </button>
+                        <span className="text-caption text-secondary">
+                          {(msg.versionIndex ?? 0) + 1}/{msg.versions?.length}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleSelectUserMessageVersion(
+                              index,
+                              Math.min(
+                                (msg.versions?.length || 1) - 1,
+                                (msg.versionIndex ?? 0) + 1,
+                              ),
+                            )
+                          }
+                          disabled={(msg.versionIndex ?? 0) >= (msg.versions?.length || 1) - 1}
+                          className="disabled:opacity-40"
+                        >
+                          {'>'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {/* Feedback */}
                 {msg.sender === 'ai' && !msg.thinking && (
                   <div className="flex items-center" style={{ gap: 'var(--space-xxs)', paddingLeft: 'var(--space-xs)' }}>
@@ -166,7 +274,7 @@ export default function Chat({
               }}
               title="Stop generating"
             >
-              <span>■</span>
+              <StopCircleIcon size={30} />
             </button>
           ) : (
             <button

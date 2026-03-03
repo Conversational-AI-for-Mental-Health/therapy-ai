@@ -1,4 +1,4 @@
-export type Screens = 'landing' | 'login' | 'signup' | 'dashboard' | 'privacy' | 'story' | 'terms' | 'contact';
+export type Screens = 'landing' | 'login' | 'signup' | 'dashboard' | 'privacy' | 'story' | 'terms' | 'contact' | 'reset-password';
 export type DashboardTab = 'chat' | 'journal';
 
 export type JournalEntry = {
@@ -14,6 +14,8 @@ export type ChatMessage = {
   text: string;
   thinking?: boolean;
   feedback?: 'positive' | 'negative' | null;
+  versions?: string[];
+  versionIndex?: number;
 };
 
 export type ChatSession = {
@@ -33,6 +35,10 @@ export interface LandingPageProps {
 export interface LoginPageProps {
   onNavigate: (screen: Screens) => void;
 
+}
+
+export interface ResetPasswordPageProps {
+  onNavigate: (screen: Screens) => void;
 }
 
 export interface SignupPageProps {
@@ -99,6 +105,9 @@ export interface ChatProps {
   handleQuickPrompt: (text?: string) => void;
   handleSubmitForm: (e: React.FormEvent<HTMLFormElement>) => void;
   handleMessageFeedback: (index: number, feedbackType: 'positive' | 'negative') => void;
+  handleEditUserMessage: (index: number, newText: string) => void;
+  handleSelectUserMessageVersion: (index: number, versionIndex: number) => void;
+  handleCopyMessage: (index: number) => void;
   isGenerating: boolean;
   onStopGeneration: () => void;
 };

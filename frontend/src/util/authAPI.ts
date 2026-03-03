@@ -6,6 +6,7 @@ interface AuthResponse {
     user: any;
     token: string;
   };
+  message?: string;
   error?: string;
 }
 
@@ -48,6 +49,48 @@ class AuthAPI {
       return {
         success: false,
         error: error.message || 'Login failed',
+      };
+    }
+  }
+
+  async forgotPassword(email: string): Promise<AuthResponse> {
+    try {
+      const response = await fetch(`${API_URL}/users/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.error('Forgot password error:', error);
+      return {
+        success: false,
+        error: error.message || 'Forgot password failed',
+      };
+    }
+  }
+
+  async resetPassword(email: string, password: string): Promise<AuthResponse> {
+    try {
+      const response = await fetch(`${API_URL}/users/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      return {
+        success: false,
+        error: error.message || 'Reset password failed',
       };
     }
   }

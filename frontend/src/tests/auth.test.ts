@@ -1,6 +1,5 @@
 import AuthAPI from "../util/authAPI";
 
-// Mock fetch globally
 global.fetch = jest.fn();
 
 describe("Authentication API Tests", () => {
@@ -9,16 +8,13 @@ describe("Authentication API Tests", () => {
     localStorage.clear();
   });
 
-  // -------------------------------
-  // LOGIN TESTS
-  // -------------------------------
   test("should login successfully with valid credentials", async () => {
     const mockResponse = {
       success: true,
       data: {
         user: { id: "1", email: "test@example.com" },
-        token: "mockToken123"
-      }
+        token: "mockToken123",
+      },
     };
 
     const mockFetch: any = global.fetch;
@@ -36,7 +32,7 @@ describe("Authentication API Tests", () => {
   test("should fail login with invalid password", async () => {
     const mockResponse = {
       success: false,
-      error: "Invalid credentials"
+      error: "Invalid credentials",
     };
 
     const mockFetch: any = global.fetch;
@@ -60,16 +56,13 @@ describe("Authentication API Tests", () => {
     expect(response.error).toBe("Network error");
   });
 
-  // -------------------------------
-  // REGISTER TESTS
-  // -------------------------------
   test("should register a user successfully", async () => {
     const mockResponse = {
       success: true,
       data: {
         user: { id: "1", email: "test@example.com" },
-        token: "mockToken123"
-      }
+        token: "mockToken123",
+      },
     };
 
     const mockFetch: any = global.fetch;
@@ -86,7 +79,7 @@ describe("Authentication API Tests", () => {
   test("should return error on registration failure", async () => {
     const mockResponse = {
       success: false,
-      error: "Email already exists"
+      error: "Email already exists",
     };
 
     const mockFetch: any = global.fetch;
@@ -100,16 +93,13 @@ describe("Authentication API Tests", () => {
     expect(response.error).toBe("Email already exists");
   });
 
-  // -------------------------------
-  // SOCIAL LOGIN TESTS
-  // -------------------------------
   test("should perform social login successfully", async () => {
     const mockResponse = {
       success: true,
       data: {
         user: { id: "77", email: "google@test.com" },
-        token: "socialToken123"
-      }
+        token: "socialToken123",
+      },
     };
 
     const mockFetch: any = global.fetch;
@@ -128,7 +118,7 @@ describe("Authentication API Tests", () => {
   test("should fail social login on server error", async () => {
     const mockResponse = {
       success: false,
-      error: "Social login failed"
+      error: "Social login failed",
     };
 
     const mockFetch: any = global.fetch;
@@ -142,9 +132,39 @@ describe("Authentication API Tests", () => {
     expect(response.error).toBe("Social login failed");
   });
 
-  // -------------------------------
-  // LOCAL STORAGE TESTS
-  // -------------------------------
+  test("should request forgot password successfully", async () => {
+    const mockResponse = {
+      success: true,
+      message: "Email verified. Continue to reset password.",
+    };
+
+    const mockFetch: any = global.fetch;
+    mockFetch.mockResolvedValueOnce({
+      json: async () => mockResponse,
+    });
+
+    const response = await AuthAPI.forgotPassword("test@example.com");
+
+    expect(response.success).toBe(true);
+    expect(response.message).toContain("Continue to reset password");
+  });
+
+  test("should reset password successfully", async () => {
+    const mockResponse = {
+      success: true,
+      message: "Password reset successful",
+    };
+
+    const mockFetch: any = global.fetch;
+    mockFetch.mockResolvedValueOnce({
+      json: async () => mockResponse,
+    });
+
+    const response = await AuthAPI.resetPassword("test@example.com", "NewPassword123");
+
+    expect(response.success).toBe(true);
+    expect(response.message).toBe("Password reset successful");
+  });
 
   test("should store and retrieve auth token", () => {
     localStorage.setItem("token", "abcd1234");
@@ -180,3 +200,4 @@ describe("Authentication API Tests", () => {
     expect(AuthAPI.isAuthenticated()).toBe(true);
   });
 });
+

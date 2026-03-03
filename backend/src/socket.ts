@@ -70,7 +70,7 @@ const handleUserMessage = async (
           max_tokens: 512,
           temperature: 0.7,
         },
-        { timeout: 30000 }, // 30 second timeout
+        { timeout: config.PYTHON_AI_TIMEOUT_MS },
       );
 
       aiResponse =

@@ -3,9 +3,7 @@ import axios from "axios";
 import { User } from "../db/models/User";
 import { Conversation } from "../db/models/Conversation";
 import { Message } from "../db/models/Message";
-
-// Same Flask API you used in api.ts
-const PYTHON_API_URL = "http://127.0.0.1:5000/chat";
+import config from "../config";
 
 interface ChatRequestBody {
   userId?: string;        // optional external identity
@@ -67,7 +65,7 @@ export const handleChat = async (req: Request, res: Response) => {
     let botText: string;
 
     try {
-      const response = await axios.post(PYTHON_API_URL, { message });
+      const response = await axios.post(config.PYTHON_AI_URL, { message });
       // Assuming Flask returns: { "response": "..." }
       botText = response.data.response ?? "I'm having trouble understanding right now.";
     } catch (err) {

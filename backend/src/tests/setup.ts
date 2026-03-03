@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import path from 'path';
 
 let mongoServer: MongoMemoryServer | undefined;
+const mongoBinaryVersion = process.env.MONGOMS_VERSION || '7.0.14';
+const mongoDownloadDir = path.resolve(process.cwd(), '.mongodb-binaries');
 
 beforeAll(async () => {
   try {
@@ -12,6 +15,10 @@ beforeAll(async () => {
 
     // Start in-memory MongoDB with longer timeout
     mongoServer = await MongoMemoryServer.create({
+      binary: {
+        version: mongoBinaryVersion,
+        downloadDir: mongoDownloadDir,
+      },
       instance: {
         dbName: 'test-therapy-ai',
       },
@@ -49,6 +56,10 @@ afterAll(async () => {
 
 afterEach(async () => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return;
+    }
+
     // Clear all collections after each test
     const collections = mongoose.connection.collections;
     for (const key in collections) {

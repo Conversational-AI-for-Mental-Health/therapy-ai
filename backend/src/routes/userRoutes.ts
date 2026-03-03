@@ -2,22 +2,26 @@ import { Router, Request, Response } from 'express';
 import { UserService } from '../services/userService';
 import jwt from 'jsonwebtoken';
 import config from '../config';
+import { createManualRateLimiter } from '../middleware/rateLimit';
 
 const router = Router();
+const authRateLimit = createManualRateLimiter({ windowMs: 60_000, maxRequests: 10 });
+const forgotPasswordRateLimit = createManualRateLimiter({ windowMs: 60_000, maxRequests: 3 });
 
 // Register
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', authRateLimit, async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
+    const normalizedEmail = email?.toLowerCase().trim();
 
-    if (!name || !email || !password) {
+    if (!name || !normalizedEmail || !password) {
       return res.status(400).json({
         success: false,
         error: 'Name, email, and password are required',
       });
     }
 
-    const existingUser = await UserService.findUserByEmail(email);
+    const existingUser = await UserService.findUserByEmail(normalizedEmail);
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -25,7 +29,7 @@ router.post('/register', async (req: Request, res: Response) => {
       });
     }
 
-    const user = await UserService.createUser(name, email, password);
+    const user = await UserService.createUser(name, normalizedEmail, password);
 
     // JWT token
     const token = jwt.sign(
@@ -51,18 +55,19 @@ router.post('/register', async (req: Request, res: Response) => {
 });
 
 
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', authRateLimit, async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
+    const normalizedEmail = email?.toLowerCase().trim();
 
-    if (!email || !password) {
+    if (!normalizedEmail || !password) {
       return res.status(400).json({
         success: false,
         error: 'Email and password are required',
       });
     }
 
-    const user = await UserService.findUserByEmail(email);
+    const user = await UserService.findUserByEmail(normalizedEmail);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -108,6 +113,80 @@ router.post('/login', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: error.message || 'Login failed',
+    });
+  }
+});
+
+router.post(
+  '/forgot-password',
+  forgotPasswordRateLimit,
+  async (req: Request, res: Response) => {
+    try {
+      const email = req.body?.email?.toLowerCase().trim();
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email is required',
+        });
+      }
+
+      const user = await UserService.findUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'No account found with this email',
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: 'Email verified. Continue to reset password.',
+      });
+    } catch (error: any) {
+      console.error('Forgot password error:', error);
+      return res.status(500).json({
+        success: false,
+        error: error.message || 'Forgot password failed',
+      });
+    }
+  },
+);
+
+router.post('/reset-password', authRateLimit, async (req: Request, res: Response) => {
+  try {
+    const email = req.body?.email?.toLowerCase().trim();
+    const password = req.body?.password;
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email and password are required',
+      });
+    }
+
+    if (typeof password !== 'string' || password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password must be at least 8 characters',
+      });
+    }
+
+    const didReset = await UserService.resetPasswordByEmail(email, password);
+    if (!didReset) {
+      return res.status(404).json({
+        success: false,
+        error: 'No account found with this email',
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Password reset successful',
+    });
+  } catch (error: any) {
+    console.error('Reset password error:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Reset password failed',
     });
   }
 });

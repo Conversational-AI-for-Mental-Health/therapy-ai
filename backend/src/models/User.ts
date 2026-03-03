@@ -10,6 +10,8 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password_hash?: string;
+  reset_password_token?: string;
+  reset_password_expires?: Date;
   googleId?: string;
   appleId?: string;
   preferences: IUserPreferences;
@@ -46,6 +48,14 @@ const UserSchema = new Schema<IUser>(
         return !this.googleId && !this.appleId;
       },
       minlength: [60, 'Password hash must be at least 60 characters (bcrypt)'],
+      select: false,
+    },
+    reset_password_token: {
+      type: String,
+      select: false,
+    },
+    reset_password_expires: {
+      type: Date,
       select: false,
     },
     googleId: {

@@ -12,8 +12,8 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Enable Corepack (Activates yarn@4.10.3)
-        run: corepack enable 
+      - name: Enable Corepack and activate Yarn 4.12.0
+        run: corepack enable && corepack prepare yarn@4.12.0 --activate
 
       - name: Cache dependencies
         uses: actions/cache@v4
@@ -28,8 +28,8 @@ jobs:
       - name: Install Dependencies
         run: yarn install --immutable 
       
-      - name: Run Frontend Tests and Coverage 
-        run: yarn test -- --coverage
+      - name: Run Frontend Tests
+        run: yarn test --runInBand
         working-directory: frontend 
 
       

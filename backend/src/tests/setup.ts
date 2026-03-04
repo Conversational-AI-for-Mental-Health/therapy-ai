@@ -3,7 +3,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import path from 'path';
 
 let mongoServer: MongoMemoryServer | undefined;
-const mongoBinaryVersion = process.env.MONGOMS_VERSION || '7.0.14';
+const mongoBinaryVersion = process.env.MONGOMS_VERSION || '7.0.24';
 const mongoDownloadDir = path.resolve(process.cwd(), '.mongodb-binaries');
 
 beforeAll(async () => {

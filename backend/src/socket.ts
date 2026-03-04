@@ -2,18 +2,54 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { ConversationService } from './services';
 import axios from 'axios';
 import config from './config';
-import { UserService } from './services/userService';
+import jwt from 'jsonwebtoken';
 
-/**
- * Handle user sending a message
- */
+type SocketAuthPayload = {
+  token?: string;
+  userId?: string;
+};
+
+type AuthenticatedSocket = Socket & {
+  data: {
+    userId: string;
+  };
+};
+
+const getUserIdFromSocket = (socket: AuthenticatedSocket): string => socket.data.userId;
+
+const resolveSocketUserId = (auth: SocketAuthPayload): string | null => {
+  const token = auth.token?.startsWith('Bearer ')
+    ? auth.token.slice(7)
+    : auth.token;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, config.JWT_SECRET) as {
+        userId: string;
+      };
+      if (decoded?.userId && typeof decoded.userId === 'string') {
+        return decoded.userId;
+      }
+    } catch (error) {
+      return null;
+    }
+  }
+
+  if (config.NODE_ENV !== 'production' && auth.userId) {
+    return auth.userId;
+  }
+
+  return null;
+};
+
 const handleUserMessage = async (
-  socket: Socket,
+  socket: AuthenticatedSocket,
   io: SocketIOServer,
-  data: { conversationId: string; text: string; userId: string },
+  data: { conversationId: string; text: string },
 ) => {
+  const userId = getUserIdFromSocket(socket);
   console.log(
-    `[Socket] send_message from user ${data.userId} in conversation ${data.conversationId}`,
+    `[Socket] send_message from user ${userId} in conversation ${data.conversationId}`,
   );
 
   try {
@@ -26,7 +62,7 @@ const handleUserMessage = async (
     // save user message
     await ConversationService.addMessage(
       data.conversationId,
-      data.userId,
+      userId,
       'user',
       data.text,
     );
@@ -37,7 +73,7 @@ const handleUserMessage = async (
     const conversation =
       await ConversationService.getConversationWithRecentMessages(
         data.conversationId,
-        data.userId,
+        userId,
         20, // last 20 messages
       );
 
@@ -91,7 +127,7 @@ const handleUserMessage = async (
     // save ai response
     await ConversationService.addMessage(
       data.conversationId,
-      data.userId,
+      userId,
       'ai',
       aiResponse,
     );
@@ -115,21 +151,20 @@ const handleUserMessage = async (
   }
 };
 
-/**
- * Handle joining a conversation room
- */
+//join convo
 const handleJoinConversation = async (
-  socket: Socket,
-  data: { conversationId: string; userId: string },
+  socket: AuthenticatedSocket,
+  data: { conversationId: string },
 ) => {
+  const userId = getUserIdFromSocket(socket);
   console.log(
-    `[Socket] join_conversation: user ${data.userId} joining conversation ${data.conversationId}`,
+    `[Socket] join_conversation: user ${userId} joining conversation ${data.conversationId}`,
   );
 
   try {
     // validate input
-    if (!data.conversationId || !data.userId) {
-      socket.emit('error', { message: 'Missing conversationId or userId' });
+    if (!data.conversationId) {
+      socket.emit('error', { message: 'Missing conversationId' });
       return;
     }
 
@@ -143,7 +178,7 @@ const handleJoinConversation = async (
     const conversation =
       await ConversationService.getConversationWithRecentMessages(
         data.conversationId,
-        data.userId,
+        userId,
         50, // last 50 messages
       );
 
@@ -165,23 +200,30 @@ const handleJoinConversation = async (
     console.error('[Socket] Error joining conversation:', error.message);
     socket.emit('error', {
       message: 'Failed to join conversation',
-      error: error.message,
     });
   }
 };
 
-/**
- * Attach socket event handlers
- */
+//attach socket event handlers
 export const attachSocketHandlers = (io: SocketIOServer) => {
+  io.use((socket, next) => {
+    const userId = resolveSocketUserId((socket.handshake.auth || {}) as SocketAuthPayload);
+    if (!userId) {
+      return next(new Error('Unauthorized'));
+    }
+    (socket as AuthenticatedSocket).data.userId = userId;
+    return next();
+  });
+
   io.on('connection', (socket: Socket) => {
+    const authSocket = socket as AuthenticatedSocket;
     console.log(`[Socket] Client connected: ${socket.id}`);
 
     // listen for join_conversation
     socket.on(
       'join_conversation',
-      async (data: { conversationId: string; userId: string }) => {
-        await handleJoinConversation(socket, data);
+      async (data: { conversationId: string }) => {
+        await handleJoinConversation(authSocket, data);
       },
     );
 
@@ -191,9 +233,8 @@ export const attachSocketHandlers = (io: SocketIOServer) => {
       async (data: {
         conversationId: string;
         text: string;
-        userId: string;
       }) => {
-        await handleUserMessage(socket, io, data);
+        await handleUserMessage(authSocket, io, data);
       },
     );
 

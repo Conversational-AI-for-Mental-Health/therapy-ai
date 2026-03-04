@@ -1,4 +1,4 @@
-import { Conversation, IConversation } from '../models';
+import { Conversation, IConversation } from '../db/models';
 import { Types } from 'mongoose';
 import { UserService } from './userService';
 

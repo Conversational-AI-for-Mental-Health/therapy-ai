@@ -1,4 +1,4 @@
-import { Conversation, User } from '../../models';
+import { Conversation, User } from '../../db/models';
 import { Types } from 'mongoose';
 import '../setup';
 

@@ -1,12 +1,11 @@
-import { Request, Response } from "express";
-import axios from "axios";
-import { User } from "../db/models/User";
-import { Conversation } from "../db/models/Conversation";
-import { Message } from "../db/models/Message";
-import config from "../config";
+import { Request, Response } from 'express';
+import axios from 'axios';
+import { Types } from 'mongoose';
+import config from '../config';
+import { ConversationService } from '../services/conversationService';
 
 interface ChatRequestBody {
-  userId?: string; // optional external identity
+  userId?: string;
   conversationId?: string;
   message: string;
 }
@@ -24,78 +23,99 @@ export const handleChat = async (req: Request, res: Response) => {
   try {
     const { userId, conversationId, message } = req.body as ChatRequestBody;
 
-    if (!message || typeof message !== "string") {
+    if (!message || typeof message !== 'string') {
       return res.status(400).json({ error: "Missing or invalid 'message' field." });
     }
 
-    // ensure user exists
-    let user = await User.findOne({ authId: userId || "dev-anonymous-user" });
-
-    if (!user) {
-      user = await User.create({
-        authId: userId || "dev-anonymous-user",
-        email: userId ? `${userId}@example.com` : undefined,
-        name: userId || "Anonymous User",
+    if (!userId || !Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        error: "Missing or invalid 'userId' field.",
       });
     }
 
-    // ensure conversation exists
-    let conversation;
+    const normalizedUserId = new Types.ObjectId(userId);
 
-    if (conversationId) {
-      conversation = await Conversation.findById(conversationId);
+    let activeConversationId: Types.ObjectId;
+
+    if (conversationId && Types.ObjectId.isValid(conversationId)) {
+      activeConversationId = new Types.ObjectId(conversationId);
+    } else {
+      const created = await ConversationService.createConversation(
+        normalizedUserId,
+        message.slice(0, 50),
+      );
+      activeConversationId = created._id;
     }
 
-    if (!conversation) {
-      conversation = await Conversation.create({
-        user: user._id,
-        title: message.slice(0, 50),
-      });
-    }
+    await ConversationService.addMessage(
+      activeConversationId,
+      normalizedUserId,
+      'user',
+      message,
+    );
 
-    // save user message
-    await Message.create({
-      conversation: conversation._id,
-      user: user._id,
-      role: "user",
-      text: message,
-    });
-
-    // call python llm
     let botText: string;
+    const latestConversation =
+      await ConversationService.getConversationWithRecentMessages(
+        activeConversationId,
+        normalizedUserId,
+        20,
+      );
+
+    if (!latestConversation) {
+      return res.status(404).json({
+        error: 'Conversation not found',
+      });
+    }
+
+    const conversationHistory = latestConversation.messages
+      .slice(0, -1)
+      .map((msg) => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.text,
+      }));
 
     try {
-      const response = await axios.post(config.PYTHON_AI_URL, { message });
-      // flask returns { response: "..." }
-      botText = response.data.response ?? "I'm having trouble understanding right now.";
+      const response = await axios.post(
+        config.PYTHON_AI_URL,
+        {
+          message,
+          conversation_history: conversationHistory,
+          max_tokens: 512,
+          temperature: 0.7,
+        },
+        { timeout: config.PYTHON_AI_TIMEOUT_MS },
+      );
+      botText =
+        response.data.response ?? "I'm having trouble understanding right now.";
     } catch (err) {
-      console.error("[CHAT] Error calling Python LLM backend:", err);
-      // fallback reply when ai call fails
-      botText = "I'm sorry, but I'm unable to reach the AI service at the moment.";
+      console.error('[CHAT] Error calling Python LLM backend:', err);
+      botText =
+        "I'm sorry, but I'm unable to reach the AI service at the moment.";
     }
 
-    // save bot message
-    const botMessage = await Message.create({
-      conversation: conversation._id,
-      role: "bot",
-      text: botText,
-    });
+    const updatedConversation = await ConversationService.addMessage(
+      activeConversationId,
+      normalizedUserId,
+      'ai',
+      botText,
+    );
+    const botMessage =
+      updatedConversation.messages[updatedConversation.messages.length - 1];
 
-    // return reply
     return res.json({
-      conversationId: conversation._id,
+      conversationId: activeConversationId,
       botMessage: {
-        id: botMessage._id,
-        role: botMessage.role,
+        id: botMessage._id.toString(),
+        role: botMessage.sender,
         text: botMessage.text,
-        createdAt: botMessage.createdAt,
+        createdAt: botMessage.timestamp,
       },
     });
   } catch (error) {
-    console.error("[CHAT] Error in handleChat:", error);
+    console.error('[CHAT] Error in handleChat:', error);
     return res.status(500).json({
-      error: "Failed to process chat message.",
-      details: (error as Error).message,
+      error: 'Failed to process chat message.',
     });
   }
 };

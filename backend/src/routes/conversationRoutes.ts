@@ -1,8 +1,30 @@
 import { Router, Request, Response } from 'express';
 import { ConversationService } from '../services';
 import { authenticateUser, validateObjectId } from '../middleware/validation';
+import { validateBody, validateQuery } from '../middleware/schemaValidation';
+import { z } from 'zod';
 
 const router = Router();
+const addMessageBodySchema = z.object({
+  sender: z.enum(['user', 'ai']),
+  text: z.string().min(1).max(10000),
+});
+
+const createConversationBodySchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+});
+
+const getConversationQuerySchema = z.object({
+  limit: z.string().regex(/^\d+$/).optional(),
+});
+
+const getConversationsQuerySchema = z.object({
+  archived: z.enum(['true', 'false']).optional(),
+});
+
+const updateTitleBodySchema = z.object({
+  title: z.string().min(1).max(200),
+});
 
 router.use(authenticateUser);
 
@@ -10,6 +32,7 @@ router.use(authenticateUser);
 router.post(
   '/:id/messages',
   validateObjectId('id'),
+  validateBody(addMessageBodySchema),
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.userId;
@@ -55,7 +78,7 @@ router.post(
 );
 
 // Create new conversation
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', validateBody(createConversationBodySchema), async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { title } = req.body;
@@ -78,7 +101,7 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // Get all conversations
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', validateQuery(getConversationsQuerySchema), async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
     const includeArchived = req.query.archived === 'true';
@@ -105,6 +128,7 @@ router.get('/', async (req: Request, res: Response) => {
 router.get(
   '/:id',
   validateObjectId('id'),
+  validateQuery(getConversationQuerySchema),
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.userId;
@@ -142,6 +166,7 @@ router.get(
 router.patch(
   '/:id/title',
   validateObjectId('id'),
+  validateBody(updateTitleBodySchema),
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.userId;

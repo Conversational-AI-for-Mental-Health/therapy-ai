@@ -10,12 +10,53 @@ import config from './config';
 
 export const createApp = () => {
   const app: Application = express();
+  const isProduction = config.NODE_ENV === 'production';
+  const allowedOrigins = new Set(config.CORS_ORIGINS);
+
+  // Required when running behind reverse proxies/load balancers.
+  app.set('trust proxy', 1);
 
   // Security & Middleware
-  app.use(helmet());
+  app.use(
+    helmet({
+      hsts: isProduction
+        ? {
+            maxAge: 15552000,
+            includeSubDomains: true,
+            preload: true,
+          }
+        : false,
+    }),
+  );
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (isProduction) {
+      const protoHeader = req.headers['x-forwarded-proto'];
+      const forwardedProto = Array.isArray(protoHeader)
+        ? protoHeader[0]
+        : protoHeader;
+      if (forwardedProto !== 'https') {
+        return res.status(426).json({
+          success: false,
+          error: 'HTTPS is required',
+        });
+      }
+    }
+    return next();
+  });
+
   app.use(
     cors({
-      origin: config.CORS_ORIGIN,
+      origin: (origin, callback) => {
+        // Allow requests without an Origin header (native apps, curl).
+        if (!origin) {
+          return callback(null, true);
+        }
+        if (allowedOrigins.has(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error('CORS origin denied'));
+      },
       credentials: true,
     }),
   );
@@ -49,7 +90,7 @@ export const createApp = () => {
     console.error('Error:', err);
     res.status(err.status || 500).json({
       success: false,
-      error: err.message || 'Internal Server Error',
+      error: isProduction ? 'Internal Server Error' : err.message || 'Internal Server Error',
     });
   });
 

@@ -1,5 +1,5 @@
 import { ConversationService, UserService } from '../../services';
-import { User, Conversation } from '../../models';
+import { User, Conversation } from '../../db/models';
 import { Types } from 'mongoose';
 import '../setup';
 

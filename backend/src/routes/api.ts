@@ -1,10 +1,15 @@
 import axios from 'axios';
 import { Router, Request, Response } from 'express';
 import config from '../config';
+import { validateBody } from '../middleware/schemaValidation';
+import { z } from 'zod';
 
 const apiRouter = Router();
+const messageBodySchema = z.object({
+  message: z.string().min(1).max(10000),
+});
 
-// Basic health/status endpoint. Conversation routes live in conversationRoutes.ts.
+//basic health/status endpoint. conversation routes live in conversationRoutes.ts.
 apiRouter.get('/status', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'Backend API is running',
@@ -13,9 +18,8 @@ apiRouter.get('/status', (req: Request, res: Response) => {
 });
 
 // main route to communicate with flask ai
-apiRouter.post('/message', async (req: Request, res: Response) => {
+apiRouter.post('/message', validateBody(messageBodySchema), async (req: Request, res: Response) => {
   const { message } = req.body;
-  if (!message) return res.status(400).json({ error: 'Message required' });
 
   try {
     const response = await axios.post(config.PYTHON_AI_URL, { message });

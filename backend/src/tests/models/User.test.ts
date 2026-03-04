@@ -1,4 +1,4 @@
-import { User } from '../../models';
+import { User } from '../../db/models';
 import '../setup';
 
 describe('User Model', () => {

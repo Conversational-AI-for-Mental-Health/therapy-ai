@@ -1,10 +1,15 @@
-import { User, IUser } from '../models';
+import { User, IUser } from '../db/models';
 import { Types } from 'mongoose';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import config from '../config';
 
 const SALT_ROUNDS = 10;
 const RESET_TOKEN_EXPIRY_MS = 1000 * 60 * 15;
+const REFRESH_TOKEN_SIZE_BYTES = 48;
+const MAX_ACTIVE_REFRESH_TOKENS = 5;
+const REFRESH_TOKEN_SELECT =
+  '+refresh_tokens.token_hash +refresh_tokens.expires_at +refresh_tokens.created_at +refresh_tokens.revoked_at';
 
 export class UserService {
   static async createUser(
@@ -168,5 +173,121 @@ export class UserService {
       { $push: { conversations: conversationId } },
       { new: true },
     );
+  }
+  //create refresh token for user validation
+  static createRefreshTokenValue(): string {
+    return crypto.randomBytes(REFRESH_TOKEN_SIZE_BYTES).toString('hex');
+  }
+  static hashToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
+  static async storeRefreshToken(
+    userId: string | Types.ObjectId,
+    refreshToken: string,
+  ): Promise<{ refreshToken: string; expiresAt: Date }> {
+    const tokenHash = this.hashToken(refreshToken);
+    const expiresAt = new Date(
+      Date.now() + config.REFRESH_TOKEN_EXPIRES_DAYS * 24 * 60 * 60 * 1000,
+    );
+
+    const user = await User.findById(userId).select(REFRESH_TOKEN_SELECT);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const now = new Date();
+    user.refresh_tokens = (user.refresh_tokens || []).filter(
+      (token) => !token.revoked_at && token.expires_at > now,
+    );
+
+    user.refresh_tokens.push({
+      token_hash: tokenHash,
+      expires_at: expiresAt,
+      created_at: now,
+    });
+
+    if (user.refresh_tokens.length > MAX_ACTIVE_REFRESH_TOKENS) {
+      user.refresh_tokens = user.refresh_tokens
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        )
+        .slice(-MAX_ACTIVE_REFRESH_TOKENS);
+    }
+
+    await user.save();
+    return { refreshToken, expiresAt };
+  }
+
+  static async rotateRefreshToken(
+    userId: string | Types.ObjectId,
+    refreshToken: string,
+  ): Promise<{ refreshToken: string; expiresAt: Date } | null> {
+    const tokenHash = this.hashToken(refreshToken);
+    const user = await User.findById(userId).select(REFRESH_TOKEN_SELECT);
+    if (!user) {
+      return null;
+    }
+    const now = new Date();
+    const existingToken = user.refresh_tokens.find(
+      (token) =>
+        token.token_hash === tokenHash &&
+        !token.revoked_at &&
+        token.expires_at > now,
+    );
+    if (!existingToken) {
+      return null;
+    }
+    existingToken.revoked_at = now;
+    const newRefreshToken = this.createRefreshTokenValue();
+    const newTokenHash = this.hashToken(newRefreshToken);
+    const newExpiresAt = new Date(
+      Date.now() + config.REFRESH_TOKEN_EXPIRES_DAYS * 24 * 60 * 60 * 1000,
+    );
+    user.refresh_tokens.push({
+      token_hash: newTokenHash,
+      expires_at: newExpiresAt,
+      created_at: now,
+    });
+    await user.save();
+    return { refreshToken: newRefreshToken, expiresAt: newExpiresAt };
+  }
+
+  static async revokeRefreshToken(
+    userId: string | Types.ObjectId,
+    refreshToken: string,
+  ): Promise<boolean> {
+    const tokenHash = this.hashToken(refreshToken);
+    const user = await User.findById(userId).select(REFRESH_TOKEN_SELECT);
+    if (!user) {
+      return false;
+    }
+
+    const tokenEntry = user.refresh_tokens.find(
+      (token) => token.token_hash === tokenHash && !token.revoked_at,
+    );
+    if (!tokenEntry) {
+      return false;
+    }
+
+    tokenEntry.revoked_at = new Date();
+    await user.save();
+    return true;
+  }
+
+  static async revokeAllRefreshTokens(
+    userId: string | Types.ObjectId,
+  ): Promise<void> {
+    const user = await User.findById(userId).select(REFRESH_TOKEN_SELECT);
+    if (!user) {
+      return;
+    }
+
+    const now = new Date();
+    user.refresh_tokens = (user.refresh_tokens || []).map((token) => ({
+      ...token,
+      revoked_at: token.revoked_at || now,
+    }));
+    await user.save();
   }
 }

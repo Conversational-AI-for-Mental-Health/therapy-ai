@@ -9,6 +9,10 @@ export interface AuthSuccessResponse {
   data: {
     user: AuthUser;
     token: string;
+    accessToken?: string;
+    refreshToken?: string;
+    accessTokenExpiresIn?: string;
+    refreshTokenExpiresAt?: string;
   };
 }
 

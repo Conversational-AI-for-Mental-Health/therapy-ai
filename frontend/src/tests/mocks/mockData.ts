@@ -1,5 +1,5 @@
 import { ChatMessage, JournalEntry, ChatSession } from '@/util/types';
-import type { Conversation } from '@/util/conversationAPI';
+import type { Conversation } from '@/util/types';
 
 export const mockChatMessages: ChatMessage[] = [
   {

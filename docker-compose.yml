@@ -1,7 +1,5 @@
 services:
-  # ---------------------------------
   # MONGODB SERVICE (NEW)
-  # ---------------------------------
   mongodb:
     image: mongo:7.0
     container_name: therapy-ai-mongodb
@@ -21,9 +19,7 @@ services:
       retries: 5
     restart: always
 
-  # ---------------------------------
   # MONGO EXPRESS (NEW - Optional UI)
-  # ---------------------------------
   mongo-express:
     image: mongo-express:latest
     container_name: therapy-ai-mongo-express
@@ -39,9 +35,7 @@ services:
       - therapy-ai-network
     restart: always
 
-  # ---------------------------------
   # BACKEND SERVICE (UPDATED)
-  # ---------------------------------
   therapy-ai-backend:
     build:
       context: .
@@ -61,9 +55,7 @@ services:
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/therapy-ai
 
-  # ---------------------------------
   # FRONTEND SERVICE (UPDATED)
-  # ---------------------------------
   therapy-ai-frontend:
     build:
       context: .
@@ -78,9 +70,7 @@ services:
       - therapy-ai-network
     restart: always
 
-  # ---------------------------------
   # MOBILE SERVICE (EXPO DEV SERVER)
-  # ---------------------------------
   therapy-ai-mobile:
     build:
       context: .
@@ -100,18 +90,14 @@ services:
     environment:
       - EXPO_PUBLIC_API_URL=http://localhost:3000/api
 
-# ---------------------------------
 # VOLUMES (NEW)
-# ---------------------------------
 volumes:
   mongodb_data:
     driver: local
   mongodb_config:
     driver: local
 
-# ---------------------------------
 # NETWORKS (NEW)
-# ---------------------------------
 networks:
   therapy-ai-network:
     driver: bridge

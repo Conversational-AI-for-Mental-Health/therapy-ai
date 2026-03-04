@@ -132,3 +132,72 @@ export interface SettingsDialogProps {
     email: string;
   };
 };
+
+//Auth API types
+export interface AuthData {
+  user?: any;
+  token?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  accessTokenExpiresIn?: string;
+  refreshTokenExpiresAt?: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  data?: AuthData;
+  message?: string;
+  error?: string;
+}
+
+//Conversation API types
+export interface APIResponse<T> {
+  success: boolean;
+  data?: T;
+  count?: number;
+  message?: string;
+  error?: string;
+}
+
+export interface Conversation {
+  _id: string;
+  user_id: string;
+  title: string;
+  started_at: string;
+  last_message_at?: string;
+  ended_at?: string;
+  archived: boolean;
+  message_count: number;
+  messages?: Message[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Message {
+  _id: string;
+  sender: 'user' | 'ai';
+  text: string;
+  timestamp: string;
+  metadata: {
+    liked: boolean;
+    copied: boolean;
+    regenerated: boolean;
+    edited: boolean;
+    original_text?: string;
+  };
+}
+
+//Emergency API types
+export interface EmergencyRequestParams {
+  userPhone?: string;
+  reason?: string;
+}
+
+export interface EmergencyResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    notified: boolean;
+    timestamp: string;
+  };
+}

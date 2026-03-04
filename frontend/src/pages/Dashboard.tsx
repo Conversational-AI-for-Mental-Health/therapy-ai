@@ -14,7 +14,8 @@ import Journal from '@/components/layout/Journal';
 import Settings from '@/components/layout/Settings';
 import { Menu, X } from 'lucide-react';
 import logo from '../images/logo.png'; import socketService from '@/util/socketService';
-import conversationAPI, { Conversation, Message } from '@/util/conversationAPI';
+import conversationAPI from '@/util/conversationAPI';
+import { Conversation, Message } from '@/util/types';
 import authAPI from '@/util/authAPI';
 import emergencyAPI from '@/util/emergencyAPI';
 

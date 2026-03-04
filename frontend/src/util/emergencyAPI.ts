@@ -1,25 +1,13 @@
+import authAPI from './authAPI';
+import { EmergencyRequestParams, EmergencyResponse } from './types';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
-interface EmergencyRequestParams {
-  userPhone?: string;
-  reason?: string;
-}
-
-interface EmergencyResponse {
-  success: boolean;
-  message: string;
-  data?: {
-    notified: boolean;
-    timestamp: string;
-  };
-}
-
 class EmergencyAPI {
-  private async request<T>(
+  private async fetchWithAuthRetry(
     endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    try {
+    options: RequestInit,
+  ): Promise<Response> {
+    const requestOnce = async () => {
       const token = localStorage.getItem('token');
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -29,13 +17,31 @@ class EmergencyAPI {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      return fetch(`${API_URL}${endpoint}`, {
         ...options,
         headers: {
           ...headers,
           ...options.headers,
         },
       });
+    };
+
+    let response = await requestOnce();
+    if (response.status === 401 && authAPI.getRefreshToken()) {
+      const refreshed = await authAPI.refreshAccessToken();
+      if (refreshed.success) {
+        response = await requestOnce();
+      }
+    }
+    return response;
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    try {
+      const response = await this.fetchWithAuthRetry(endpoint, options);
 
       const data = await response.json();
 

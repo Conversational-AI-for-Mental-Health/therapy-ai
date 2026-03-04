@@ -24,8 +24,7 @@ export default function SignupPage({ onNavigate }: SignupPageProps) {
       const response = await authAPI.register(name, email, password);
       
       if (response.success && response.data) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        authAPI.storeAuthData(response.data);
         onNavigate('dashboard');
       } else {
         setError(response.error || 'Registration failed');
@@ -47,13 +46,12 @@ export default function SignupPage({ onNavigate }: SignupPageProps) {
         email: `user@${provider}.com`,
         name: `Mock ${provider} User`,
       };
+      const mockIdToken = `mock-${provider}-id-token`;
 
-      const response = await authAPI.socialLogin(provider, mockProfile);
+      const response = await authAPI.socialLogin(provider, mockProfile, mockIdToken);
       
       if (response.success && response.data) {
-        
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        authAPI.storeAuthData(response.data);
         
         onNavigate('dashboard');
       } else {

@@ -4,35 +4,26 @@ const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3000';
 
 class SocketService {
   private socket: Socket | null = null;
-  
-  private getUserId(): string {
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        return user._id;
-      }
-    } catch (e) {
-      console.error('Failed to get user ID:', e);
-    }
-    return '507f1f77bcf86cd799439011'; // Fallback to placeholder if no user found (though user should be logged in)
+  private getAuthToken(): string | null {
+    return localStorage.getItem('token');
   }
-
   connect() {
     if (this.socket?.connected) {
       console.log('Socket already connected');
       return;
     }
-
-    const userId = this.getUserId();
-
+    const token = this.getAuthToken();
+    if (!token) {
+      console.warn('Missing auth token. Socket connection skipped.');
+      return;
+    }
     this.socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       auth: {
-        userId: userId,
+        token: `Bearer ${token}`,
       },
     });
 
@@ -63,13 +54,10 @@ class SocketService {
       throw new Error('Socket not connected');
     }
 
-    const userId = this.getUserId();
-
     console.log('Sending message:', { conversationId, text });
     this.socket.emit('send_message', {
       conversationId,
       text,
-      userId,
     });
   }
 
@@ -79,8 +67,7 @@ class SocketService {
       throw new Error('Socket not connected');
     }
 
-    const userId = this.getUserId();
-    this.socket.emit('join_conversation', { conversationId, userId });
+    this.socket.emit('join_conversation', { conversationId });
   }
 
   // Listen for AI responses

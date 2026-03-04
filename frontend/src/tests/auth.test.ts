@@ -107,9 +107,10 @@ describe("Authentication API Tests", () => {
       json: async () => mockResponse,
     });
 
-    const profile = { email: "google@test.com", name: "Google User" };
+    const profile = { id: "social-id-1", email: "google@test.com", name: "Google User" };
+    const idToken = "mock-google-id-token";
 
-    const response = await AuthAPI.socialLogin("google", profile);
+    const response = await AuthAPI.socialLogin("google", profile, idToken);
 
     expect(response.success).toBe(true);
     expect(response.data?.token).toBe("socialToken123");
@@ -126,7 +127,7 @@ describe("Authentication API Tests", () => {
       json: async () => mockResponse,
     });
 
-    const response = await AuthAPI.socialLogin("apple", {});
+    const response = await AuthAPI.socialLogin("apple", {}, "mock-apple-id-token");
 
     expect(response.success).toBe(false);
     expect(response.error).toBe("Social login failed");
@@ -172,6 +173,11 @@ describe("Authentication API Tests", () => {
     expect(AuthAPI.getToken()).toBe("abcd1234");
   });
 
+  test("should store and retrieve refresh token", () => {
+    localStorage.setItem("refreshToken", "refresh-1234");
+    expect(AuthAPI.getRefreshToken()).toBe("refresh-1234");
+  });
+
   test("should store and retrieve current user", () => {
     const user = { id: "1", email: "test@example.com" };
     localStorage.setItem("user", JSON.stringify(user));
@@ -185,12 +191,35 @@ describe("Authentication API Tests", () => {
 
   test("should logout user", () => {
     localStorage.setItem("token", "abc");
+    localStorage.setItem("refreshToken", "refresh-abc");
     localStorage.setItem("user", "{}");
 
     AuthAPI.logout();
 
     expect(AuthAPI.getToken()).toBe(null);
+    expect(AuthAPI.getRefreshToken()).toBe(null);
     expect(AuthAPI.getCurrentUser()).toBe(null);
+  });
+
+  test("should refresh access token successfully", async () => {
+    localStorage.setItem("refreshToken", "refresh-abc");
+    localStorage.setItem("user", JSON.stringify({ _id: "u1", email: "a@b.com" }));
+
+    const mockFetch: any = global.fetch;
+    mockFetch.mockResolvedValueOnce({
+      json: async () => ({
+        success: true,
+        data: {
+          token: "new-token-1",
+          refreshToken: "new-refresh-1",
+        },
+      }),
+    });
+
+    const response = await AuthAPI.refreshAccessToken();
+    expect(response.success).toBe(true);
+    expect(AuthAPI.getToken()).toBe("new-token-1");
+    expect(AuthAPI.getRefreshToken()).toBe("new-refresh-1");
   });
 
   test("should return true only when token exists", () => {

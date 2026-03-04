@@ -1,5 +1,5 @@
 """
-Mental Health Chatbot Flask API - Qwen 2.5 1.5B
+Mental Health Chatbot Flask API - Qwen 2.5 0.5B
 Runs completely locally with no authentication required
 Model loads at startup and stays in memory
 
@@ -227,14 +227,14 @@ Remember to be supportive, validating, and encouraging while maintaining safety.
 
 
 def load_model() -> None:
-    """Load Qwen 2.5 1.5B Instruct model into memory at startup"""
+    """Load Qwen 2.5 0.5B Instruct model into memory at startup"""
     global model, tokenizer
 
     logger.info("=" * 60)
     logger.info("Loading Qwen 2.5 0.5B Instruct model locally...")
     logger.info("=" * 60)
 
-    model_name = "Qwen/Qwen2.5-1.5B-Instruct"
+    model_name = "Qwen/Qwen2.5-0.5B-Instruct"
     logger.info(f"Model: {model_name}")
     logger.info("This may take a few minutes on first run (~1GB download)...")
 
@@ -269,7 +269,7 @@ def load_model() -> None:
     logger.info("=" * 60)
     logger.info("✓ MODEL LOADED SUCCESSFULLY AND READY FOR INFERENCE!")
     logger.info(f"✓ Device: {device}")
-    logger.info("✓ Model parameters: ~1.5 billion")
+    logger.info("✓ Model parameters: ~0.5 billion")
     logger.info("=" * 60)
 
 
@@ -336,7 +336,7 @@ def health_check():
         {
             "status": "healthy",
             "model_loaded": model is not None,
-            "model": "Qwen 2.5 1.5B Instruct",
+            "model": "Qwen 2.5 0.5B Instruct",
             "device": device_info,
             "cuda_device": CUDA_DEVICE,
         }

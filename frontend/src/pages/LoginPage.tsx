@@ -26,9 +26,7 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
       const response = await authAPI.login(email, password);
       
       if (response.success && response.data) {
-        // Store auth data
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        authAPI.storeAuthData(response.data);
         
         // Navigate to dashboard
         onNavigate('dashboard');
@@ -79,13 +77,12 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
         email: `user-${Date.now()}@example.com`,
         name: `Mock ${provider} User`,
       };
+      const mockIdToken = `mock-${provider}-id-token`;
 
-      const response = await authAPI.socialLogin(provider, mockProfile);
+      const response = await authAPI.socialLogin(provider, mockProfile, mockIdToken);
       
       if (response.success && response.data) {
-        // Store auth data
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        authAPI.storeAuthData(response.data);
         
         // Navigate to dashboard
         onNavigate('dashboard');

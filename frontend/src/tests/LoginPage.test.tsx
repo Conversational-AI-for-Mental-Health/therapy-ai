@@ -22,6 +22,7 @@ jest.mock('@/util/authAPI', () => ({
         user: { name: 'Jamie', email: 'jamie.r@example.com' },
       },
     }),
+    storeAuthData: jest.fn(),
   },
 }));
 

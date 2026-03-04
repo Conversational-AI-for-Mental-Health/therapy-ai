@@ -6,6 +6,8 @@ WORKDIR /app
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY backend/ ./backend
 COPY frontend/ ./frontend
+COPY mobile/ ./mobile
+COPY packages/ ./packages
 RUN yarn install --frozen-lockfile 
 
 # ----------------------------------------------------

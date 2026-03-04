@@ -4,7 +4,9 @@
   "private": true,
   "workspaces": [
     "backend",
-    "frontend"
+    "frontend",
+    "mobile",
+    "packages/shared"
   ],
   "scripts": {
     "build": "yarn workspace backend build && yarn workspace frontend build",
@@ -24,7 +26,8 @@
     "docker:down": "docker compose down",
     "docker:start": "docker compose up --build -d",
     "docker:clean": "docker compose down --rmi all",
-    "docker:logs": "docker compose logs -f"
+    "docker:logs": "docker compose logs -f",
+    "dev:mobile": "yarn workspace mobile start"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

@@ -78,6 +78,28 @@ services:
       - therapy-ai-network
     restart: always
 
+  # ---------------------------------
+  # MOBILE SERVICE (EXPO DEV SERVER)
+  # ---------------------------------
+  therapy-ai-mobile:
+    build:
+      context: .
+      dockerfile: ./mobile/Dockerfile
+    depends_on:
+      - therapy-ai-backend
+    ports:
+      - '8082:8081'
+      - '19000:19000'
+      - '19001:19001'
+      - '19002:19002'
+      - '19006:19006'
+    container_name: therapy-ai-mobile
+    networks:
+      - therapy-ai-network
+    restart: always
+    environment:
+      - EXPO_PUBLIC_API_URL=http://localhost:3000/api
+
 # ---------------------------------
 # VOLUMES (NEW)
 # ---------------------------------

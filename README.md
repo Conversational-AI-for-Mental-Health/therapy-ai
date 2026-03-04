@@ -8,6 +8,7 @@ This is a full-stack **monorepo** managed with **Yarn Workspaces**.
 | :---------- | :--------------------------- | :--------- | :--------------------------------- |
 | `backend/`  | Node.js, Express, TypeScript | **3000**   | API Server & Socket.IO             |
 | `frontend/` | React, TypeScript, Webpack   | **8080**   | UI (served by Webpack Dev Server)  |
+| `mobile/`   | Expo, React Native, TypeScript | Expo DevTools | Mobile client                      |
 | `conversational_ai/` | Python, Flask, Transformers | **5000** | Local LLM Model Server (Qwen 2.5) |
 
 ---
@@ -70,6 +71,14 @@ Run this command from the project root:
 yarn dev
 ```
 
+For mobile:
+
+```bash
+yarn dev:mobile
+```
+
+Set `EXPO_PUBLIC_API_URL` in `mobile/.env` (see `mobile/.env.example`) when testing on a simulator or real device.
+
 You can also run this command in the frontend or backend to test them separately
 No seperate yarn installation is required
 
@@ -93,6 +102,14 @@ http://localhost:8081
 username: admin
 password: admin123
 ```
+
+Run full app stack (backend + frontend + mobile + mongodb):
+```bash
+docker compose up --build -d
+```
+
+Mobile Expo service is exposed on ports `8082` (mapped to container `8081`), `19000`, `19001`, `19002`, and `19006`.
+Set `EXPO_PUBLIC_API_URL` in compose if you need a different backend URL for your device/simulator setup.
 ## 📘 Documentation Links
 1. Project Charter https://www.overleaf.com/project/68d58effa5d65c5eaa9b1018
 2. SRS https://www.overleaf.com/project/68eec9d6dc78d607a23ee0a8
@@ -107,6 +124,8 @@ therapy-ai/
 ├── conversational_ai/       # Python LLM service (Flask + Qwen2.5)
 ├── docs/                    # SRS, ADS, diagrams
 ├── frontend/                # TypeScript frontend
+├── mobile/                  # Expo React Native app
+├── packages/shared/         # Shared API contracts and types
 ├── models/                  # Shared models (placeholder)
 ├── scripts/                 # Utility scripts (placeholder)
 │

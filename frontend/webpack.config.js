@@ -1,3 +1,4 @@
+// Webpack configuration for the Therapy AI frontend application. This configuration sets up the entry point, output, module resolution, loaders for TypeScript and CSS, and plugins for HTML generation and environment variable management. It also configures the development server with hot reloading and proxy settings for API requests during development.
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const webpack = require("webpack");
@@ -9,14 +10,13 @@ module.exports = (env, argv) => {
   return {
     entry: "./src/index.tsx",
 
-    // Output configuration remains the same...
+
     output: {
       path: path.resolve(__dirname, "dist"),
       filename: "bundle.js",
       publicPath: "/",
     },
 
-    // Resolve extensions remains the same...
     resolve: {
       extensions: [".ts", ".tsx", ".js", ".jsx"],
       alias: {
@@ -26,7 +26,6 @@ module.exports = (env, argv) => {
 
     module: {
       rules: [
-        // FIX: Use require.resolve() to guarantee Webpack finds the hoisted ts-loader
         {
           test: /\.tsx?$/,
           use: {
@@ -34,7 +33,6 @@ module.exports = (env, argv) => {
           },
           exclude: /node_modules/,
         },
-        // Rule for handling CSS files (add if not present)
         {
           test: /\.css$/,
           use: ["style-loader", "css-loader", "postcss-loader"],
@@ -52,12 +50,10 @@ module.exports = (env, argv) => {
         filename: "index.html",
       }),
 
-      // Rely solely on dotenv-webpack to load variables like REACT_APP_API_URL
       new dotenv({
         path: "./.env",
       }),
 
-      // Define NODE_ENV explicitly to be consumed by React/JS code
       new webpack.DefinePlugin({
         "process.env.NODE_ENV": JSON.stringify(
           isDevelopment ? "development" : "production",

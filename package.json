@@ -5,6 +5,7 @@
   "workspaces": [
     "backend",
     "frontend",
+    "e2e",
     "mobile",
     "packages/shared"
   ],
@@ -14,9 +15,12 @@
     "build:backend": "yarn workspace backend build",
     "dev": "concurrently \"cd backend && yarn dev\" \"cd frontend && yarn dev\"",
     "install:all": "yarn install",
-    "test": "yarn workspace therapy-ai-backend test && yarn workspace therapy-ai-frontend test --runInBand && python -m pytest -q conversational_ai",
-    "test:watch": "yarn workspace therapy-ai-frontend test:watch",
-    "test:all": "yarn test",
+    "test:all": "yarn workspace therapy-ai-backend jest && yarn workspace therapy-ai-frontend jest --runInBand && python -m pytest -q conversational_ai",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test": "jest",
+    "cy:run": "yarn workspace therapy-ai-e2e cy:run",
+    "cy:open": "yarn workspace therapy-ai-e2e cy:open",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx ./backend ./frontend",
     "lint:fix": "eslint --ext .ts,.tsx,.js,.jsx --fix ./backend ./frontend",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
@@ -43,5 +47,5 @@
     "ts-jest": "^29.4.5",
     "typescript": "^5.9.3"
   },
-  "packageManager": "yarn@4.12.0"
+  "packageManager": "yarn@4.12.0+sha512.f45ab632439a67f8bc759bf32ead036a1f413287b9042726b7cc4818b7b49e14e9423ba49b18f9e06ea4941c1ad062385b1d8760a8d5091a1a31e5f6219afca8"
 }

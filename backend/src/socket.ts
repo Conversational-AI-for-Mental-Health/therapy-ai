@@ -42,39 +42,63 @@ const resolveSocketUserId = (auth: SocketAuthPayload): string | null => {
   return null;
 };
 
+// Handle incoming user messages, call Python AI, and broadcast responses
 const handleUserMessage = async (
   socket: AuthenticatedSocket,
   io: SocketIOServer,
-  data: { conversationId: string; text: string },
+  data: { conversationId?: string; text: string },
 ) => {
   const userId = getUserIdFromSocket(socket);
+
   console.log(
-    `[Socket] send_message from user ${userId} in conversation ${data.conversationId}`,
+    `[Socket] send_message from user ${userId} in conversation ${data.conversationId || '(new)'}`,
   );
 
   try {
-    // validate input
+    // 1. Validate message text
     if (!data.text || data.text.trim().length === 0) {
       socket.emit('error', { message: 'Message text cannot be empty' });
       return;
     }
+    if (data.text.trim().length > 10000) {
+      socket.emit('error', { message: 'Message is too long. Please keep messages under 10,000 characters.' });
+      return;
+    }
 
-    // save user message
+    // 2. If no conversationId, create a new conversation
+    let conversationId = data.conversationId;
+
+    if (!conversationId) {
+      const newConversation = await ConversationService.createConversation(
+        userId,
+        data.text.trim().slice(0, 50),
+      );
+      conversationId = newConversation._id.toString();
+
+      socket.emit('conversation_created', {
+        conversationId,
+        title: newConversation.title,
+      });
+      socket.join(conversationId);
+      console.log(`[Socket] Created new conversation ${conversationId} for user ${userId}`);
+    }
+
+    // 3. Save user message to database
     await ConversationService.addMessage(
-      data.conversationId,
+      conversationId,
       userId,
       'user',
-      data.text,
+      data.text.trim(),
     );
 
     console.log('[Socket] User message saved to database');
 
-    // get recent conversation context
+    // 4. Fetch conversation with recent messages for AI context
     const conversation =
       await ConversationService.getConversationWithRecentMessages(
-        data.conversationId,
+        conversationId,
         userId,
-        20, // last 20 messages
+        20,
       );
 
     if (!conversation) {
@@ -82,10 +106,9 @@ const handleUserMessage = async (
       return;
     }
 
-    // build history for python ai
-    // skip the latest user message
+    // 5. Prepare conversation history for AI (exclude the current user message)
     const conversationHistory = conversation.messages
-      .slice(0, -1) // remove last user message
+      .slice(0, -1)
       .map((msg) => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
         content: msg.text,
@@ -95,16 +118,18 @@ const handleUserMessage = async (
       `[Socket] Calling Python AI with ${conversationHistory.length} previous messages`,
     );
 
-    // call python ai with history
+    // 6. Call Python AI service
     let aiResponse: string;
+    let suggestedPrompts: string[] = [];
     try {
       const response = await axios.post(
         config.PYTHON_AI_URL,
         {
-          message: data.text,
-          conversation_history: conversationHistory, // send full history
+          message: data.text.trim(),
+          conversation_history: conversationHistory,
           max_tokens: 512,
           temperature: 0.7,
+          system_prompt: "You are Kai, an empathetic AI companion for mental health support. Listen carefully, validate feelings, ask open-ended questions. Never give medical advice. Keep responses concise.",
         },
         { timeout: config.PYTHON_AI_TIMEOUT_MS },
       );
@@ -124,9 +149,9 @@ const handleUserMessage = async (
         "I'm having trouble connecting to my AI service. Please try again in a moment.";
     }
 
-    // save ai response
+    // 7. Save AI response to database
     await ConversationService.addMessage(
-      data.conversationId,
+      conversationId,
       userId,
       'ai',
       aiResponse,
@@ -134,15 +159,54 @@ const handleUserMessage = async (
 
     console.log('[Socket] AI message saved to database');
 
-    // emit ai response
-    io.to(data.conversationId).emit('receive_message', {
-      conversationId: data.conversationId,
+    // 8. Broadcast AI response immediately
+    io.to(conversationId).emit('receive_message', {
+      conversationId,
       text: aiResponse,
       sender: 'ai',
       timestamp: new Date(),
     });
 
-    console.log('[Socket] AI response sent to room:', data.conversationId);
+    console.log('[Socket] AI response sent to room:', conversationId);
+
+    // 9. Asynchronously generate suggested prompts for the user based on the conversation history + AI response
+    (async () => {
+      try {
+        const promptsResponse = await axios.post(
+          config.PYTHON_AI_URL,
+          {
+            message: `Based on this conversation, suggest exactly 3 short things the USER might want to say next, written in first person as if the user is speaking (e.g. "I feel overwhelmed", "What can I do?", "I need help"). Each must be 3-5 words maximum. Return ONLY a JSON array of 3 strings, no other text.`,
+            conversation_history: [
+              ...conversationHistory,
+              { role: 'assistant', content: aiResponse },
+            ],
+            max_tokens: 60,
+            temperature: 0.7,
+            system_prompt: "You generate short follow-up messages written from the USER's perspective in first person — things the user might type next, not things the AI would say. Respond ONLY with a valid JSON array of exactly 3 strings, each 3-5 words. No preamble, no explanation.",
+          },
+          { timeout: 15000 },
+        );
+
+        const raw: string = promptsResponse.data.response || promptsResponse.data.message || '[]';
+        const cleaned = raw.replace(/```json|```/g, '').trim();
+        const parsed: unknown = JSON.parse(cleaned);
+        if (Array.isArray(parsed)) {
+          const prompts = (parsed as unknown[])
+            .filter((p): p is string => typeof p === 'string' && p.trim().length > 0)
+            .slice(0, 3);
+
+          if (prompts.length > 0) {
+            io.to(conversationId).emit('suggested_prompts', {
+              conversationId,
+              prompts,
+            });
+            console.log('[Socket] Suggested prompts sent to room:', conversationId);
+          }
+        }
+      } catch (promptErr: any) {
+        console.warn('[Socket] Failed to generate suggested prompts:', promptErr.message);
+      }
+    })();
   } catch (error: any) {
     console.error('[Socket] Error handling message:', error.message);
     socket.emit('error', {
@@ -151,35 +215,33 @@ const handleUserMessage = async (
   }
 };
 
-//join convo
+// Handle client joining a conversation room and send conversation history
 const handleJoinConversation = async (
   socket: AuthenticatedSocket,
   data: { conversationId: string },
 ) => {
   const userId = getUserIdFromSocket(socket);
+
   console.log(
     `[Socket] join_conversation: user ${userId} joining conversation ${data.conversationId}`,
   );
 
   try {
-    // validate input
     if (!data.conversationId) {
       socket.emit('error', { message: 'Missing conversationId' });
       return;
     }
 
-    // join room
     socket.join(data.conversationId);
     console.log(
       `[Socket] Client ${socket.id} joined room: ${data.conversationId}`,
     );
 
-    // get conversation with messages
     const conversation =
       await ConversationService.getConversationWithRecentMessages(
         data.conversationId,
         userId,
-        50, // last 50 messages
+        50,
       );
 
     if (!conversation) {
@@ -187,7 +249,6 @@ const handleJoinConversation = async (
       return;
     }
 
-    // send history to this client
     socket.emit('conversation_history', {
       conversationId: data.conversationId,
       messages: conversation.messages || [],
@@ -204,7 +265,7 @@ const handleJoinConversation = async (
   }
 };
 
-//attach socket event handlers
+// Export the function to attach socket handlers, which will be called in server.ts
 export const attachSocketHandlers = (io: SocketIOServer) => {
   io.use((socket, next) => {
     const userId = resolveSocketUserId((socket.handshake.auth || {}) as SocketAuthPayload);
@@ -217,9 +278,8 @@ export const attachSocketHandlers = (io: SocketIOServer) => {
 
   io.on('connection', (socket: Socket) => {
     const authSocket = socket as AuthenticatedSocket;
-    console.log(`[Socket] Client connected: ${socket.id}`);
+    console.log(`[Socket] Client connected: ${socket.id} (user: ${socket.data.userId})`);
 
-    // listen for join_conversation
     socket.on(
       'join_conversation',
       async (data: { conversationId: string }) => {
@@ -227,27 +287,21 @@ export const attachSocketHandlers = (io: SocketIOServer) => {
       },
     );
 
-    // listen for send_message
     socket.on(
       'send_message',
-      async (data: {
-        conversationId: string;
-        text: string;
-      }) => {
+      async (data: { conversationId?: string; text: string }) => {
         await handleUserMessage(authSocket, io, data);
       },
     );
 
-    // handle disconnect
     socket.on('disconnect', () => {
       console.log(`[Socket] Client disconnected: ${socket.id}`);
     });
 
-    // handle errors
     socket.on('error', (error) => {
       console.error('[Socket] Socket error:', error);
     });
   });
 
-  console.log('Socket.io handlers attached');
+  console.log('Socket.io handlers attached (JWT auth enabled)');
 };

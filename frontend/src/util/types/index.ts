@@ -1,9 +1,10 @@
-export type Screens = 'landing' | 'login' | 'signup' | 'dashboard' | 'privacy' | 'story' | 'terms' | 'contact' | 'reset-password';
+// Define TypeScript types for the Therapy AI application
+export type Screens = 'landing' | 'login' | 'signup' | 'dashboard' | 'privacy' | 'story' | 'terms' | 'contact' | 'reset-password' | 'notfound';
 export type DashboardTab = 'chat' | 'journal';
 
 export type JournalEntry = {
-  id: number;
-  date: string;
+  _id: string;
+  createdAt: string;
   mood: string;
   moodIcon: string;
   text: string;
@@ -16,6 +17,7 @@ export type ChatMessage = {
   feedback?: 'positive' | 'negative' | null;
   versions?: string[];
   versionIndex?: number;
+  suggestedPrompts?: string[];
 };
 
 export type ChatSession = {
@@ -50,19 +52,23 @@ export interface ContactPageProps {
   onNavigate: (screen: Screens) => void;
 }
 
+export interface ResetPasswordPageProps {
+  onNavigate: (screen: Screens) => void;
+}
+
 export interface TermsPageProps {
   onNavigate: (screen: Screens) => void;
   isDarkMode: boolean;
   setIsDarkMode: (value: boolean) => void;
 }
 
-export interface DashboardPageProps{
+export interface DashboardPageProps {
   onNavigate: (screen: Screens) => void;
   isDarkMode: boolean;
   setIsDarkMode: (value: boolean) => void;
 };
 
-export interface SidebarProps{
+export interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   onShowSettings: () => void;
@@ -85,15 +91,15 @@ export type MoodOption = {
   moodIcon: string;
 };
 
-export interface JournalProps{
+export interface JournalProps {
   moodOptions: MoodOption[];
 };
 
 export interface JournalViewProps {
   journalEntries: JournalEntry[];
-  onUpdateEntry: (id: number, text: string) => void;
-  onDeleteEntry: (id: number) => void;
-  onGetInsights: (id: number) => void;
+  onUpdateEntry: (id: string, text: string) => void;
+  onDeleteEntry: (id: string) => void;
+  onGetInsights: (id: string) => void;
 }
 
 export interface ChatProps {
@@ -110,6 +116,8 @@ export interface ChatProps {
   handleCopyMessage: (index: number) => void;
   isGenerating: boolean;
   onStopGeneration: () => void;
+  suggestedPrompts: string[];
+  onClearSuggestedPrompts: () => void;
 };
 
 export interface FeedbackProps {
@@ -131,6 +139,7 @@ export interface SettingsDialogProps {
     name: string;
     email: string;
   };
+  setUser?: (user: { name: string; email: string } | undefined) => void;
 };
 
 //Auth API types

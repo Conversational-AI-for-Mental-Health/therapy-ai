@@ -11,8 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4 
+      - uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -22,13 +21,13 @@ jobs:
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
-
           path: |
             ${{ github.workspace }}/.yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+            ~/.cache/mongodb-binaries
+          key: ${{ runner.os }}-yarn-mongo-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
+            ${{ runner.os }}-yarn-mongo-
             ${{ runner.os }}-yarn-
-
       - name: Install Dependencies
         run: yarn install --immutable 
       
@@ -38,7 +37,6 @@ jobs:
 
       
       - name: Run Backend Tests
-        run: yarn test 
+        run: yarn test
         working-directory: backend
-        
       - uses: codecov/codecov-action@v4

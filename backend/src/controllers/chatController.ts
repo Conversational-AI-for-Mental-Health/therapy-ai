@@ -1,121 +1,113 @@
-import { Request, Response } from 'express';
-import axios from 'axios';
-import { Types } from 'mongoose';
-import config from '../config';
-import { ConversationService } from '../services/conversationService';
+import { Request, Response } from "express";
+import axios from "axios";
+import config from "../config";
+import { ConversationService } from "../services/conversationService";
+
+const PYTHON_API_URL = config.PYTHON_AI_URL;
 
 interface ChatRequestBody {
-  userId?: string;
   conversationId?: string;
   message: string;
 }
 
-/**
- * POST /api/chat
- * Handles a chat turn:
- *  - ensures a User and Conversation exist
- *  - saves the user message
- *  - sends the message to the Python LLM backend
- *  - saves the bot (LLM) message
- *  - returns the bot reply + conversationId
- */
+// Main chat handler - processes user messages, interacts with AI backend, and manages conversation state
 export const handleChat = async (req: Request, res: Response) => {
   try {
-    const { userId, conversationId, message } = req.body as ChatRequestBody;
+    // 0) Authentication check
+    const userId = req.user?.userId;
 
-    if (!message || typeof message !== 'string') {
-      return res.status(400).json({ error: "Missing or invalid 'message' field." });
+    if (!userId) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
     }
 
-    if (!userId || !Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({
-        error: "Missing or invalid 'userId' field.",
-      });
+    // 1) Validate input
+    const { conversationId, message } = req.body as ChatRequestBody;
+
+    if (!message || typeof message !== "string" || message.trim().length === 0) {
+      return res.status(400).json({ success: false, error: "Missing or invalid 'message' field." });
     }
 
-    const normalizedUserId = new Types.ObjectId(userId);
+    // Limit message length to prevent abuse
+    if (message.trim().length > 10000) {
+      return res.status(400).json({ success: false, error: 'Message is too long. Maximum 10,000 characters.' });
+    }
 
-    let activeConversationId: Types.ObjectId;
+    // 2) Fetch or create conversation
+    let conversation;
+    if (conversationId) {
+      conversation = await ConversationService.getConversationById(conversationId, userId);
+    }
 
-    if (conversationId && Types.ObjectId.isValid(conversationId)) {
-      activeConversationId = new Types.ObjectId(conversationId);
-    } else {
-      const created = await ConversationService.createConversation(
-        normalizedUserId,
-        message.slice(0, 50),
+    if (!conversation) {
+      conversation = await ConversationService.createConversation(
+        userId,
+        message.trim().slice(0, 50)
       );
-      activeConversationId = created._id;
     }
 
-    await ConversationService.addMessage(
-      activeConversationId,
-      normalizedUserId,
-      'user',
-      message,
+    // Add user message to conversation
+    conversation = await ConversationService.addMessage(
+      conversation._id,
+      userId,
+      "user",
+      message.trim()
     );
 
-    let botText: string;
-    const latestConversation =
-      await ConversationService.getConversationWithRecentMessages(
-        activeConversationId,
-        normalizedUserId,
-        20,
-      );
-
-    if (!latestConversation) {
-      return res.status(404).json({
-        error: 'Conversation not found',
-      });
-    }
-
-    const conversationHistory = latestConversation.messages
-      .slice(0, -1)
+    // 3) Prepare conversation history for AI backend (last 20 messages)
+    const history = conversation.messages
+      .slice(-21, -1)
       .map((msg) => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
+        role: msg.sender === "user" ? "user" : "assistant",
         content: msg.text,
       }));
 
+    // 4) Call Python AI backend
+    let botText: string;
     try {
       const response = await axios.post(
-        config.PYTHON_AI_URL,
+        PYTHON_API_URL,
         {
-          message,
-          conversation_history: conversationHistory,
+          message: message.trim(),
+          conversation_history: history,
           max_tokens: 512,
           temperature: 0.7,
+          system_prompt: "You are Kai, an empathetic AI companion for mental health support. Listen carefully, validate feelings, ask open-ended questions. Never give medical advice. Keep responses concise.",
         },
-        { timeout: config.PYTHON_AI_TIMEOUT_MS },
+        { timeout: config.PYTHON_AI_TIMEOUT_MS }
       );
-      botText =
-        response.data.response ?? "I'm having trouble understanding right now.";
+      botText = response.data.response ?? "I'm having trouble understanding right now.";
     } catch (err) {
-      console.error('[CHAT] Error calling Python LLM backend:', err);
-      botText =
-        "I'm sorry, but I'm unable to reach the AI service at the moment.";
+      console.error("[CHAT] Error calling Python AI backend:", err);
+      botText = "I'm sorry, I'm unable to reach the AI service at the moment. Please try again.";
     }
 
-    const updatedConversation = await ConversationService.addMessage(
-      activeConversationId,
-      normalizedUserId,
-      'ai',
-      botText,
+    // 5) Save bot response to conversation
+    conversation = await ConversationService.addMessage(
+      conversation._id,
+      userId,
+      "ai",
+      botText
     );
-    const botMessage =
-      updatedConversation.messages[updatedConversation.messages.length - 1];
 
+    // Get the latest bot message (the one we just added)
+    const botMessage = conversation.messages[conversation.messages.length - 1];
+
+    // 6) Return response to client
     return res.json({
-      conversationId: activeConversationId,
+      success: true,
+      conversationId: conversation._id,
       botMessage: {
-        id: botMessage._id.toString(),
-        role: botMessage.sender,
+        id: botMessage._id,
+        sender: botMessage.sender,
         text: botMessage.text,
-        createdAt: botMessage.timestamp,
+        timestamp: botMessage.timestamp,
       },
     });
   } catch (error) {
     console.error('[CHAT] Error in handleChat:', error);
     return res.status(500).json({
-      error: 'Failed to process chat message.',
+      success: false,
+      error: "Failed to process chat message.",
     });
   }
 };

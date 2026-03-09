@@ -1,5 +1,6 @@
 import authAPI from './authAPI';
 import { APIResponse, Conversation, Message } from './types';
+
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
 class ConversationAPI {
@@ -54,7 +55,6 @@ class ConversationAPI {
     }
   }
 
-  //new convo
   async createConversation(title?: string): Promise<Conversation> {
     const response = await this.request<Conversation>(`/conversations`, {
       method: 'POST',
@@ -68,7 +68,6 @@ class ConversationAPI {
     return response.data;
   }
 
-  //all chats
   async getAllConversations(includeArchived = false): Promise<Conversation[]> {
     const response = await this.request<Conversation[]>(
       `/conversations?archived=${includeArchived}`,
@@ -76,6 +75,7 @@ class ConversationAPI {
 
     return response.data || [];
   }
+
   async getConversation(
     conversationId: string,
     messageLimit = 50,
@@ -112,7 +112,6 @@ class ConversationAPI {
     return response.data as unknown as Message;
   }
 
-  //update title
   async updateTitle(
     conversationId: string,
     title: string,
@@ -121,9 +120,7 @@ class ConversationAPI {
       `/conversations/${conversationId}/title`,
       {
         method: 'PATCH',
-        body: JSON.stringify({
-          title,
-        }),
+        body: JSON.stringify({ title }),
       },
     );
 
@@ -134,7 +131,6 @@ class ConversationAPI {
     return response.data;
   }
 
-  //archive
   async archiveConversation(conversationId: string): Promise<Conversation> {
     const response = await this.request<Conversation>(
       `/conversations/${conversationId}/archive`,
@@ -150,7 +146,6 @@ class ConversationAPI {
     return response.data;
   }
 
-  //undo archive (coming soon)
   async unarchiveConversation(conversationId: string): Promise<Conversation> {
     const response = await this.request<Conversation>(
       `/conversations/${conversationId}/unarchive`,
@@ -166,20 +161,26 @@ class ConversationAPI {
     return response.data;
   }
 
-  //delete
   async deleteConversation(conversationId: string): Promise<void> {
     await this.request(`/conversations/${conversationId}`, {
       method: 'DELETE',
     });
   }
 
-  //stats?
   async getConversationStats(conversationId: string): Promise<any> {
     const response = await this.request<any>(
       `/conversations/${conversationId}/stats`,
     );
 
     return response.data;
+  }
+
+  async sendMessage(conversationId: string | null, message: string): Promise<any> {
+    const response = await this.request<any>('/chat', {
+      method: 'POST',
+      body: JSON.stringify({ conversationId, message }),
+    });
+    return response;
   }
 }
 

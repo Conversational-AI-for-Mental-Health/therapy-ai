@@ -1,5 +1,7 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 import { AuthData, AuthResponse } from "./types";
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+
 class AuthAPI {
   private persistAuthData(data?: AuthData) {
     if (!data) return;
@@ -104,7 +106,7 @@ class AuthAPI {
       };
     }
   }
-  //google or apple login
+
   async socialLogin(
     provider: 'google' | 'apple',
     profile: any,

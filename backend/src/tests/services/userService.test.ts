@@ -1,6 +1,6 @@
 import '../setup';
 import { UserService } from '../../services/userService';
-import { User } from '../../db/models';
+import { User } from '../../models';
 
 describe('UserService refresh tokens', () => {
   it('stores refresh token hash in database', async () => {

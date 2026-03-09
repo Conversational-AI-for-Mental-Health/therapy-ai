@@ -4,18 +4,17 @@ import { createApp } from './app';
 import { attachSocketHandlers } from './socket';
 import { connectDatabase } from './config/database';
 import config from './config';
-import { console } from 'inspector';
 
 const startServer = async () => {
   try {
-    // Connect to MongoDB FIRST
+    // Connect to MongoDB before starting the server to ensure DB is available
     await connectDatabase();
 
     // Create Express app and HTTP server
     const app = createApp();
     const httpServer = createServer(app);
 
-    // Configure Socket.IO
+    // Initialize Socket.io with CORS settings
     const io = new SocketIOServer(httpServer, {
       cors: {
         origin: config.CORS_ORIGIN,
@@ -23,16 +22,16 @@ const startServer = async () => {
       },
     });
 
-    // Attach socket handlers
+    // Attach Socket.io event handlers
     attachSocketHandlers(io);
 
-    // Start listening
+    // Start the server
     httpServer.listen(config.PORT, () => {
       console.log('\n Server started successfully!');
-      console.log(` Server running on port ${config.PORT}`);
+      console.log(` Server running on port ${config.PORT} `);
       console.log(` API URL: http://localhost:${config.PORT}`);
-      console.log(` Database URL: http://localhost:8081`); // MongoDB GUI runs here after running `docker-compose up -d mongodb mongo-express` at project root
-      console.log(` Socket.io ready`);
+      console.log(` Database URL: http://localhost:8081`); 
+      console.log(` Socket.io ready (JWT auth enabled)`);
       console.log(` Environment: ${config.NODE_ENV}`);
       console.log('\nPress CTRL+C to stop\n');
     });

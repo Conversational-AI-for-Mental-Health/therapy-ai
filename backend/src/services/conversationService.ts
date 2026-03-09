@@ -1,7 +1,8 @@
-import { Conversation, IConversation } from '../db/models';
+import { Conversation, IConversation, User } from '../models';
 import { Types } from 'mongoose';
 import { UserService } from './userService';
 
+// Service class for managing conversations
 export class ConversationService {
   static async createConversation(
     userId: string | Types.ObjectId,
@@ -22,6 +23,7 @@ export class ConversationService {
     return conversation;
   }
 
+  // Get a conversation by ID, ensuring it belongs to the specified user
   static async getConversationById(
     conversationId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
@@ -32,6 +34,7 @@ export class ConversationService {
     });
   }
 
+  // Get a conversation by ID and populate all messages (for admin or detailed view)
   static async getConversationWithRecentMessages(
     conversationId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
@@ -44,7 +47,7 @@ export class ConversationService {
 
     if (!conversation) return null;
 
-    // Manually slice messages to get recent ones
+    // Limit the number of messages returned to the most recent ones
     if (conversation.messages.length > messageLimit) {
       conversation.messages = conversation.messages.slice(-messageLimit) as any;
     }
@@ -52,12 +55,14 @@ export class ConversationService {
     return conversation;
   }
 
+  // Get all conversations for a user, with optional filtering for archived conversations
   static async getUserConversations(
     userId: string | Types.ObjectId,
     includeArchived: boolean = false,
   ): Promise<IConversation[]> {
     const query: any = {
       user_id: userId,
+      deleted: false,
     };
 
     if (!includeArchived) {
@@ -69,6 +74,7 @@ export class ConversationService {
       .select('-messages');
   }
 
+  // Add a message to a conversation and update the last_message_at timestamp
   static async addMessage(
     conversationId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
@@ -87,6 +93,7 @@ export class ConversationService {
     return conversation;
   }
 
+  // Update the title of a conversation
   static async updateTitle(
     conversationId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
@@ -95,10 +102,11 @@ export class ConversationService {
     return Conversation.findOneAndUpdate(
       { _id: conversationId, user_id: userId },
       { $set: { title } },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true }, 
     );
   }
 
+  // Archive a conversation (soft delete)
   static async archiveConversation(
     conversationId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
@@ -106,10 +114,11 @@ export class ConversationService {
     return Conversation.findOneAndUpdate(
       { _id: conversationId, user_id: userId },
       { $set: { archived: true } },
-      { new: true },
+      { returnDocument: 'after' },
     );
   }
 
+  // Unarchive a conversation
   static async unarchiveConversation(
     conversationId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
@@ -117,17 +126,27 @@ export class ConversationService {
     return Conversation.findOneAndUpdate(
       { _id: conversationId, user_id: userId },
       { $set: { archived: false } },
-      { new: true },
+      { returnDocument: 'after' },
     );
   }
 
+  // Soft delete a conversation and remove its reference from the user's conversations array
   static async deleteConversation(
     conversationId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
   ): Promise<IConversation | null> {
-    return Conversation.findOneAndDelete({ _id: conversationId, user_id: userId });
+    const deleted = await Conversation.findOneAndUpdate(
+      { _id: conversationId, user_id: userId },
+      { $set: { deleted: true } },
+      { new: true },
+    );
+    if (deleted) {
+      await User.findByIdAndUpdate(userId, { $pull: { conversations: deleted._id } }); 
+    }
+    return deleted;
   }
 
+  // Get conversation statistics such as total messages, user vs AI messages, liked messages, and conversation duration
   static async getConversationStats(
     conversationId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
@@ -153,10 +172,10 @@ export class ConversationService {
       last_message_at: conversation.last_message_at,
       duration_minutes: conversation.last_message_at
         ? Math.floor(
-            (conversation.last_message_at.getTime() -
-              conversation.started_at.getTime()) /
-              60000,
-          )
+          (conversation.last_message_at.getTime() -
+            conversation.started_at.getTime()) /
+          60000,
+        )
         : 0,
     };
   }

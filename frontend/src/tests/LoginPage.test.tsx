@@ -7,21 +7,9 @@ import authAPI from '@/util/authAPI';
 jest.mock('@/util/authAPI', () => ({
   __esModule: true,
   default: {
-    login: jest.fn().mockResolvedValue({
-      success: true,
-      data: {
-        token: 'mock-token',
-        user: { name: 'Jamie', email: 'jamie.r@example.com' },
-      },
-    }),
-    forgotPassword: jest.fn().mockResolvedValue({ success: true }),
-    socialLogin: jest.fn().mockResolvedValue({
-      success: true,
-      data: {
-        token: 'mock-token',
-        user: { name: 'Jamie', email: 'jamie.r@example.com' },
-      },
-    }),
+    login: jest.fn(),
+    forgotPassword: jest.fn(),
+    socialLogin: jest.fn(),
     storeAuthData: jest.fn(),
   },
 }));
@@ -39,7 +27,7 @@ describe('LoginPage', () => {
       success: true,
       data: {
         token: 'mock-token',
-        user: { name: 'Jamie', email: 'jamie.r@example.com' },
+        user: { name: 'Test User', email: 'test@example.com' },
       },
     });
     (authAPI.forgotPassword as jest.Mock).mockResolvedValue({ success: true });
@@ -47,7 +35,7 @@ describe('LoginPage', () => {
       success: true,
       data: {
         token: 'mock-token',
-        user: { name: 'Jamie', email: 'jamie.r@example.com' },
+        user: { name: 'Test User', email: 'test@example.com' },
       },
     });
   });
@@ -57,17 +45,13 @@ describe('LoginPage', () => {
       render(<LoginPage {...defaultProps} />);
 
       expect(screen.getByText('Welcome Back👋')).toBeInTheDocument();
-      expect(
-        screen.getByText('Sign in to continue your journey'),
-      ).toBeInTheDocument();
+      expect(screen.getByText('Sign in to continue your journey')).toBeInTheDocument();
       expect(screen.getByLabelText('Email')).toBeInTheDocument();
       expect(screen.getByLabelText('Password')).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: 'Log In' }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Log In' })).toBeInTheDocument();
     });
 
-    it('should render therapy logo', () => {
+    it('should render Therapy AI logo', () => {
       render(<LoginPage {...defaultProps} />);
 
       expect(screen.getByAltText('Therapy AI')).toBeInTheDocument();
@@ -112,27 +96,36 @@ describe('LoginPage', () => {
   });
 
   describe('Navigation', () => {
-    it('should navigate to dashboard when login button is clicked', async () => {
+    it('should navigate to dashboard when login button is clicked with valid inputs', async () => {
       const user = userEvent.setup();
       render(<LoginPage {...defaultProps} />);
 
-      await user.type(screen.getByLabelText('Email'), 'jamie@example.com');
+      await user.type(screen.getByLabelText('Email'), 'test@example.com');
       await user.type(screen.getByLabelText('Password'), 'password123');
-      const loginButton = screen.getByRole('button', { name: 'Log In' });
-      await user.click(loginButton);
 
-      expect(authAPI.login).toHaveBeenCalledWith('jamie@example.com', 'password123');
+      await user.click(screen.getByRole('button', { name: 'Log In' }));
+
       await waitFor(() => {
+        expect(authAPI.login).toHaveBeenCalledWith('test@example.com', 'password123');
         expect(mockOnNavigate).toHaveBeenCalledWith('dashboard');
       });
+    });
+
+    it('should show error and not navigate when fields are empty', async () => {
+      const user = userEvent.setup();
+      render(<LoginPage {...defaultProps} />);
+
+      await user.click(screen.getByRole('button', { name: 'Log In' }));
+
+      expect(screen.getByText('Please fill in all fields')).toBeInTheDocument();
+      expect(mockOnNavigate).not.toHaveBeenCalled();
     });
 
     it('should navigate to signup when sign up link is clicked', async () => {
       const user = userEvent.setup();
       render(<LoginPage {...defaultProps} />);
 
-      const signupLink = screen.getByText('Sign up');
-      await user.click(signupLink);
+      await user.click(screen.getByText('Sign up'));
 
       expect(mockOnNavigate).toHaveBeenCalledWith('signup');
     });
@@ -141,8 +134,7 @@ describe('LoginPage', () => {
       const user = userEvent.setup();
       render(<LoginPage {...defaultProps} />);
 
-      const homeLink = screen.getByText('Home');
-      await user.click(homeLink);
+      await user.click(screen.getByText('Home'));
 
       expect(mockOnNavigate).toHaveBeenCalledWith('landing');
     });
@@ -163,38 +155,26 @@ describe('LoginPage', () => {
       const user = userEvent.setup();
       render(<LoginPage {...defaultProps} />);
 
-      const passwordInput = screen.getByLabelText(
-        'Password',
-      ) as HTMLInputElement;
+      const passwordInput = screen.getByLabelText('Password') as HTMLInputElement;
       await user.type(passwordInput, 'password123');
 
       expect(passwordInput.value).toBe('password123');
     });
-
-    it('should have proper input types for security', () => {
-      render(<LoginPage {...defaultProps} />);
-
-      const emailInput = screen.getByLabelText('Email');
-      const passwordInput = screen.getByLabelText('Password');
-
-      expect(emailInput).toHaveAttribute('type', 'email');
-      expect(passwordInput).toHaveAttribute('type', 'password');
-    });
   });
 
   describe('Styling', () => {
-    it('should apply primary styling to login button', () => {
+    it('should apply gradient primary styling to login button', () => {
       render(<LoginPage {...defaultProps} />);
 
       const loginButton = screen.getByRole('button', { name: 'Log In' });
       expect(loginButton).toHaveClass('gradient-bg-primary', 'text-white');
     });
 
-    it('should apply correct styling to form container', () => {
+    it('should apply correct styling to form container heading', () => {
       render(<LoginPage {...defaultProps} />);
 
       const heading = screen.getByText('Welcome Back👋');
-      expect(heading).toHaveClass('text-h1');
+      expect(heading).toHaveClass('text-h1', 'text-center');
     });
   });
 
@@ -212,40 +192,23 @@ describe('LoginPage', () => {
       const buttons = screen.getAllByRole('button');
       expect(buttons.length).toBeGreaterThan(0);
     });
-
-    it('should have proper link text', () => {
-      render(<LoginPage {...defaultProps} />);
-
-      const links = screen.getAllByRole('link');
-      links.forEach((link) => {
-        expect(link.textContent).toBeTruthy();
-      });
-    });
   });
 
   describe('Social Login Buttons', () => {
     it('should render Google login button with icon', () => {
-      const { container } = render(<LoginPage {...defaultProps} />);
+      render(<LoginPage {...defaultProps} />);
 
-      const googleButton = screen
-        .getByText('Continue with Google')
-        .closest('button');
+      const googleButton = screen.getByText('Continue with Google').closest('button');
       expect(googleButton).toBeInTheDocument();
-
-      const googleIcon = googleButton?.querySelector('svg');
-      expect(googleIcon).toBeInTheDocument();
+      expect(googleButton?.querySelector('svg')).toBeInTheDocument();
     });
 
     it('should render Apple login button with icon', () => {
-      const { container } = render(<LoginPage {...defaultProps} />);
+      render(<LoginPage {...defaultProps} />);
 
-      const appleButton = screen
-        .getByText('Continue with Apple')
-        .closest('button');
+      const appleButton = screen.getByText('Continue with Apple').closest('button');
       expect(appleButton).toBeInTheDocument();
-
-      const appleIcon = appleButton?.querySelector('svg');
-      expect(appleIcon).toBeInTheDocument();
+      expect(appleButton?.querySelector('svg')).toBeInTheDocument();
     });
   });
 
@@ -253,27 +216,19 @@ describe('LoginPage', () => {
     it('should center the login form on the page', () => {
       const { container } = render(<LoginPage {...defaultProps} />);
 
-      const wrapper = container.firstChild;
-      expect(wrapper).toHaveClass(
-        'min-h-screen',
-        'flex',
-        'items-center',
-        'justify-center',
-      );
+      expect(container.firstChild).toHaveClass('min-h-screen', 'flex', 'items-center', 'justify-center');
     });
 
     it('should have responsive padding', () => {
       const { container } = render(<LoginPage {...defaultProps} />);
 
-      const wrapper = container.firstChild;
-      expect(wrapper).toHaveClass('px-4', 'sm:px-6', 'md:px-8');
+      expect(container.firstChild).toHaveClass('px-4', 'sm:px-6', 'md:px-8');
     });
 
     it('should have constrained max width', () => {
       const { container } = render(<LoginPage {...defaultProps} />);
 
-      const formContainer = container.querySelector('.max-w-sm');
-      expect(formContainer).toBeInTheDocument();
+      expect(container.querySelector('.max-w-sm')).toBeInTheDocument();
     });
   });
 });

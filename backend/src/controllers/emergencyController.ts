@@ -4,10 +4,12 @@ import { UserService } from '../services/userService';
 
 const E164_PHONE_REGEX = /^\+[1-9]\d{7,14}$/;
 
+// Controller for handling emergency support requests
 export const requestProfessionalSupport = async (req: Request, res: Response) => {
   try {
     const { userPhone, reason } = req.body;
     const userId = req.user?.userId;
+
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -31,15 +33,18 @@ export const requestProfessionalSupport = async (req: Request, res: Response) =>
 
     const user = await UserService.findUserById(userId);
 
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
     const result = await twilioService.sendEmergencyRequest({
       userPhone,
-      userName: user?.name || 'Unknown User',
-      userEmail: user?.email || undefined,
-      reason: reason || 'User requested professional mental health support'
+      userName: user.name || 'Unknown User',
+      userEmail: user.email || undefined,
+      reason: reason || 'User requested professional mental health support',
     });
 
     if (result.success) {
-      // Optionally send confirmation to user if they provided their phone
       if (userPhone) {
         await twilioService.sendConfirmationToUser(userPhone);
       }
@@ -49,13 +54,13 @@ export const requestProfessionalSupport = async (req: Request, res: Response) =>
         message: result.message,
         data: {
           notified: true,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
     } else {
       return res.status(500).json({
         success: false,
-        message: result.message
+        message: result.message,
       });
     }
   } catch (error: any) {

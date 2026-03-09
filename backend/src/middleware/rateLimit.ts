@@ -17,6 +17,11 @@ export const createManualRateLimiter = ({
   maxRequests,
 }: RateLimitOptions) => {
   return (req: Request, res: Response, next: NextFunction) => {
+    // Bypass rate limiting for Cypress tests
+    if (req.headers['x-cypress-test'] === 'true') {
+      return next();
+    }
+
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
     const key = `${req.path}:${ip}`;
     const now = Date.now();
@@ -43,4 +48,3 @@ export const createManualRateLimiter = ({
     return next();
   };
 };
-

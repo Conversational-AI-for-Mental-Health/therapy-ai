@@ -12,27 +12,40 @@ export default function Settings({
   setPersonalizedAds,
   pushNotifications,
   setPushNotifications,
-  user
+  user,
+  setUser
 }: SettingsDialogProps) {
-  /* dynamic UI state */
+
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'B';
   const userName = user?.name ? user.name.split(' ')[0] : 'Bhuwan';
   const userEmail = user?.email || 'bhuwan@mindguideai';
 
+  // State for managing the display name input and error message and password modal visibility
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [displayName, setDisplayName] = useState(user?.name || userName);
+  const [nameError, setNameError] = useState('');
+
+  // Effect to update the display name state when the user prop changes, ensuring that the input field reflects the current user's name when the settings dialog is opened or when the user information is updated
+  React.useEffect(() => {
+    if (user?.name) {
+      setDisplayName(user.name);
+    }
+  }, [user?.name]);
 
   if (!isOpen) return null;
 
-  /* handle delete account */
+  // Handle account deletion, showing a confirmation prompt to the user and alerting that the account has been deleted (UI only, no actual deletion logic implemented)
   const handleDeleteAccount = () => {
     if (confirm("Are you sure? This cannot be undone.")) {
       alert("Account deleted (UI only).");
     }
   };
 
+  // Settings dialog component that displays user information, allows editing the display name, toggling notification and privacy settings, and provides options to change password, delete account, or log out. The component uses local state to manage form inputs and error messages, and makes API calls to update user information when necessary. It also includes animations for opening and closing the dialog, and handles click events to close the dialog when clicking outside of it.
   return (
     <div
+      data-cy="settings-modal"
       className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fadeIn no-scrollbar"
       style={{ background: "rgba(0,0,0,0.35)", backdropFilter: "blur(10px)" }}
       onClick={onClose}
@@ -88,6 +101,53 @@ export default function Settings({
           <div>
             <h3 className="text-lg font-semibold mb-4">Account</h3>
 
+            {/* Display Name */}
+            <div className="mb-4">
+              <label className="text-secondary text-sm mb-1 block">Display Name</label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                onBlur={async () => {
+                  if (!displayName.trim() || displayName.trim() === (user?.name || userName)) return;
+                  setNameError('');
+                  try {
+                    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+                    const res = await fetch(`${API_URL}/users/name`, {
+                      method: 'PATCH',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                      },
+                      body: JSON.stringify({ name: displayName.trim() }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.success) {
+                      setNameError(data.error || 'Failed to update name.');
+                    } else {
+                      const cached = localStorage.getItem('user');
+                      if (cached) {
+                        const parsed = JSON.parse(cached);
+                        parsed.name = displayName.trim();
+                        localStorage.setItem('user', JSON.stringify(parsed));
+                      }
+                      if (setUser) {
+                        setUser({
+                          ...user!,
+                          name: displayName.trim()
+                        });
+                      }
+                    }
+                  } catch {
+                    setNameError('Network error. Please try again.');
+                  }
+                }}
+                className="border border-color rounded-xl px-4 py-2 bg-background text-foreground w-full focus:ring-2 focus:ring-primary outline-none transition"
+                placeholder="Your name"
+              />
+              {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
+            </div>
+
             <button
               onClick={() => setShowPasswordModal(true)}
               className="w-full py-3 bg-surface-base rounded-xl text-secondary font-medium hover:bg-primary/10 transition"
@@ -134,6 +194,7 @@ export default function Settings({
 
           {/* LOGOUT */}
           <button
+            data-cy="logout-btn"
             onClick={onLogout}
             className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 transition"
           >
@@ -168,7 +229,7 @@ export default function Settings({
   );
 }
 
-/* Components */
+/* Helper components for editable rows and toggle switches used in the settings dialog. The EditableRow component renders a label and an input field for editing text values, while the ToggleRow component renders a label and a toggle switch for boolean settings. Both components receive props for the label, current value, and a setter function to update the value in the parent component. */
 
 function EditableRow({
   label,
@@ -220,12 +281,46 @@ function ToggleRow({
   );
 }
 
+// Password change modal component that allows the user to enter their current password and a new password, and handles the logic for submitting the password change request to the backend API. The component manages local state for the input fields, error messages, and loading state, and provides feedback to the user based on the success or failure of the password update operation. The modal can be closed by clicking outside of it or by clicking the close button, and it includes basic validation to ensure both fields are filled before allowing submission.
 function PasswordModal({ onClose }: { onClose: () => void }) {
   const [oldPw, setOldPw] = useState("");
   const [newPw, setNewPw] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSave = async () => {
+    setError("");
+    if (!oldPw || !newPw) {
+      setError("Both fields are required.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+      const res = await fetch(`${API_URL}/users/password`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        onClose();
+      } else {
+        setError(data.error || "Failed to update password.");
+      }
+    } catch (err: any) {
+      setError("Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div
+      data-cy="password-modal"
       className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 animate-fadeIn"
       onClick={onClose}
     >
@@ -238,7 +333,7 @@ function PasswordModal({ onClose }: { onClose: () => void }) {
         <div className="space-y-4">
           <input
             type="password"
-            placeholder="Old Password"
+            placeholder="Current Password"
             value={oldPw}
             onChange={(e) => setOldPw(e.target.value)}
             className="w-full border border-color bg-background text-foreground rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none transition"
@@ -252,14 +347,16 @@ function PasswordModal({ onClose }: { onClose: () => void }) {
             className="w-full border border-color bg-background text-foreground rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary outline-none transition"
           />
 
+          {error && (
+            <p className="text-sm text-red-500">{error}</p>
+          )}
+
           <button
-            className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 transition"
-            onClick={() => {
-              alert("Password updated (UI only).");
-              onClose();
-            }}
+            className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50"
+            onClick={handleSave}
+            disabled={isLoading}
           >
-            Save Password
+            {isLoading ? 'Saving...' : 'Save Password'}
           </button>
         </div>
       </div>

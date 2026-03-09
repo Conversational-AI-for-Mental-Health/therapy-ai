@@ -5,6 +5,7 @@ import { validateBody, validateQuery } from '../middleware/schemaValidation';
 import { z } from 'zod';
 
 const router = Router();
+
 const addMessageBodySchema = z.object({
   sender: z.enum(['user', 'ai']),
   text: z.string().min(1).max(10000),
@@ -28,7 +29,7 @@ const updateTitleBodySchema = z.object({
 
 router.use(authenticateUser);
 
-// Append a message to an existing conversation
+// Add message to conversation
 router.post(
   '/:id/messages',
   validateObjectId('id'),
@@ -46,10 +47,10 @@ router.post(
         });
       }
 
-      if (sender !== 'user' && sender !== 'ai') {
+      if (sender !== 'user') {
         return res.status(400).json({
           success: false,
-          error: 'Sender must be either "user" or "ai"',
+          error: 'Sender must be "user" — AI messages are written by the AI service only',
         });
       }
 
@@ -100,7 +101,7 @@ router.post('/', validateBody(createConversationBodySchema), async (req: Request
   }
 });
 
-// Get all conversations
+// Get all conversations for the user, with optional filter for archived conversations
 router.get('/', validateQuery(getConversationsQuerySchema), async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -124,7 +125,7 @@ router.get('/', validateQuery(getConversationsQuerySchema), async (req: Request,
   }
 });
 
-// Get single conversation
+// Get a specific conversation by ID, including its messages (with pagination)
 router.get(
   '/:id',
   validateObjectId('id'),
@@ -308,7 +309,7 @@ router.delete(
   },
 );
 
-// Get conversation statistics
+// Get conversation stats
 router.get(
   '/:id/stats',
   validateObjectId('id'),

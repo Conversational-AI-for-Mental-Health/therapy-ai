@@ -24,22 +24,22 @@ export const mockThinkingMessage: ChatMessage = {
 
 export const mockJournalEntries: JournalEntry[] = [
   {
-    id: 1,
-    date: 'Nov 28, 2025',
+    _id: '1',
+    createdAt: '2025-11-28T10:00:00Z',
     mood: 'Happy',
     moodIcon: '😊',
     text: 'Today was a great day! I felt productive and accomplished many of my goals. I am grateful for the support of my friends and family.',
   },
   {
-    id: 2,
-    date: 'Nov 27, 2025',
+    _id: '2',
+    createdAt: '2025-11-27T10:00:00Z',
     mood: 'Anxious',
     moodIcon: '😟',
     text: 'Feeling overwhelmed with work deadlines. There is so much to do and I am not sure where to start. Need to take a deep breath and prioritize my tasks one at a time.',
   },
   {
-    id: 3,
-    date: 'Nov 26, 2025',
+    _id: '3',
+    createdAt: '2025-11-26T10:00:00Z',
     mood: 'Calm',
     moodIcon: '😌',
     text: 'This is a short entry with less than 100 words for testing the insights feature validation.',
@@ -47,8 +47,8 @@ export const mockJournalEntries: JournalEntry[] = [
 ];
 
 export const mockLongJournalEntry: JournalEntry = {
-  id: 4,
-  date: 'Nov 25, 2025',
+  _id: '4',
+  createdAt: '2025-11-25T10:00:00Z',
   mood: 'Hopeful',
   moodIcon: '🌟',
   text: 'Today was a good day overall. I woke up feeling refreshed and ready to tackle my tasks. The morning started with a peaceful walk in the park, which helped clear my mind and set a positive tone for the rest of the day. I noticed the changing leaves and took a moment to appreciate the beauty around me. Work was productive, and I managed to complete several important tasks that had been pending. I felt accomplished and proud of myself. In the evening, I spent quality time with family, which always lifts my spirits. We shared stories and laughed together, reminding me of the importance of connection. I am grateful for these moments and looking forward to more days like this.',

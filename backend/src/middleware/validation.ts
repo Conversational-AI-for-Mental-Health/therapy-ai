@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { Types } from 'mongoose';
+import jwt from 'jsonwebtoken';
+import config from '../config';
 
-// Extend Express Request type
+// Extend Express Request interface to include user property
 declare global {
   namespace Express {
     interface Request {
@@ -12,6 +14,7 @@ declare global {
   }
 }
 
+// Middleware to validate MongoDB ObjectId in route parameters
 export const validateObjectId = (paramName: string = 'id') => {
   return (req: Request, res: Response, next: NextFunction) => {
     const id = req.params[paramName];
@@ -26,11 +29,7 @@ export const validateObjectId = (paramName: string = 'id') => {
     next();
   };
 };
-
-import jwt from 'jsonwebtoken';
-import config from '../config';
-
-// JWT verification
+// Middleware to authenticate user using JWT
 export const authenticateUser = (
   req: Request,
   res: Response,
@@ -45,8 +44,10 @@ export const authenticateUser = (
     });
   }
 
+  // Extract the token from the Authorization header
   const token = authHeader.split(' ')[1];
 
+  // Verify the token and extract user information
   try {
     const decoded = jwt.verify(token, config.JWT_SECRET) as {
       userId: string;
@@ -61,3 +62,12 @@ export const authenticateUser = (
     });
   }
 };
+
+// Utility function to extract validation error messages from Mongoose errors
+export function extractValidationError(error: any): string | null {
+  if (error.name === 'ValidationError') {
+    const messages = Object.values(error.errors).map((e: any) => e.message);
+    return messages.join(', ');
+  }
+  return null;
+}

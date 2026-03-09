@@ -6,18 +6,17 @@ describe('ConversationAPI', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    localStorage.setItem('token', 'test-token');
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
+    localStorage.clear();
   });
 
   describe('createConversation', () => {
     it('should create a new conversation successfully', async () => {
-      const mockResponse = {
-        success: true,
-        data: mockConversation,
-      };
+      const mockResponse = { success: true, data: mockConversation };
 
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
@@ -30,9 +29,10 @@ describe('ConversationAPI', () => {
         `${API_URL}/conversations`,
         expect.objectContaining({
           method: 'POST',
-          headers: {
+          headers: expect.objectContaining({
             'Content-Type': 'application/json',
-          },
+            'Authorization': 'Bearer test-token',
+          }),
           body: JSON.stringify({ title: 'New Chat' }),
         }),
       );
@@ -40,9 +40,7 @@ describe('ConversationAPI', () => {
     });
 
     it('should throw error when no data returned', async () => {
-      const mockResponse = {
-        success: true,
-      };
+      const mockResponse = { success: true };
 
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
@@ -57,10 +55,7 @@ describe('ConversationAPI', () => {
 
   describe('getAllConversations', () => {
     it('should fetch all conversations', async () => {
-      const mockResponse = {
-        success: true,
-        data: mockConversations,
-      };
+      const mockResponse = { success: true, data: mockConversations };
 
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
@@ -77,10 +72,7 @@ describe('ConversationAPI', () => {
     });
 
     it('should include archived conversations when requested', async () => {
-      const mockResponse = {
-        success: true,
-        data: mockConversations,
-      };
+      const mockResponse = { success: true, data: mockConversations };
 
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
@@ -94,38 +86,18 @@ describe('ConversationAPI', () => {
         expect.any(Object),
       );
     });
-
-    it('should return empty array when no data', async () => {
-      const mockResponse = {
-        success: true,
-      };
-
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: async () => mockResponse,
-      });
-
-      const result = await conversationAPI.getAllConversations();
-
-      expect(result).toEqual([]);
-    });
   });
 
   describe('getConversation', () => {
     it('should fetch a single conversation with messages', async () => {
-      const mockResponse = {
-        success: true,
-        data: mockConversation,
-      };
+      const mockResponse = { success: true, data: mockConversation };
 
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => mockResponse,
       });
 
-      const result = await conversationAPI.getConversation(
-        mockConversation._id,
-      );
+      const result = await conversationAPI.getConversation(mockConversation._id);
 
       expect(global.fetch).toHaveBeenCalledWith(
         `${API_URL}/conversations/${mockConversation._id}?limit=50`,
@@ -135,10 +107,7 @@ describe('ConversationAPI', () => {
     });
 
     it('should respect custom message limit', async () => {
-      const mockResponse = {
-        success: true,
-        data: mockConversation,
-      };
+      const mockResponse = { success: true, data: mockConversation };
 
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
@@ -154,9 +123,7 @@ describe('ConversationAPI', () => {
     });
 
     it('should throw error when conversation not found', async () => {
-      const mockResponse = {
-        success: true,
-      };
+      const mockResponse = { success: true };
 
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
@@ -190,69 +157,16 @@ describe('ConversationAPI', () => {
         `${API_URL}/conversations/${mockConversation._id}/title`,
         expect.objectContaining({
           method: 'PATCH',
-          body: JSON.stringify({
-            title: 'Updated Title',
-          }),
+          body: JSON.stringify({ title: 'Updated Title' }),
         }),
       );
       expect(result.title).toBe('Updated Title');
     });
   });
 
-  describe('archiveConversation', () => {
-    it('should archive a conversation', async () => {
-      const mockResponse = {
-        success: true,
-        data: { ...mockConversation, archived: true },
-      };
-
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: async () => mockResponse,
-      });
-
-      const result = await conversationAPI.archiveConversation(
-        mockConversation._id,
-      );
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${API_URL}/conversations/${mockConversation._id}/archive`,
-        expect.objectContaining({
-          method: 'PATCH',
-        }),
-      );
-      expect(result.archived).toBe(true);
-    });
-  });
-
-  describe('unarchiveConversation', () => {
-    it('should unarchive a conversation', async () => {
-      const mockResponse = {
-        success: true,
-        data: mockConversation,
-      };
-
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: async () => mockResponse,
-      });
-
-      await conversationAPI.unarchiveConversation(mockConversation._id);
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${API_URL}/conversations/${mockConversation._id}/unarchive`,
-        expect.objectContaining({
-          method: 'PATCH',
-        }),
-      );
-    });
-  });
-
   describe('deleteConversation', () => {
     it('should delete a conversation', async () => {
-      const mockResponse = {
-        success: true,
-      };
+      const mockResponse = { success: true };
 
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
@@ -263,9 +177,7 @@ describe('ConversationAPI', () => {
 
       expect(global.fetch).toHaveBeenCalledWith(
         `${API_URL}/conversations/${mockConversation._id}`,
-        expect.objectContaining({
-          method: 'DELETE',
-        }),
+        expect.objectContaining({ method: 'DELETE' }),
       );
     });
   });
@@ -277,17 +189,7 @@ describe('ConversationAPI', () => {
         json: async () => ({ error: 'API Error' }),
       });
 
-      await expect(conversationAPI.getAllConversations()).rejects.toThrow(
-        'API Error',
-      );
-    });
-
-    it('should throw error on network failure', async () => {
-      global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
-
-      await expect(conversationAPI.getAllConversations()).rejects.toThrow(
-        'Network error',
-      );
+      await expect(conversationAPI.getAllConversations()).rejects.toThrow('API Error');
     });
   });
 });

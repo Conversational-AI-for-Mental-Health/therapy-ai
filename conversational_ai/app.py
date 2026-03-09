@@ -26,7 +26,6 @@ from telegram_store import init_db, load_history, save_history, truncate_history
 from telegram_format import llm_text_to_telegram_html
 
 
-
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 
 # Telegram config
@@ -37,7 +36,7 @@ TELEGRAM_MAX_TURNS = int(os.environ.get("TELEGRAM_MAX_TURNS", "12"))
 # "polling" works with no public domain. "webhook" requires public HTTPS + setWebhook.
 TELEGRAM_MODE = os.environ.get("TELEGRAM_MODE", "polling")  # "polling" or "webhook"
 TELEGRAM_POLL_SECONDS = float(os.environ.get("TELEGRAM_POLL_SECONDS", "1.0"))
-TELEGRAM_POLL_TIMEOUT = int(os.environ.get("TELEGRAM_POLL_TIMEOUT", "30"))  # long poll timeout seconds
+TELEGRAM_POLL_TIMEOUT = int(os.environ.get("TELEGRAM_POLL_TIMEOUT", "30")) # long poll timeout seconds
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -242,7 +241,11 @@ def load_model() -> None:
         device = f"cuda:{CUDA_DEVICE}"
         logger.info(f"✓ CUDA available - Using GPU index: {CUDA_DEVICE}")
         logger.info(f"GPU Name: {torch.cuda.get_device_name(CUDA_DEVICE)}")
+        os.environ['CUDA_VISIBLE_DEVICES'] = str(CUDA_DEVICE)
         torch.cuda.set_device(CUDA_DEVICE)
+    elif torch.backends.mps.is_available():
+        device = "mps"
+        logger.info("✓ Apple Silicon detected - Using MPS Acceleration")
     else:
         device = "cpu"
         if CUDA_DEVICE is not None:
@@ -256,19 +259,20 @@ def load_model() -> None:
         tokenizer.pad_token = tokenizer.eos_token
     logger.info("✓ Tokenizer loaded")
 
-    logger.info("Loading model into memory...")
+    dtype = torch.float16 if device.startswith("cuda") else torch.float32
+
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
-        torch_dtype=torch.float16 if device != "cpu" else torch.float32,
+        torch_dtype=dtype,
         low_cpu_mem_usage=True,
         trust_remote_code=True,
-    )
-    model = model.to(device)
+    ).to(device)
+
     model.eval()
 
     logger.info("=" * 60)
     logger.info("✓ MODEL LOADED SUCCESSFULLY AND READY FOR INFERENCE!")
-    logger.info(f"✓ Device: {device}")
+    logger.info(f"✓ Device: {device} | Dtype: {dtype}")
     logger.info("✓ Model parameters: ~0.5 billion")
     logger.info("=" * 60)
 
@@ -320,7 +324,7 @@ def generate_response(
             )
 
         generated_text = tokenizer.decode(
-            outputs[0][inputs["input_ids"].shape[1] :],
+            outputs[0][inputs["input_ids"].shape[1]:],
             skip_special_tokens=True,
         )
         return generated_text.strip()
@@ -403,7 +407,6 @@ def reset():
 
 logger.info("Starting Mental Health Chatbot API...")
 logger.info(f"Configuration: CUDA_DEVICE = {CUDA_DEVICE}")
-
 
 try:
     load_model()

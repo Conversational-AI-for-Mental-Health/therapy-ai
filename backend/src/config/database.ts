@@ -1,4 +1,4 @@
-// backend/src/config/database.ts
+// Database connection management using Mongoose for MongoDB. This module provides functions to connect, disconnect, and check the connection status of the database. It also includes event listeners for connection events and handles graceful shutdown on application termination.
 import mongoose from 'mongoose';
 import config from '../config';
 

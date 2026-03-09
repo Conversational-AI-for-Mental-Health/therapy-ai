@@ -4,14 +4,17 @@ import jwt from 'jsonwebtoken';
 import config from '../config';
 import { createManualRateLimiter } from '../middleware/rateLimit';
 import { verifySocialToken } from '../services/socialAuthService';
-import { authenticateUser } from '../middleware/validation';
+import { authenticateUser, extractValidationError } from '../middleware/validation';
 import { validateBody } from '../middleware/schemaValidation';
+import { User } from '../models';
 import { z } from 'zod';
 
 const router = Router();
+
 const authRateLimit = createManualRateLimiter({ windowMs: 60_000, maxRequests: 10 });
 const forgotPasswordRateLimit = createManualRateLimiter({ windowMs: 60_000, maxRequests: 3 });
 const refreshRateLimit = createManualRateLimiter({ windowMs: 60_000, maxRequests: 20 });
+
 const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 const registerBodySchema = z.object({
@@ -77,116 +80,124 @@ const buildAuthData = async (user: any) => {
   };
 };
 
-//register
+// User registration
 router.post(
   '/register',
   authRateLimit,
   validateBody(registerBodySchema),
   async (req: Request, res: Response) => {
-  try {
-    const { name, email, password } = req.body;
-    const normalizedEmail = email?.toLowerCase().trim();
+    try {
+      const { name, email, password } = req.body;
+      const normalizedEmail = email?.toLowerCase().trim();
 
-    if (
-      !name ||
-      typeof name !== 'string' ||
-      !normalizedEmail ||
-      typeof password !== 'string' ||
-      password.length < 8 ||
-      !isValidEmail(normalizedEmail)
-    ) {
-      return res.status(400).json({
+      if (
+        !name ||
+        typeof name !== 'string' ||
+        !normalizedEmail ||
+        typeof password !== 'string' ||
+        password.length < 8 ||
+        !isValidEmail(normalizedEmail)
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid registration payload',
+        });
+      }
+
+      const existingUser = await UserService.findUserByEmail(normalizedEmail);
+      if (existingUser) {
+        return res.status(409).json({
+          success: false,
+          error: 'User already exists',
+        });
+      }
+
+      const user = await UserService.createUser(name, normalizedEmail, password);
+
+      res.status(201).json({
+        success: true,
+        data: await buildAuthData(user),
+      });
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      const validationMsg = extractValidationError(error);
+      if (validationMsg) {
+        return res.status(400).json({ success: false, error: validationMsg });
+      }
+      res.status(500).json({
         success: false,
-        error: 'Invalid registration payload',
+        error: 'Registration failed',
       });
     }
-
-    const existingUser = await UserService.findUserByEmail(normalizedEmail);
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        error: 'User already exists',
-      });
-    }
-
-    const user = await UserService.createUser(name, normalizedEmail, password);
-
-    res.status(201).json({
-      success: true,
-      data: await buildAuthData(user),
-    });
-  } catch (error: any) {
-    console.error('Registration error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Registration failed',
-    });
-  }
   },
 );
 
-
+// User login
 router.post(
   '/login',
   authRateLimit,
   validateBody(loginBodySchema),
   async (req: Request, res: Response) => {
-  try {
-    const { email, password } = req.body;
-    const normalizedEmail = email?.toLowerCase().trim();
+    try {
+      const { email, password } = req.body;
+      const normalizedEmail = email?.toLowerCase().trim();
 
-    if (
-      !normalizedEmail ||
-      typeof password !== 'string' ||
-      !isValidEmail(normalizedEmail)
-    ) {
-      return res.status(400).json({
+      if (
+        !normalizedEmail ||
+        typeof password !== 'string' ||
+        !isValidEmail(normalizedEmail)
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid login payload',
+        });
+      }
+
+      const user = await UserService.findUserByEmail(normalizedEmail);
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid email or password',
+        });
+      }
+
+      if (!user.password_hash) {
+        return res.status(401).json({
+          success: false,
+          error: 'Please login with Google or Apple',
+        });
+      }
+
+      const isMatch = await UserService.verifyPassword(password, user.password_hash);
+      if (!isMatch) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid email or password',
+        });
+      }
+
+      const userObj = user.toObject();
+      delete userObj.password_hash;
+
+      res.json({
+        success: true,
+        data: await buildAuthData(userObj),
+      });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      const validationMsg = extractValidationError(error);
+      if (validationMsg) {
+        return res.status(400).json({ success: false, error: validationMsg });
+      }
+      res.status(500).json({
         success: false,
-        error: 'Invalid login payload',
+        error: 'Login failed',
       });
     }
-
-    const user = await UserService.findUserByEmail(normalizedEmail);
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid email or password',
-      });
-    }
-
-    if (!user.password_hash) {
-      return res.status(401).json({
-        success: false,
-        error: 'Please login with Google or Apple',
-      });
-    }
-
-    const isMatch = await UserService.verifyPassword(password, user.password_hash);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid email or password',
-      });
-    }
-
-    //removing hash from password
-    const userObj = user.toObject();
-    delete userObj.password_hash;
-
-    res.json({
-      success: true,
-      data: await buildAuthData(userObj),
-    });
-  } catch (error: any) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Login failed',
-    });
-  }
   },
 );
 
+// Forgot password - verify email exists
 router.post(
   '/forgot-password',
   forgotPasswordRateLimit,
@@ -223,108 +234,111 @@ router.post(
   },
 );
 
+// Reset password using email
 router.post(
   '/reset-password',
   authRateLimit,
   validateBody(resetPasswordBodySchema),
   async (req: Request, res: Response) => {
-  try {
-    const email = req.body?.email?.toLowerCase().trim();
-    const password = req.body?.password;
-    if (!email || !password) {
-      return res.status(400).json({
+    try {
+      const email = req.body?.email?.toLowerCase().trim();
+      const password = req.body?.password;
+
+      if (!email || !password) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email and password are required',
+        });
+      }
+
+      if (typeof password !== 'string' || password.length < 8) {
+        return res.status(400).json({
+          success: false,
+          error: 'Password must be at least 8 characters',
+        });
+      }
+
+      const didReset = await UserService.resetPasswordByEmail(email, password);
+      if (!didReset) {
+        return res.status(404).json({
+          success: false,
+          error: 'No account found with this email',
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: 'Password reset successful',
+      });
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      return res.status(500).json({
         success: false,
-        error: 'Email and password are required',
+        error: 'Reset password failed',
       });
     }
-
-    if (typeof password !== 'string' || password.length < 8) {
-      return res.status(400).json({
-        success: false,
-        error: 'Password must be at least 8 characters',
-      });
-    }
-
-    const didReset = await UserService.resetPasswordByEmail(email, password);
-    if (!didReset) {
-      return res.status(404).json({
-        success: false,
-        error: 'No account found with this email',
-      });
-    }
-
-    return res.json({
-      success: true,
-      message: 'Password reset successful',
-    });
-  } catch (error: any) {
-    console.error('Reset password error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Reset password failed',
-    });
-  }
   },
 );
 
+// Social login (Google/Apple)
 router.post(
   '/social-login',
   authRateLimit,
   validateBody(socialLoginBodySchema),
   async (req: Request, res: Response) => {
-  try {
-    const { provider, profile, idToken } = req.body;
+    try {
+      const { provider, profile, idToken } = req.body;
 
-    if (
-      !provider ||
-      !['google', 'apple'].includes(provider) ||
-      !profile ||
-      !profile.email ||
-      !profile.id ||
-      typeof idToken !== 'string'
-    ) {
-      return res.status(400).json({
+      if (
+        !provider ||
+        !['google', 'apple'].includes(provider) ||
+        !profile ||
+        !profile.email ||
+        !profile.id ||
+        typeof idToken !== 'string'
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid social login data',
+        });
+      }
+
+      const verifiedClaims = await verifySocialToken(provider, idToken);
+      if (!verifiedClaims) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid social identity token',
+        });
+      }
+
+      if (
+        verifiedClaims.sub !== profile.id ||
+        (verifiedClaims.email &&
+          verifiedClaims.email.toLowerCase() !== profile.email.toLowerCase())
+      ) {
+        return res.status(401).json({
+          success: false,
+          error: 'Social identity payload mismatch',
+        });
+      }
+
+      const user = await UserService.findOrCreateSocialUser(provider, profile);
+
+      res.json({
+        success: true,
+        data: await buildAuthData(user),
+      });
+    } catch (error: any) {
+      console.error('Social login error:', error);
+      res.status(500).json({
         success: false,
-        error: 'Invalid social login data',
+        error: 'Social login failed',
       });
     }
-
-    const verifiedClaims = await verifySocialToken(provider, idToken);
-    if (!verifiedClaims) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid social identity token',
-      });
-    }
-
-    if (
-      verifiedClaims.sub !== profile.id ||
-      (verifiedClaims.email &&
-        verifiedClaims.email.toLowerCase() !== profile.email.toLowerCase())
-    ) {
-      return res.status(401).json({
-        success: false,
-        error: 'Social identity payload mismatch',
-      });
-    }
-
-    const user = await UserService.findOrCreateSocialUser(provider, profile);
-
-    res.json({
-      success: true,
-      data: await buildAuthData(user),
-    });
-  } catch (error: any) {
-    console.error('Social login error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Social login failed',
-    });
-  }
   },
 );
 
-// current user
+// Get current user profile
 router.get('/me', authenticateUser, async (req: Request, res: Response) => {
   try {
     const user = await UserService.findUserById(req.user!.userId);
@@ -348,89 +362,172 @@ router.get('/me', authenticateUser, async (req: Request, res: Response) => {
   }
 });
 
+// Change password
+router.patch('/password', authenticateUser, async (req: Request, res: Response) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'oldPassword and newPassword are required',
+      });
+    }
+
+    const user = await User.findById(req.user!.userId).select('+password_hash');
+    if (!user || !user.password_hash) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot change password for social login accounts',
+      });
+    }
+
+    const isMatch = await UserService.verifyPassword(oldPassword, user.password_hash);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password is incorrect',
+      });
+    }
+
+    await UserService.updatePasswordById(req.user!.userId, newPassword);
+
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (error: any) {
+    console.error('Password update error:', error);
+    const validationMsg = extractValidationError(error);
+    if (validationMsg) {
+      return res.status(400).json({ success: false, error: validationMsg });
+    }
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update password',
+    });
+  }
+});
+
+// Change user name
+router.patch('/name', authenticateUser, async (req: Request, res: Response) => {
+  try {
+    const { name } = req.body;
+
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'name is required',
+      });
+    }
+
+    const updated = await User.findByIdAndUpdate(
+      req.user!.userId,
+      { $set: { name: name.trim() } },
+      { new: true },
+    );
+
+    if (!updated) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    res.json({ success: true, data: { name: updated.name } });
+  } catch (error: any) {
+    console.error('Name update error:', error);
+    const validationMsg = extractValidationError(error);
+    if (validationMsg) {
+      return res.status(400).json({ success: false, error: validationMsg });
+    }
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update name',
+    });
+  }
+});
+
+// Refresh JWT token
 router.post(
   '/refresh-token',
   refreshRateLimit,
   validateBody(refreshTokenBodySchema),
   async (req: Request, res: Response) => {
-  try {
-    const refreshToken = req.body?.refreshToken;
-    const userId = req.body?.userId;
+    try {
+      const refreshToken = req.body?.refreshToken;
+      const userId = req.body?.userId;
 
-    if (
-      !refreshToken ||
-      typeof refreshToken !== 'string' ||
-      !userId ||
-      typeof userId !== 'string'
-    ) {
-      return res.status(400).json({
+      if (
+        !refreshToken ||
+        typeof refreshToken !== 'string' ||
+        !userId ||
+        typeof userId !== 'string'
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid refresh token payload',
+        });
+      }
+
+      const rotated = await UserService.rotateRefreshToken(userId, refreshToken);
+      if (!rotated) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid or expired refresh token',
+        });
+      }
+
+      const user = await UserService.findUserById(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+        });
+      }
+
+      const accessToken = createAccessToken(user._id, user.email);
+
+      return res.json({
+        success: true,
+        data: {
+          token: accessToken,
+          accessToken,
+          refreshToken: rotated.refreshToken,
+          accessTokenExpiresIn: config.ACCESS_TOKEN_EXPIRES_IN,
+          refreshTokenExpiresAt: rotated.expiresAt.toISOString(),
+        },
+      });
+    } catch (error: any) {
+      console.error('Refresh token error:', error);
+      return res.status(500).json({
         success: false,
-        error: 'Invalid refresh token payload',
+        error: 'Refresh token failed',
       });
     }
-
-    const rotated = await UserService.rotateRefreshToken(userId, refreshToken);
-    if (!rotated) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid or expired refresh token',
-      });
-    }
-
-    const user = await UserService.findUserById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found',
-      });
-    }
-
-    const accessToken = createAccessToken(user._id, user.email);
-    return res.json({
-      success: true,
-      data: {
-        token: accessToken,
-        accessToken,
-        refreshToken: rotated.refreshToken,
-        accessTokenExpiresIn: config.ACCESS_TOKEN_EXPIRES_IN,
-        refreshTokenExpiresAt: rotated.expiresAt.toISOString(),
-      },
-    });
-  } catch (error: any) {
-    console.error('Refresh token error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Refresh token failed',
-    });
-  }
   },
 );
 
+// Logout - revoke refresh token(s)
 router.post(
   '/logout',
   authenticateUser,
   validateBody(logoutBodySchema),
   async (req: Request, res: Response) => {
-  try {
-    const refreshToken = req.body?.refreshToken;
+    try {
+      const refreshToken = req.body?.refreshToken;
 
-    if (refreshToken && typeof refreshToken === 'string') {
-      await UserService.revokeRefreshToken(req.user!.userId, refreshToken);
-    } else {
-      await UserService.revokeAllRefreshTokens(req.user!.userId);
+      if (refreshToken && typeof refreshToken === 'string') {
+        await UserService.revokeRefreshToken(req.user!.userId, refreshToken);
+      } else {
+        await UserService.revokeAllRefreshTokens(req.user!.userId);
+      }
+
+      return res.json({
+        success: true,
+        message: 'Logged out successfully',
+      });
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Logout failed',
+      });
     }
-
-    return res.json({
-      success: true,
-      message: 'Logged out successfully',
-    });
-  } catch (error: any) {
-    console.error('Logout error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Logout failed',
-    });
-  }
   },
 );
 

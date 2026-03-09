@@ -62,10 +62,10 @@ jobs:
         working-directory: e2e
 
       - name: Build frontend
-        run: yarn workspace frontend build
+        run: yarn workspace therapy-ai-frontend build
 
       - name: Start backend server (background)
-        run: yarn workspace backend dev &
+        run: yarn workspace therapy-ai-backend dev &
         env:
           NODE_ENV: development
 

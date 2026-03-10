@@ -54,18 +54,14 @@ jobs:
             ${{ runner.os }}-yarn-cypress-
             ${{ runner.os }}-yarn-
 
-      - name: Install root dependencies
+      - name: Install dependencies
         run: yarn install --immutable
-
-      - name: Install E2E dependencies
-        run: yarn install --immutable
-        working-directory: e2e
 
       - name: Build frontend
         run: yarn workspace therapy-ai-frontend build
 
       - name: Start backend server (background)
-        run: yarn workspace therapy-ai-backend dev &
+        run: yarn workspace therapy-ai-backend dev > /tmp/backend.log 2>&1 &
         env:
           NODE_ENV: development
 
@@ -73,22 +69,32 @@ jobs:
         run: |
           echo "Waiting for backend on port 3000..."
           for i in {1..30}; do
-            curl -s http://localhost:3000/api/users/me -o /dev/null && echo "Backend ready" && break
-            echo "Attempt $i: backend not ready yet..."
+            if curl -sf http://localhost:3000/api/users/me -o /dev/null 2>/dev/null; then
+              echo "Backend ready on attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i: not ready yet..."
             sleep 2
           done
+          echo "=== Backend failed to start. Logs: ==="
+          cat /tmp/backend.log
+          exit 1
 
       - name: Serve frontend build (background)
-        run: |
-          npx serve -s frontend/dist -l 8080 &
+        run: npx serve -s frontend/dist -l 8080 &
 
       - name: Wait for frontend to be ready
         run: |
           echo "Waiting for frontend on port 8080..."
           for i in {1..20}; do
-            curl -s http://localhost:8080 -o /dev/null && echo "Frontend ready" && break
+            if curl -sf http://localhost:8080 -o /dev/null 2>/dev/null; then
+              echo "Frontend ready"
+              exit 0
+            fi
             sleep 2
           done
+          echo "Frontend failed to start"
+          exit 1
 
       - name: Run Cypress E2E Tests
         uses: cypress-io/github-action@v6
@@ -97,6 +103,7 @@ jobs:
           browser: chrome
           headed: false
           config: baseUrl=http://localhost:8080
+          install: false
         env:
           CYPRESS_API_URL: http://localhost:3000/api
           CYPRESS_SOCKET_URL: http://localhost:3000

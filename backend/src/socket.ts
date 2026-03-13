@@ -120,7 +120,7 @@ const handleUserMessage = async (
 
     // 6. Call Python AI service
     let aiResponse: string;
-    let suggestedPrompts: string[] = [];
+    let aiCallSucceeded = true;
     try {
       const response = await axios.post(
         config.PYTHON_AI_URL,
@@ -145,6 +145,7 @@ const handleUserMessage = async (
       );
     } catch (aiError: any) {
       console.error('[Socket] Python AI error:', aiError.message);
+      aiCallSucceeded = false;
       aiResponse =
         "I'm having trouble connecting to my AI service. Please try again in a moment.";
     }
@@ -169,44 +170,48 @@ const handleUserMessage = async (
 
     console.log('[Socket] AI response sent to room:', conversationId);
 
-    // 9. Asynchronously generate suggested prompts for the user based on the conversation history + AI response
-    (async () => {
-      try {
-        const promptsResponse = await axios.post(
-          config.PYTHON_AI_URL,
-          {
-            message: `Based on this conversation, suggest exactly 3 short things the USER might want to say next, written in first person as if the user is speaking (e.g. "I feel overwhelmed", "What can I do?", "I need help"). Each must be 3-5 words maximum. Return ONLY a JSON array of 3 strings, no other text.`,
-            conversation_history: [
-              ...conversationHistory,
-              { role: 'assistant', content: aiResponse },
-            ],
-            max_tokens: 60,
-            temperature: 0.7,
-            system_prompt: "You generate short follow-up messages written from the USER's perspective in first person — things the user might type next, not things the AI would say. Respond ONLY with a valid JSON array of exactly 3 strings, each 3-5 words. No preamble, no explanation.",
-          },
-          { timeout: 15000 },
-        );
+    // 9. Asynchronously generate dynamic quick prompts after a successful AI response.
+    if (aiCallSucceeded) {
+      (async () => {
+        try {
+          const promptsResponse = await axios.post(
+            config.PYTHON_AI_URL,
+            {
+              message:
+                'Based on this conversation, suggest exactly 3 short things the USER might want to say next, written in first person as if the user is speaking (e.g. "I feel overwhelmed", "What can I do?", "I need help"). Each must be 3-5 words maximum. Return ONLY a JSON array of 3 strings, no other text.',
+              conversation_history: [
+                ...conversationHistory,
+                { role: 'assistant', content: aiResponse },
+              ],
+              max_tokens: 60,
+              temperature: 0.7,
+              system_prompt:
+                "You generate short follow-up messages written from the USER's perspective in first person - things the user might type next, not things the AI would say. Respond ONLY with a valid JSON array of exactly 3 strings, each 3-5 words. No preamble, no explanation.",
+            },
+            { timeout: config.PYTHON_SUGGESTED_PROMPTS_TIMEOUT_MS },
+          );
 
-        const raw: string = promptsResponse.data.response || promptsResponse.data.message || '[]';
-        const cleaned = raw.replace(/```json|```/g, '').trim();
-        const parsed: unknown = JSON.parse(cleaned);
-        if (Array.isArray(parsed)) {
-          const prompts = (parsed as unknown[])
-            .filter((p): p is string => typeof p === 'string' && p.trim().length > 0)
-            .slice(0, 3);
+          const raw: string = promptsResponse.data.response || promptsResponse.data.message || '[]';
+          const cleaned = raw.replace(/```json|```/g, '').trim();
+          const parsed: unknown = JSON.parse(cleaned);
+          if (Array.isArray(parsed)) {
+            const prompts = (parsed as unknown[])
+              .filter((p): p is string => typeof p === 'string' && p.trim().length > 0)
+              .slice(0, 3);
 
-          if (prompts.length > 0) {
-            io.to(conversationId).emit('suggested_prompts', {
-              conversationId,
-              prompts,
-            });
-            console.log('[Socket] Suggested prompts sent to room:', conversationId);
+            if (prompts.length > 0) {
+              io.to(conversationId).emit('suggested_prompts', {
+                conversationId,
+                prompts,
+              });
+              console.log('[Socket] Suggested prompts sent to room:', conversationId);
+            }
           }
+        } catch (promptErr: any) {
+          console.warn('[Socket] Failed to generate suggested prompts:', promptErr.message);
         }
-      } catch (promptErr: any) {
-        console.warn('[Socket] Failed to generate suggested prompts:', promptErr.message);
-      }
-    })();
+      })();
+    }
   } catch (error: any) {
     console.error('[Socket] Error handling message:', error.message);
     socket.emit('error', {

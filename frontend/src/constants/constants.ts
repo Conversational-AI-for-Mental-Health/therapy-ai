@@ -1,10 +1,9 @@
 
-
-export const quickPrompts = [
+export const defaultQuickPrompts = [
   'Help me relax',
   'Journal my day',
   'Recommend me books',
-  'Dopamine detox'
+  'Dopamine detox',
 ];
 
 export const moodOptions = [

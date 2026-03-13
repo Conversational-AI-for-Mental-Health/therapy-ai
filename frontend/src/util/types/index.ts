@@ -105,6 +105,8 @@ export interface JournalViewProps {
 export interface ChatProps {
   chatHistory: ChatMessage[];
   chatHistoryRef: React.RefObject<HTMLDivElement>;
+  showPrompts: boolean;
+  onTogglePrompts: () => void;
   quickPrompts: string[];
   chatInput: string;
   onChatInputChange: (value: string) => void;
@@ -116,7 +118,6 @@ export interface ChatProps {
   handleCopyMessage: (index: number) => void;
   isGenerating: boolean;
   onStopGeneration: () => void;
-  suggestedPrompts: string[];
   onClearSuggestedPrompts: () => void;
 };
 

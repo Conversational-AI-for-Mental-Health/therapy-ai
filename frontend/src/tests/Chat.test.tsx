@@ -1,10 +1,10 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Chat from '../components/layout/Chat';
 import {
   mockChatMessages,
-  mockQuickPrompts,
+  mockSuggestedPrompts,
   mockThinkingMessage,
 } from './mocks/mockData';
 
@@ -27,11 +27,14 @@ describe('Chat Component', () => {
   const mockOnChatInputChange = jest.fn();
   const mockOnStopGeneration = jest.fn();
   const mockOnClearSuggestedPrompts = jest.fn();
+  const mockOnTogglePrompts = jest.fn();
 
   const defaultProps = {
     chatHistory: mockChatMessages,
     chatHistoryRef: mockChatHistoryRef,
-    quickPrompts: mockQuickPrompts,
+    showPrompts: false,
+    onTogglePrompts: mockOnTogglePrompts,
+    quickPrompts: mockSuggestedPrompts,
     chatInput: '',
     onChatInputChange: mockOnChatInputChange,
     handleQuickPrompt: mockHandleQuickPrompt,
@@ -42,7 +45,6 @@ describe('Chat Component', () => {
     handleCopyMessage: mockHandleCopyMessage,
     isGenerating: false,
     onStopGeneration: mockOnStopGeneration,
-    suggestedPrompts: [],
     onClearSuggestedPrompts: mockOnClearSuggestedPrompts,
   };
 
@@ -59,15 +61,20 @@ describe('Chat Component', () => {
       expect(screen.getByRole('button', { name: '→' })).toBeInTheDocument();
     });
 
-    it('should render all quick prompts', async () => {
-      const user = userEvent.setup();
-      render(<Chat {...defaultProps} chatHistory={[]} />);
+    it('should render quick prompts panel when showPrompts is true', () => {
+      const { container } = render(
+        <Chat
+          {...defaultProps}
+          showPrompts={true}
+          quickPrompts={mockSuggestedPrompts}
+        />,
+      );
 
-      await user.click(screen.getByTitle('Show Suggestions'));
-
-      mockQuickPrompts.forEach((prompt) => {
+      expect(container.querySelector('[data-cy="quick-prompts-panel"]')).toBeInTheDocument();
+      mockSuggestedPrompts.forEach((prompt) => {
         expect(screen.getByText(prompt)).toBeInTheDocument();
       });
+      expect(container.querySelector('[data-cy="suggested-prompts"]')).toBeInTheDocument();
     });
 
     it('should render chat history messages', () => {
@@ -109,15 +116,22 @@ describe('Chat Component', () => {
       expect(mockHandleSubmitForm).toHaveBeenCalledTimes(1);
     });
 
-    it('should call handleQuickPrompt when quick prompt button is clicked', async () => {
+    it('should call handleQuickPrompt when dynamic suggested prompt is clicked', async () => {
       const user = userEvent.setup();
-      render(<Chat {...defaultProps} chatHistory={[]} />);
+      render(<Chat {...defaultProps} showPrompts={true} quickPrompts={mockSuggestedPrompts} />);
 
-      await user.click(screen.getByTitle('Show Suggestions'));
-      const quickPromptButton = screen.getByText(mockQuickPrompts[0]);
+      const quickPromptButton = screen.getByText(mockSuggestedPrompts[0]);
       await user.click(quickPromptButton);
 
-      expect(mockHandleQuickPrompt).toHaveBeenCalledWith(mockQuickPrompts[0]);
+      expect(mockHandleQuickPrompt).toHaveBeenCalledWith(mockSuggestedPrompts[0]);
+    });
+
+    it('should call onTogglePrompts when toggle button clicked', async () => {
+      const user = userEvent.setup();
+      render(<Chat {...defaultProps} />);
+
+      await user.click(screen.getByTitle('Show Suggestions'));
+      expect(mockOnTogglePrompts).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -175,22 +189,10 @@ describe('Chat Component', () => {
     });
   });
 
-  describe('Suggested Prompts', () => {
-    it('should render suggested prompts when provided and last message is AI', () => {
-      const suggested = ['Tell me more', 'I am fine'];
-      const chatHistory = [{ sender: 'ai' as const, text: 'How are you?', thinking: false }];
-      render(<Chat {...defaultProps} chatHistory={chatHistory} suggestedPrompts={suggested} />);
-
-      suggested.forEach(prompt => {
-        expect(screen.getByText(prompt)).toBeInTheDocument();
-      });
-    });
-
-    it('should call handleQuickPrompt and onClearSuggestedPrompts when suggested prompt clicked', async () => {
+  describe('Quick Prompts', () => {
+    it('should call handleQuickPrompt and onClearSuggestedPrompts when quick prompt clicked', async () => {
       const user = userEvent.setup();
-      const suggested = ['Tell me more'];
-      const chatHistory = [{ sender: 'ai' as const, text: 'How are you?', thinking: false }];
-      render(<Chat {...defaultProps} chatHistory={chatHistory} suggestedPrompts={suggested} />);
+      render(<Chat {...defaultProps} showPrompts={true} quickPrompts={['Tell me more']} />);
 
       await user.click(screen.getByText('Tell me more'));
       expect(mockHandleQuickPrompt).toHaveBeenCalledWith('Tell me more');

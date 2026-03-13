@@ -12,3 +12,4 @@ docs/
 __pycache__/
 .pytest_cache/
 app.sqlite3
+.venv

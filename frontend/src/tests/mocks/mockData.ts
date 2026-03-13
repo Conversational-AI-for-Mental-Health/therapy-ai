@@ -132,7 +132,7 @@ export const mockMoodOptions = [
   { mood: 'Hopeful', moodIcon: '🌟' },
 ];
 
-export const mockQuickPrompts = [
+export const mockSuggestedPrompts = [
   'Help me relax',
   'Journal my day',
   'Recommend me books',

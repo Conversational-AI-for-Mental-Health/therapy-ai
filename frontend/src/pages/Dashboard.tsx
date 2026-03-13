@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import React from 'react';
-import { moodOptions, quickPrompts } from '@/constants/constants';
+import { defaultQuickPrompts, moodOptions } from '@/constants/constants';
 import {
     DashboardTab,
     ChatMessage,
@@ -19,6 +19,15 @@ import { Conversation, Message } from '@/util/types';
 import authAPI from '@/util/authAPI';
 import emergencyAPI from '@/util/emergencyAPI';
 
+const AI_SERVICE_FAILURE_SNIPPET = "I'm having trouble connecting to my AI service";
+
+const isSuccessfulAiMessage = (msg: ChatMessage): boolean =>
+    msg.sender === 'ai' &&
+    !msg.thinking &&
+    msg.text !== 'Hello! I am here to listen. How are you feeling today?' &&
+    !msg.text.includes(AI_SERVICE_FAILURE_SNIPPET) &&
+    !msg.text.includes('unable to reach the AI service');
+
 export default function DashboardPage({
     onNavigate,
     isDarkMode,
@@ -27,6 +36,7 @@ export default function DashboardPage({
     // UI State
     const [currentDashboardTab, setCurrentDashboardTab] = useState<DashboardTab>('chat');
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [showPrompts, setShowPrompts] = useState(false);
 
     // Chat State
     const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
@@ -39,6 +49,7 @@ export default function DashboardPage({
     const [isLoadingConversation, setIsLoadingConversation] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>([]);
+    const [successfulExchangeCount, setSuccessfulExchangeCount] = useState(0);
 
     // Settings State
     const [showSettingsDialog, setShowSettingsDialog] = useState(false);
@@ -146,6 +157,11 @@ export default function DashboardPage({
                 return [...withoutThinking, { sender: 'ai', text: data.text }];
             });
 
+            const aiMessage: ChatMessage = { sender: 'ai', text: data.text };
+            if (isSuccessfulAiMessage(aiMessage)) {
+                setSuccessfulExchangeCount((prev) => prev + 1);
+            }
+
             setIsGenerating(false);
         });
 
@@ -242,6 +258,9 @@ export default function DashboardPage({
     const awaitStartConversation = () => {
         setCurrentConversation(null);
         setCurrentChatId(null);
+        setShowPrompts(false);
+        setSuggestedPrompts([]);
+        setSuccessfulExchangeCount(0);
         setChatHistory([
             { sender: 'ai', text: 'Hello! I am here to listen. How are you feeling today?' },
         ]);
@@ -340,6 +359,8 @@ export default function DashboardPage({
 
         pendingEditedReplyRef.current = { active: true, aiIndex: targetAiIndex };
         setIsGenerating(true);
+        setShowPrompts(false);
+        setSuggestedPrompts([]);
         updateSessionPreview(conversationId, editedUserText);
         try {
             socketService.joinConversation(conversationId);
@@ -387,7 +408,7 @@ export default function DashboardPage({
     };
 
     const handleChatSubmit = async (text?: string) => {
-        setSuggestedPrompts([]);
+        
         if (!text?.trim()) return;
 
         setChatHistory((prev) => [
@@ -398,6 +419,7 @@ export default function DashboardPage({
         setChatInput('');
         generationCancelledRef.current = false;
         setIsGenerating(true);
+        setShowPrompts(false);
 
         const activeChatId = currentConversation?._id || currentChatId;
         if (activeChatId) updateSessionPreview(activeChatId, text);
@@ -430,6 +452,7 @@ export default function DashboardPage({
 
             socketService.joinConversation(conversationId);
             socketService.sendMessage(conversationId, text);
+            setSuggestedPrompts([]);
         } catch (error: any) {
             console.error('Failed to send message:', error);
             setChatHistory((prev) => [
@@ -470,6 +493,9 @@ export default function DashboardPage({
                 : [{ sender: 'ai', text: 'Hello! I am here to listen. How are you feeling today?' }];
 
             setChatHistory(messages);
+            setShowPrompts(false);
+            setSuggestedPrompts([]);
+            setSuccessfulExchangeCount(messages.filter(isSuccessfulAiMessage).length);
 
             const latestMessage = messages[messages.length - 1];
             if (latestMessage && latestMessage.sender === 'ai') {
@@ -575,6 +601,12 @@ export default function DashboardPage({
         }
     };
 
+    const shouldUseDynamicPrompts =
+        successfulExchangeCount >= 2 && suggestedPrompts.length > 0;
+    const quickPromptsToDisplay = shouldUseDynamicPrompts
+        ? suggestedPrompts
+        : defaultQuickPrompts;
+
     return (
         <>
             <div data-cy="dashboard-container" className="h-dvh flex flex-col md:flex-row relative overflow-hidden">
@@ -674,7 +706,9 @@ export default function DashboardPage({
                                         <Chat
                                             chatHistory={chatHistory}
                                             chatHistoryRef={chatHistoryRef}
-                                            quickPrompts={quickPrompts}
+                                            showPrompts={showPrompts}
+                                            onTogglePrompts={() => setShowPrompts((prev) => !prev)}
+                                            quickPrompts={quickPromptsToDisplay}
                                             chatInput={chatInput}
                                             onChatInputChange={setChatInput}
                                             handleQuickPrompt={handleQuickPrompt}
@@ -685,7 +719,6 @@ export default function DashboardPage({
                                             handleCopyMessage={handleCopyMessage}
                                             isGenerating={isGenerating}
                                             onStopGeneration={handleStopGeneration}
-                                            suggestedPrompts={suggestedPrompts}
                                             onClearSuggestedPrompts={() => setSuggestedPrompts([])}
                                         />
                                     )}

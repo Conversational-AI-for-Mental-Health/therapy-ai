@@ -16,24 +16,14 @@ describe('Chat — Initial State', () => {
     cy.get('[data-cy="chat-send-btn"]').should('be.visible');
   });
 
-  it('shows the quick prompts toggle when history has ≤ 1 message', () => {
+  it('shows quick prompts toggle on initial conversation', () => {
     cy.get('[data-cy="quick-prompts-toggle"]').should('be.visible');
   });
 
-  it('quick prompts panel opens and shows prompt options', () => {
+  it('opens quick prompts panel with default prompt options', () => {
     cy.get('[data-cy="quick-prompts-toggle"]').click();
     cy.get('[data-cy="quick-prompts-panel"]').should('be.visible');
     cy.get('[data-cy="quick-prompts-panel"] button').should('have.length.greaterThan', 0);
-  });
-
-  it('clicking a quick prompt sends the message', () => {
-    cy.get('[data-cy="quick-prompts-toggle"]').click();
-    cy.get('[data-cy="quick-prompts-panel"] button').first().then(($btn) => {
-      const promptText = $btn.text().trim();
-      cy.wrap($btn).click();
-      cy.contains(promptText).should('be.visible');
-    });
-    cy.get('[data-cy="chat-input"]').should('have.value', '');
   });
 });
 
@@ -77,10 +67,33 @@ describe('Chat — Sending Messages', () => {
     cy.get('[data-cy="chat-send-btn"]').should('be.disabled');
   });
 
-  it('hides the quick prompts toggle after first message is sent', () => {
+  it('keeps quick prompts available after first AI response', () => {
     cy.get('[data-cy="chat-input"]').type('First message');
     cy.get('[data-cy="chat-send-btn"]').click();
-    cy.get('[data-cy="quick-prompts-toggle"]').should('not.exist');
+    cy.get('[data-cy="thinking-bubble"]', { timeout: 30000 }).should('not.exist');
+
+    cy.get('[data-cy="quick-prompts-toggle"]').click();
+    cy.get('[data-cy="quick-prompts-panel"] button').should('have.length.greaterThan', 0);
+  });
+
+  it('clicking a quick prompt sends the message', () => {
+    cy.get('[data-cy="quick-prompts-toggle"]').click();
+    cy.get('[data-cy="quick-prompts-panel"] button').first().then(($btn) => {
+      const promptText = $btn.text().trim();
+      cy.wrap($btn).click();
+      cy.contains(promptText).should('be.visible');
+    });
+
+    cy.get('[data-cy="chat-input"]').should('have.value', '');
+  });
+
+  it('falls back to default prompts if dynamic prompts are unavailable', () => {
+    cy.get('[data-cy="chat-input"]').type('I need guidance');
+    cy.get('[data-cy="chat-send-btn"]').click();
+    cy.get('[data-cy="thinking-bubble"]', { timeout: 30000 }).should('not.exist');
+
+    cy.get('[data-cy="quick-prompts-toggle"]').click();
+    cy.get('[data-cy="quick-prompts-panel"] button').should('have.length.greaterThan', 0);
   });
 
   it('typing in the input clears any displayed suggested prompts', () => {

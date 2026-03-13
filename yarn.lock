@@ -13110,7 +13110,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemon@npm:^3.0.1":
+"nodemon@npm:^3.1.14":
   version: 3.1.14
   resolution: "nodemon@npm:3.1.14"
   dependencies:
@@ -14229,7 +14229,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-router-dom@npm:^7.13.0":
+"react-router-dom@npm:^7.13.1":
   version: 7.13.1
   resolution: "react-router-dom@npm:7.13.1"
   dependencies:
@@ -15866,7 +15866,7 @@ __metadata:
     mongodb: "npm:^6.20.0"
     mongodb-memory-server: "npm:^10.3.0"
     mongoose: "npm:^9.0.0"
-    nodemon: "npm:^3.0.1"
+    nodemon: "npm:^3.1.14"
     socket.io: "npm:^4.7.2"
     supertest: "npm:^7.1.4"
     ts-node: "npm:^10.9.2"
@@ -15921,7 +15921,7 @@ __metadata:
     react: "npm:^18.2.0"
     react-dom: "npm:^18.2.0"
     react-markdown: "npm:^10.1.0"
-    react-router-dom: "npm:^7.13.0"
+    react-router-dom: "npm:^7.13.1"
     rehype-sanitize: "npm:^6.0.0"
     socket.io-client: "npm:^4.7.2"
     style-loader: "npm:^3.3.4"

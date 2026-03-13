@@ -10,6 +10,8 @@ import rehypeSanitize from 'rehype-sanitize';
 export default function Chat({
   chatHistory,
   chatHistoryRef,
+  showPrompts,
+  onTogglePrompts,
   quickPrompts,
   chatInput,
   onChatInputChange,
@@ -21,11 +23,9 @@ export default function Chat({
   handleCopyMessage,
   isGenerating,
   onStopGeneration,
-  suggestedPrompts,
   onClearSuggestedPrompts,
 }: ChatProps) {
 
-  const [showPrompts, setShowPrompts] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingText, setEditingText] = useState('');
 
@@ -208,42 +208,25 @@ export default function Chat({
           );
         })}
 
-        {/* Suggested prompts after AI response */}
-        {suggestedPrompts.length > 0 && chatHistory.length > 0 && chatHistory[chatHistory.length - 1].sender === 'ai' && !chatHistory[chatHistory.length - 1].thinking && (
-          <div data-cy="suggested-prompts" className="flex flex-wrap gap-2 pl-2 mt-1">
-            {suggestedPrompts.map((prompt, i) => (
-              <button
-                key={i}
-                onClick={() => { handleQuickPrompt(prompt); onClearSuggestedPrompts(); }}
-                className="bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition text-body-sm whitespace-nowrap"
-                style={{ padding: 'var(--space-xxs) var(--space-sm)' }}
-              >
-                {prompt}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Quick prompts */}
       <div className="shrink-0 flex flex-col border-t border-color bg-surface-base" style={{ padding: 'var(--space-xs)' }}>
-        {chatHistory.length <= 1 && (
-          <div className="flex justify-center -mt-6 mb-2 relative z-10">
-            <button
-              data-cy="quick-prompts-toggle"
-              onClick={() => setShowPrompts(!showPrompts)}
-              className="bg-surface border border-color shadow-sm rounded-full text-secondary hover:text-primary transition flex items-center justify-center"
-              style={{ width: '24px', height: '24px' }}
-              title={showPrompts ? "Hide Suggestions" : "Show Suggestions"}
-            >
-              {showPrompts ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-            </button>
-          </div>
-        )}
+        <div className="flex justify-center -mt-6 mb-2 relative z-10">
+          <button
+            data-cy="quick-prompts-toggle"
+            onClick={onTogglePrompts}
+            className="bg-surface border border-color shadow-sm rounded-full text-secondary hover:text-primary transition flex items-center justify-center"
+            style={{ width: '24px', height: '24px' }}
+            title={showPrompts ? 'Hide Suggestions' : 'Show Suggestions'}
+          >
+            {showPrompts ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+          </button>
+        </div>
 
-        {/* Quick Prompts (above input) */}
+        {/* Quick prompts (default early, dynamic later with fallback) */}
         <AnimatePresence>
-          {showPrompts && chatHistory.length <= 1 && (
+          {showPrompts && quickPrompts.length > 0 && (
             <motion.div
               data-cy="quick-prompts-panel"
               initial={{ height: 0, opacity: 0 }}
@@ -251,13 +234,16 @@ export default function Chat({
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div style={{ display: 'flex', gap: 'var(--space-xs)', flexWrap: 'wrap', marginBottom: 'var(--space-xs)', justifyContent: 'center' }}>
+              <div
+                data-cy="suggested-prompts"
+                style={{ display: 'flex', gap: 'var(--space-xs)', flexWrap: 'wrap', marginBottom: 'var(--space-xs)', justifyContent: 'center' }}
+              >
                 {quickPrompts.map((prompt, index) => (
                   <button
                     key={index}
                     onClick={() => {
                       handleQuickPrompt(prompt);
-                      setShowPrompts(false);
+                      onClearSuggestedPrompts();
                     }}
                     disabled={isGenerating}
                     className="bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition text-body-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"

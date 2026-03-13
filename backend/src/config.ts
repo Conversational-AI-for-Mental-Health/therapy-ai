@@ -25,6 +25,7 @@ interface AppConfig {
     MONGODB_URI : string;
     PYTHON_AI_URL : string;
     PYTHON_AI_TIMEOUT_MS: number;
+    PYTHON_SUGGESTED_PROMPTS_TIMEOUT_MS: number;
     JWT_SECRET: string;
     ACCESS_TOKEN_EXPIRES_IN: string;
     REFRESH_TOKEN_EXPIRES_DAYS: number;
@@ -46,6 +47,10 @@ const config: AppConfig = {
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/therapy-ai',
   PYTHON_AI_URL: normalizePythonAiUrl(process.env.AI_SERVICE_URL || 'http://localhost:5000'),
   PYTHON_AI_TIMEOUT_MS: parseInt(process.env.PYTHON_AI_TIMEOUT_MS || '120000', 10),
+  PYTHON_SUGGESTED_PROMPTS_TIMEOUT_MS: parseInt(
+    process.env.PYTHON_SUGGESTED_PROMPTS_TIMEOUT_MS || '15000',
+    10,
+  ),
   JWT_SECRET: process.env.JWT_SECRET || DEFAULT_JWT_SECRET,
   ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN || '60m',
   REFRESH_TOKEN_EXPIRES_DAYS: parseInt(process.env.REFRESH_TOKEN_EXPIRES_DAYS || '30', 10),
@@ -62,6 +67,9 @@ if (!config.MONGODB_URI) {
 }
 if (isNaN(config.PYTHON_AI_TIMEOUT_MS)) {
   throw new Error('Invalid PYTHON_AI_TIMEOUT_MS defined in environment variables.');
+}
+if (isNaN(config.PYTHON_SUGGESTED_PROMPTS_TIMEOUT_MS)) {
+  throw new Error('Invalid PYTHON_SUGGESTED_PROMPTS_TIMEOUT_MS defined in environment variables.');
 }
 if (isNaN(config.REFRESH_TOKEN_EXPIRES_DAYS) || config.REFRESH_TOKEN_EXPIRES_DAYS <= 0) {
   throw new Error('Invalid REFRESH_TOKEN_EXPIRES_DAYS defined in environment variables.');

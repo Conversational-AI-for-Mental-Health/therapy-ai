@@ -9,6 +9,7 @@ module.exports = {
 
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^ansi-regex$': '<rootDir>/src/tests/mocks/ansi-regex.ts',
 
     '^framer-motion$': '<rootDir>/src/tests/mocks/framer-motion.tsx',
     '^react-markdown$': '<rootDir>/src/tests/mocks/react-markdown.tsx',
@@ -31,7 +32,8 @@ module.exports = {
     ],
   },
 
-  testMatch: ['<rootDir>/src/**/?(*.)+(spec|test).+(ts|tsx|js)'],
+  // Keep the pattern relative to roots so it works consistently on Windows paths.
+  testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
 
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

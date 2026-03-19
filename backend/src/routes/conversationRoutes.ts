@@ -1,13 +1,85 @@
 import { Router, Request, Response } from 'express';
 import { ConversationService } from '../services';
 import { authenticateUser, validateObjectId } from '../middleware/validation';
+import { validateBody, validateQuery } from '../middleware/schemaValidation';
+import { z } from 'zod';
 
 const router = Router();
 
+const addMessageBodySchema = z.object({
+  sender: z.enum(['user', 'ai']),
+  text: z.string().min(1).max(10000),
+});
+
+const createConversationBodySchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+});
+
+const getConversationQuerySchema = z.object({
+  limit: z.string().regex(/^\d+$/).optional(),
+});
+
+const getConversationsQuerySchema = z.object({
+  archived: z.enum(['true', 'false']).optional(),
+});
+
+const updateTitleBodySchema = z.object({
+  title: z.string().min(1).max(200),
+});
+
 router.use(authenticateUser);
 
+// Add message to conversation
+router.post(
+  '/:id/messages',
+  validateObjectId('id'),
+  validateBody(addMessageBodySchema),
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const conversationId = req.params.id;
+      const { sender, text } = req.body;
+
+      if (!text || typeof text !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: 'Message text is required',
+        });
+      }
+
+      if (sender !== 'user') {
+        return res.status(400).json({
+          success: false,
+          error: 'Sender must be "user" — AI messages are written by the AI service only',
+        });
+      }
+
+      const conversation = await ConversationService.addMessage(
+        conversationId,
+        userId,
+        sender,
+        text,
+      );
+
+      const latestMessage = conversation.messages[conversation.messages.length - 1];
+
+      res.status(201).json({
+        success: true,
+        data: latestMessage,
+        conversationId: conversation._id,
+        message_count: conversation.message_count,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to add message',
+      });
+    }
+  },
+);
+
 // Create new conversation
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', validateBody(createConversationBodySchema), async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { title } = req.body;
@@ -29,8 +101,8 @@ router.post('/', async (req: Request, res: Response) => {
   }
 });
 
-// Get all conversations
-router.get('/', async (req: Request, res: Response) => {
+// Get all conversations for the user, with optional filter for archived conversations
+router.get('/', validateQuery(getConversationsQuerySchema), async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
     const includeArchived = req.query.archived === 'true';
@@ -53,15 +125,16 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// Get single conversation
+// Get a specific conversation by ID, including its messages (with pagination)
 router.get(
   '/:id',
   validateObjectId('id'),
+  validateQuery(getConversationQuerySchema),
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.userId;
       const conversationId = req.params.id;
-      const messageLimit = parseInt(req.query.limit as string) || 50;
+      const messageLimit = parseInt(req.query.limit as string) || 100;
 
       const conversation =
         await ConversationService.getConversationWithRecentMessages(
@@ -94,6 +167,7 @@ router.get(
 router.patch(
   '/:id/title',
   validateObjectId('id'),
+  validateBody(updateTitleBodySchema),
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.userId;
@@ -235,7 +309,7 @@ router.delete(
   },
 );
 
-// Get conversation statistics
+// Get conversation stats
 router.get(
   '/:id/stats',
   validateObjectId('id'),

@@ -189,7 +189,7 @@ Content-Type: application/json
 - `conversation_history` (optional): Array of previous messages for context
 - `max_tokens` (optional): Max response length (1-2048, default: 512)
 - `temperature` (optional): Response creativity (0.0-2.0, default: 0.7)
-  - Lower (0.3-0.5): More focused and conservative
+  - Lower (0.3-1.5): More focused and conservative
   - Higher (0.8-1.0): More creative and varied
 
 **Response:**
@@ -268,7 +268,7 @@ pip install --upgrade transformers
 
 3. **Lower temperature** for more consistent responses:
 ```python
-"temperature": 0.5  # Instead of 0.7
+"temperature": 1.5  # Instead of 0.7
 ```
 
 4. **Quantization** (Advanced - saves memory, slight quality loss):

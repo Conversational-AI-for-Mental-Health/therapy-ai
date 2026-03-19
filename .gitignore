@@ -6,3 +6,10 @@ dist/
 npm-debug.log
 **/.env
 .yarn/
+.mongodb-binaries/
+backend/.mongodb-binaries/
+docs/
+__pycache__/
+.pytest_cache/
+app.sqlite3
+.venv

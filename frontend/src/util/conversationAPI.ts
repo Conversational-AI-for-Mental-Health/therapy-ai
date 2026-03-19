@@ -1,58 +1,46 @@
+import authAPI from './authAPI';
+import { APIResponse, Conversation, Message } from './types';
+
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
-interface APIResponse<T> {
-  success: boolean;
-  data?: T;
-  count?: number;
-  message?: string;
-  error?: string;
-}
-
-export interface Conversation {
-  _id: string;
-  user_id: string;
-  title: string;
-  started_at: string;
-  last_message_at?: string;
-  ended_at?: string;
-  archived: boolean;
-  deleted: boolean;
-  message_count: number;
-  messages?: Message[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Message {
-  _id: string;
-  sender: 'user' | 'ai';
-  text: string;
-  timestamp: string;
-  metadata: {
-    liked: boolean;
-    copied: boolean;
-    regenerated: boolean;
-    edited: boolean;
-    original_text?: string;
-  };
-}
-
 class ConversationAPI {
-  // Placeholder user ID - replace with real auth later
-  private userId: string = '507f1f77bcf86cd799439011';
+  private async fetchWithAuthRetry(
+    endpoint: string,
+    options: RequestInit,
+  ): Promise<Response> {
+    const requestOnce = async () => {
+      const token = localStorage.getItem('token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      return fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers: {
+          ...headers,
+          ...options.headers,
+        },
+      });
+    };
+
+    let response = await requestOnce();
+    if (response.status === 401 && authAPI.getRefreshToken()) {
+      const refreshed = await authAPI.refreshAccessToken();
+      if (refreshed.success) {
+        response = await requestOnce();
+      }
+    }
+    return response;
+  }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
   ): Promise<APIResponse<T>> {
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-      });
+      const response = await this.fetchWithAuthRetry(endpoint, options);
 
       const data = await response.json();
 
@@ -67,17 +55,11 @@ class ConversationAPI {
     }
   }
 
-  /**
-   * Create a new conversation
-   */
   async createConversation(title?: string): Promise<Conversation> {
-    const response = await this.request<Conversation>(
-      `/conversations?userId=${this.userId}`,
-      {
-        method: 'POST',
-        body: JSON.stringify({ title }),
-      },
-    );
+    const response = await this.request<Conversation>(`/conversations`, {
+      method: 'POST',
+      body: JSON.stringify({ title }),
+    });
 
     if (!response.data) {
       throw new Error('No data returned from API');
@@ -86,26 +68,20 @@ class ConversationAPI {
     return response.data;
   }
 
-  /**
-   * Get all conversations for the user
-   */
   async getAllConversations(includeArchived = false): Promise<Conversation[]> {
     const response = await this.request<Conversation[]>(
-      `/conversations?userId=${this.userId}&archived=${includeArchived}`,
+      `/conversations?archived=${includeArchived}`,
     );
 
     return response.data || [];
   }
 
-  /**
-   * Get a single conversation with messages
-   */
   async getConversation(
     conversationId: string,
     messageLimit = 50,
   ): Promise<Conversation> {
     const response = await this.request<Conversation>(
-      `/conversations/${conversationId}?userId=${this.userId}&limit=${messageLimit}`,
+      `/conversations/${conversationId}?limit=${messageLimit}`,
     );
 
     if (!response.data) {
@@ -115,9 +91,27 @@ class ConversationAPI {
     return response.data;
   }
 
-  /**
-   * Update conversation title
-   */
+  async addMessage(
+    conversationId: string,
+    sender: 'user' | 'ai',
+    text: string,
+  ): Promise<Message> {
+    const response = await this.request<{
+      data: Message;
+      conversationId: string;
+      message_count: number;
+    }>(`/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ sender, text }),
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to add message');
+    }
+
+    return response.data as unknown as Message;
+  }
+
   async updateTitle(
     conversationId: string,
     title: string,
@@ -126,10 +120,7 @@ class ConversationAPI {
       `/conversations/${conversationId}/title`,
       {
         method: 'PATCH',
-        body: JSON.stringify({
-          userId: this.userId,
-          title,
-        }),
+        body: JSON.stringify({ title }),
       },
     );
 
@@ -140,17 +131,11 @@ class ConversationAPI {
     return response.data;
   }
 
-  /**
-   * Archive a conversation
-   */
   async archiveConversation(conversationId: string): Promise<Conversation> {
     const response = await this.request<Conversation>(
       `/conversations/${conversationId}/archive`,
       {
         method: 'PATCH',
-        body: JSON.stringify({
-          userId: this.userId,
-        }),
       },
     );
 
@@ -161,17 +146,11 @@ class ConversationAPI {
     return response.data;
   }
 
-  /**
-   * Unarchive a conversation
-   */
   async unarchiveConversation(conversationId: string): Promise<Conversation> {
     const response = await this.request<Conversation>(
       `/conversations/${conversationId}/unarchive`,
       {
         method: 'PATCH',
-        body: JSON.stringify({
-          userId: this.userId,
-        }),
       },
     );
 
@@ -182,27 +161,26 @@ class ConversationAPI {
     return response.data;
   }
 
-  /**
-   * Delete a conversation
-   */
   async deleteConversation(conversationId: string): Promise<void> {
     await this.request(`/conversations/${conversationId}`, {
       method: 'DELETE',
-      body: JSON.stringify({
-        userId: this.userId,
-      }),
     });
   }
 
-  /**
-   * Get conversation statistics
-   */
   async getConversationStats(conversationId: string): Promise<any> {
     const response = await this.request<any>(
-      `/conversations/${conversationId}/stats?userId=${this.userId}`,
+      `/conversations/${conversationId}/stats`,
     );
 
     return response.data;
+  }
+
+  async sendMessage(conversationId: string | null, message: string): Promise<any> {
+    const response = await this.request<any>('/chat', {
+      method: 'POST',
+      body: JSON.stringify({ conversationId, message }),
+    });
+    return response;
   }
 }
 

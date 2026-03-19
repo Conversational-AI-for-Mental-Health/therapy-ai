@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import path from 'path';
 
 let mongoServer: MongoMemoryServer | undefined;
+const mongoBinaryVersion = process.env.MONGOMS_VERSION || '7.0.24';
+const mongoDownloadDir = path.resolve(process.cwd(), '.mongodb-binaries');
 
 beforeAll(async () => {
   try {
@@ -12,14 +15,19 @@ beforeAll(async () => {
 
     // Start in-memory MongoDB with longer timeout
     mongoServer = await MongoMemoryServer.create({
+      binary: {
+        version: mongoBinaryVersion,
+        downloadDir: mongoDownloadDir,
+      },
       instance: {
-        dbName: 'test-therapy-ai',
+        dbName: `test-therapy-ai-${process.pid}`,
+        port: 0,
       },
     });
 
     const mongoUri = mongoServer.getUri();
 
-    // Connect to in-memory database
+    //connect to in-memory database
     await mongoose.connect(mongoUri);
 
     console.log('Test database connected');
@@ -31,12 +39,9 @@ beforeAll(async () => {
 
 afterAll(async () => {
   try {
-    // Disconnect mongoose
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
     }
-
-    // Stop mongo server if it exists
     if (mongoServer) {
       await mongoServer.stop();
     }
@@ -49,7 +54,11 @@ afterAll(async () => {
 
 afterEach(async () => {
   try {
-    // Clear all collections after each test
+    if (mongoose.connection.readyState !== 1) {
+      return;
+    }
+
+    //clear all collections after each test
     const collections = mongoose.connection.collections;
     for (const key in collections) {
       await collections[key].deleteMany({});

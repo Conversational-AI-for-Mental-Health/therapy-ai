@@ -1,0 +1,19 @@
+{
+    "validUser": {
+        "name": "Cypress Tester",
+        "email": "cypress-test@therapy-ai.test",
+        "password": "CypressTest123!"
+    },
+    "invalidCredentials": {
+        "email": "notauser@therapy-ai.test",
+        "password": "WrongPassword999"
+    },
+    "chatMessages": {
+        "simple": "I have been feeling anxious lately"
+    },
+    "journalEntry": {
+        "text": "Today was a challenging day but I managed to stay calm.",
+        "mood": "Calm",
+        "moodIcon": "😌"
+    }
+}

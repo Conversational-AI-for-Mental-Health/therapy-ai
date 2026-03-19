@@ -28,7 +28,6 @@ describe('Conversation Model', () => {
       expect(conversation.title).toBe('Test Conversation');
       expect(conversation.started_at).toBeDefined();
       expect(conversation.archived).toBe(false);
-      expect(conversation.deleted).toBe(false);
       expect(conversation.messages).toHaveLength(0);
       expect(conversation.message_count).toBe(0);
     });

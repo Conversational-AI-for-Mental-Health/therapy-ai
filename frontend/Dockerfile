@@ -6,7 +6,10 @@ WORKDIR /app
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY backend/ ./backend
 COPY frontend/ ./frontend
-RUN yarn install --frozen-lockfile 
+COPY e2e/ ./e2e
+COPY mobile/ ./mobile
+COPY packages/ ./packages
+RUN yarn install --immutable
 
 # ----------------------------------------------------
 # Build the Frontend Static Assets

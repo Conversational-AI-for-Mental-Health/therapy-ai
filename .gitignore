@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # dependencies
 node_modules/
 
@@ -36,3 +37,12 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+=======
+.DS_Store
+node_modules/
+.DS_Store
+build/
+dist/
+npm-debug.log
+**/.env
+>>>>>>> d342decd092495c7a1bf1068bedba2bf815c7728

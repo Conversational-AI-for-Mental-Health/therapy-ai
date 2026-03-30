@@ -1,50 +1,13 @@
 {
-<<<<<<< HEAD
-  "name": "mobile",
-  "version": "1.0.0",
-  "main": "index.ts",
-  "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@expo/metro-config": "~54.0.14",
-    "@react-native-community/cli-server-api": "^20.1.3",
-    "@react-navigation/native": "^7.2.2",
-    "@react-navigation/native-stack": "^7.14.10",
-    "@therapy-ai/shared": "workspace:*",
-    "expo": "54",
-    "expo-secure-store": "~15.0.8",
-    "expo-status-bar": "~3.0.9",
-    "metro": "^0.83.1",
-    "metro-cache": "0.76",
-    "metro-config": "~0.80.4",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-native": "0.81.5",
-    "react-native-gesture-handler": "~2.28.0",
-    "react-native-reanimated": "~3.6.2",
-    "react-native-safe-area-context": "~5.6.0",
-    "react-native-screens": "~4.16.0",
-    "react-native-web": "^0.21.0"
-  },
-  "devDependencies": {
-    "@types/react": "~19.1.10",
-    "@types/react-dom": "~19.1.7",
-    "@types/react-native-web": "^0",
-    "typescript": "~5.9.2"
-  },
-  "private": true
-=======
   "name": "therapy-ai-monorepo",
   "version": "1.0.0",
   "private": true,
   "workspaces": [
     "backend",
-    "frontend"
+    "frontend",
+    "e2e",
+    "mobile",
+    "packages/shared"
   ],
   "scripts": {
     "build": "yarn workspace backend build && yarn workspace frontend build",
@@ -52,18 +15,23 @@
     "build:backend": "yarn workspace backend build",
     "dev": "concurrently \"cd backend && yarn dev\" \"cd frontend && yarn dev\"",
     "install:all": "yarn install",
-    "test": "jest",
+    "test:all": "yarn workspace therapy-ai-backend jest && yarn workspace therapy-ai-frontend jest --runInBand && python -m pytest -q conversational_ai",
     "test:watch": "jest --watch",
-    "test:all": "jest --coverage --watchAll",
+    "test:coverage": "jest --coverage",
+    "test": "jest",
+    "cy:run": "yarn workspace therapy-ai-e2e cy:run",
+    "cy:open": "yarn workspace therapy-ai-e2e cy:open",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx ./backend ./frontend",
     "lint:fix": "eslint --ext .ts,.tsx,.js,.jsx --fix ./backend ./frontend",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
+    "docker:mongodb": "docker-compose up -d mongodb mongo-express",
     "docker:down": "docker compose down",
     "docker:start": "docker compose up --build -d",
     "docker:clean": "docker compose down --rmi all",
-    "docker:logs": "docker compose logs -f"
+    "docker:logs": "docker compose logs -f",
+    "dev:mobile": "yarn workspace mobile start"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
@@ -78,6 +46,6 @@
     "rimraf": "^6.0.1",
     "ts-jest": "^29.4.5",
     "typescript": "^5.9.3"
-  }
->>>>>>> d342decd092495c7a1bf1068bedba2bf815c7728
+  },
+  "packageManager": "yarn@4.12.0+sha512.f45ab632439a67f8bc759bf32ead036a1f413287b9042726b7cc4818b7b49e14e9423ba49b18f9e06ea4941c1ad062385b1d8760a8d5091a1a31e5f6219afca8"
 }

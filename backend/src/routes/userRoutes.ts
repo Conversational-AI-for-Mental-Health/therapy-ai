@@ -58,6 +58,15 @@ const logoutBodySchema = z
   })
   .optional();
 
+// Validation schemas for password and name updates
+const changePasswordBodySchema = z.object({
+  oldPassword: z.string().min(1, 'Current password is required').max(256),
+  newPassword: z.string().min(8, 'New password must be at least 8 characters').max(256),
+});
+const changeNameBodySchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name cannot exceed 100 characters').trim(),
+});
+
 const createAccessToken = (userId: unknown, email: string): string =>
   jwt.sign({ userId, email }, config.JWT_SECRET, {
     expiresIn: config.ACCESS_TOKEN_EXPIRES_IN as any,
@@ -363,7 +372,7 @@ router.get('/me', authenticateUser, async (req: Request, res: Response) => {
 });
 
 // Change password
-router.patch('/password', authenticateUser, async (req: Request, res: Response) => {
+router.patch('/password', authenticateUser, validateBody(changePasswordBodySchema), async (req: Request, res: Response) => {
   try {
     const { oldPassword, newPassword } = req.body;
 
@@ -407,7 +416,7 @@ router.patch('/password', authenticateUser, async (req: Request, res: Response) 
 });
 
 // Change user name
-router.patch('/name', authenticateUser, async (req: Request, res: Response) => {
+router.patch('/name', authenticateUser, validateBody(changeNameBodySchema), async (req: Request, res: Response) => {
   try {
     const { name } = req.body;
 

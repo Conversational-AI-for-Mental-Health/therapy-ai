@@ -96,7 +96,7 @@ services:
       - therapy-ai-network
     restart: always
     environment:
-      - EXPO_PUBLIC_API_URL=http://localhost:3000/api
+      - EXPO_PUBLIC_API_URL=http://therapy-ai-backend:3000/api
 
 # ---------------------------------
 # VOLUMES 

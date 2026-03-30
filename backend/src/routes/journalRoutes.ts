@@ -1,13 +1,26 @@
 import { Router, Request, Response } from 'express';
 import { authenticateUser, validateObjectId, extractValidationError } from '../middleware/validation';
+import { validateBody } from '../middleware/schemaValidation';
 import { JournalService } from '../services/journalService';
+import { z } from 'zod';
+
+// Validation schemas for journal entry creation and updates
+const createEntryBodySchema = z.object({
+  text: z.string().min(1, 'Text is required').max(10000, 'Text cannot exceed 10,000 characters'),
+  mood: z.string().min(1, 'Mood is required').max(50, 'Mood cannot exceed 50 characters'),
+  moodIcon: z.string().min(1, 'Mood icon is required').max(10, 'Mood icon cannot exceed 10 characters'),
+});
+
+const updateEntryBodySchema = z.object({
+  text: z.string().min(1, 'Text is required').max(10000, 'Text cannot exceed 10,000 characters'),
+});
 
 const router = Router();
 
 router.use(authenticateUser);
 
 // Create new journal entry
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', validateBody(createEntryBodySchema), async (req: Request, res: Response) => {
     try {
         const userId = req.user!.userId;
         const { text, mood, moodIcon } = req.body;
@@ -50,7 +63,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // Update journal entry
-router.patch('/:id', validateObjectId('id'), async (req: Request, res: Response) => {
+router.patch('/:id', validateObjectId('id'), validateBody(updateEntryBodySchema), async (req: Request, res: Response) => {
     try {
         const userId = req.user!.userId;
         const entryId = req.params.id;

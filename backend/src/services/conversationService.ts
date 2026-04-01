@@ -39,6 +39,7 @@ export class ConversationService {
     conversationId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
     messageLimit: number = 20,
+    beforeCursor?: string
   ): Promise<IConversation | null> {
     const conversation = await Conversation.findOne({
       _id: conversationId,
@@ -46,6 +47,14 @@ export class ConversationService {
     });
 
     if (!conversation) return null;
+
+    // If a beforeCursor is provided, filter out newer messages
+    if (beforeCursor) {
+      const beforeTime = new Date(beforeCursor).getTime();
+      conversation.messages = conversation.messages.filter(
+        (msg: any) => new Date(msg.timestamp).getTime() < beforeTime
+      ) as any;
+    }
 
     // Limit the number of messages returned to the most recent ones
     if (conversation.messages.length > messageLimit) {

@@ -78,7 +78,7 @@ class ConversationAPI {
 
   async getConversation(
     conversationId: string,
-    messageLimit = 50,
+    messageLimit = 5000,
   ): Promise<Conversation> {
     const response = await this.request<Conversation>(
       `/conversations/${conversationId}?limit=${messageLimit}`,

@@ -100,7 +100,7 @@ describe('ConversationAPI', () => {
       const result = await conversationAPI.getConversation(mockConversation._id);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_URL}/conversations/${mockConversation._id}?limit=50`,
+        `${API_URL}/conversations/${mockConversation._id}?limit=5000`,
         expect.any(Object),
       );
       expect(result).toEqual(mockConversation);

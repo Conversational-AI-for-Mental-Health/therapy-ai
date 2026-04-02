@@ -1,33 +1,15 @@
+import 'react-native-gesture-handler';
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import type { LoginRequest } from '@therapy-ai/shared';
+import { AuthProvider } from './src/context/AuthContext';
+import AppNavigator from './src/navigation/AppNavigator';
 
+// The main entry point of the application, wrapping the app in the AuthProvider for authentication context
 export default function App() {
-  const starterPayload: LoginRequest = {
-    email: 'demo@example.com',
-    password: 'password123',
-  };
-
   return (
-    <View style={styles.container}>
-      <Text>Therapy AI Mobile app</Text>
-      <Text style={styles.subText}>
-        Shared types ready: {starterPayload.email}
-      </Text>
-      <StatusBar style="auto" />
-    </View>
+    <AuthProvider>
+      <StatusBar style="light" />
+      <AppNavigator />
+    </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  subText: {
-    marginTop: 8,
-    color: '#555',
-  },
-});

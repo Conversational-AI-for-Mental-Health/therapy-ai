@@ -39,6 +39,7 @@ export class ConversationService {
     conversationId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
     messageLimit: number = 20,
+    beforeCursor?: string
   ): Promise<IConversation | null> {
     const conversation = await Conversation.findOne({
       _id: conversationId,
@@ -46,6 +47,14 @@ export class ConversationService {
     });
 
     if (!conversation) return null;
+
+    // If a beforeCursor is provided, filter out newer messages
+    if (beforeCursor) {
+      const beforeTime = new Date(beforeCursor).getTime();
+      conversation.messages = conversation.messages.filter(
+        (msg: any) => new Date(msg.timestamp).getTime() < beforeTime
+      ) as any;
+    }
 
     // Limit the number of messages returned to the most recent ones
     if (conversation.messages.length > messageLimit) {
@@ -72,6 +81,31 @@ export class ConversationService {
     return Conversation.find(query)
       .sort({ last_message_at: -1 })
       .select('-messages');
+  }
+
+  // Get paginated conversations for a user, with optional filtering for archived conversations
+  // This is used for the mobile app to efficiently load conversations without fetching all messages or metadata.
+  static async getUserConversationsPaginated(
+    userId: string | Types.ObjectId,
+    includeArchived: boolean = false,
+    page: number = 1,
+    pageSize: number = 20,
+  ): Promise<{ conversations: Partial<IConversation>[]; total: number }> {
+    const query: any = { user_id: userId, deleted: false };
+    if (!includeArchived) query.archived = false;
+
+    const skip = (page - 1) * pageSize;
+
+    const [conversations, total] = await Promise.all([
+      Conversation.find(query)
+        .sort({ last_message_at: -1 })
+        .skip(skip)
+        .limit(pageSize)
+        .select('_id title last_message_at message_count archived createdAt'),
+      Conversation.countDocuments(query),
+    ]);
+
+    return { conversations, total };
   }
 
   // Add a message to a conversation and update the last_message_at timestamp

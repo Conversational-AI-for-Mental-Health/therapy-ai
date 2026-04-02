@@ -17,6 +17,7 @@ const createConversationBodySchema = z.object({
 
 const getConversationQuerySchema = z.object({
   limit: z.string().regex(/^\d+$/).optional(),
+  before: z.iso.datetime({ offset: true }).optional(), // For pagination: only return messages created before this timestamp.
 });
 
 const getConversationsQuerySchema = z.object({
@@ -125,6 +126,49 @@ router.get('/', validateQuery(getConversationsQuerySchema), async (req: Request,
   }
 });
 
+// Lightweight paginated list for mobile. Returns only the 6 fields the native list UI needs — no embedded messages, no heavy metadata.
+
+const getMobileConversationsQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).optional(),
+  pageSize: z.string().regex(/^\d+$/).optional(),
+  archived: z.enum(['true', 'false']).optional(),
+});
+
+// Get paginated conversations for mobile, with optional filter for archived conversations
+router.get(
+  '/mobile-list',
+  validateQuery(getMobileConversationsQuerySchema),
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const pageSize = Math.min(50, Math.max(1, parseInt(req.query.pageSize as string) || 20));
+      const includeArchived = req.query.archived === 'true';
+
+      const { conversations, total } = await ConversationService.getUserConversationsPaginated(
+        userId,
+        includeArchived,
+        page,
+        pageSize,
+      );
+
+      res.json({
+        success: true,
+        data: conversations,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize),
+          hasMore: page * pageSize < total,
+        },
+      });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message || 'Failed to fetch conversations' });
+    }
+  },
+);
+
 // Get a specific conversation by ID, including its messages (with pagination)
 router.get(
   '/:id',
@@ -135,12 +179,14 @@ router.get(
       const userId = req.user!.userId;
       const conversationId = req.params.id;
       const messageLimit = parseInt(req.query.limit as string) || 100;
+      const beforeCursor = req.query.before as string | undefined;
 
       const conversation =
         await ConversationService.getConversationWithRecentMessages(
           conversationId,
           userId,
           messageLimit,
+          beforeCursor,
         );
 
       if (!conversation) {

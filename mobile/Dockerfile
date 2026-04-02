@@ -10,10 +10,10 @@ COPY frontend/ ./frontend
 COPY mobile/ ./mobile
 COPY packages/ ./packages
 
-RUN yarn install --frozen-lockfile
+RUN yarn install
 
 WORKDIR /app/mobile
 
 EXPOSE 8081 19000 19001 19002 19006
 
-CMD ["yarn", "start", "--host", "0.0.0.0"]
+CMD ["yarn", "start", "--lan"]

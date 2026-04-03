@@ -2,23 +2,22 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
 import { RootStackParamList, ChatMessage, ChatSession, DashboardTab, Conversation } from '../types';
 import { defaultQuickPrompts } from '../constants/constants';
 import { colors, spacing } from '../constants/theme';
-
 import { useAuth } from '../context/AuthContext';
 import conversationApi from '../services/conversationApi';
-
 import Sidebar from '../components/Sidebar';
 import ChatPanel from '../components/ChatPanel';
 import JournalPanel from '../components/JournalPanel';
 import SettingsModal from '../components/SettingsModal';
 import ProfessionalSupportModal from '../components/ProfessionalSupportModal';
-
+import { useTheme } from '../context/ThemeContext';
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'Dashboard'> };
 
 export default function DashboardScreen({ navigation }: Props) {
+  const { themeColors, isDarkMode, toggleDarkMode } = useTheme();
+  
   const { user, logout } = useAuth();
 
   const [tab, setTab]= useState<DashboardTab>('chat');
@@ -241,6 +240,7 @@ export default function DashboardScreen({ navigation }: Props) {
     : undefined;
 
   return (
+    
     <SafeAreaView style={styles.safe} edges={['top']}>
       <Sidebar
         isOpen={sidebarOpen}
@@ -251,8 +251,7 @@ export default function DashboardScreen({ navigation }: Props) {
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
         onContactProfessional={handleContactProfessional}
-        onNavigate={() => {}}
-        onLoadMoreSessions={handleLoadMoreSessions}
+ onNavigate={(screen) => navigation.navigate(screen as any)}        onLoadMoreSessions={handleLoadMoreSessions}
         user={userDisplay}
       />
 

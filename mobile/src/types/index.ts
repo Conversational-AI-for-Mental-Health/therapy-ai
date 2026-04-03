@@ -3,6 +3,10 @@ export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
   Dashboard: undefined;
+  OurStory: undefined;
+  PrivacyPolicy: undefined; 
+  Contact:undefined;
+
 };
 
 export type DashboardTab = 'chat' | 'journal';

@@ -12,6 +12,7 @@ export const colors = {
   aiBubble: '#1e3a34',
   inputBg: '#1a3530',
   danger: '#c0544a',
+   white: '#ffffff',
 };
 
 export const spacing = {

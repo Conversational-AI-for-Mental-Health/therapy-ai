@@ -20,22 +20,7 @@ export default function SignupScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async () => {
-    setError('');
-    if (!name || !email || !password) { setError('Please fill in all fields'); return; }
-    if (password.length < 8) { setError('Password must be at least 8 characters'); return; }
-    setLoading(true);
-    try {
-      const result = await register(name, email, password);
-      if (result.success) {
-        navigation.replace('Dashboard');
-      } else {
-        setError(result.error || 'Registration failed');
-      }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
+     navigation.replace('Dashboard');
   };
 
   return (

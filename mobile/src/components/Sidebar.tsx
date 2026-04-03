@@ -130,15 +130,15 @@ export default function Sidebar({
                 <Text style={styles.contactBtnText}>🧑‍⚕️  Contact Professional</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.footerBtn} onPress={() => openLink(LINKS.ourStory)}>
+              <TouchableOpacity style={styles.footerBtn} onPress={() => { onNavigate('OurStory'); onClose(); }}>
                 <Text style={styles.footerBtnText}>📖  Our Story</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.footerBtn} onPress={() => openLink(LINKS.privacyPolicy)}>
+              <TouchableOpacity style={styles.footerBtn} onPress={() => { onNavigate('PrivacyPolicy'); onClose(); }}>
                 <Text style={styles.footerBtnText}>🔒  Privacy Policy</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.footerBtn} onPress={() => openLink(LINKS.contactUs)}>
+              <TouchableOpacity style={styles.footerBtn}  onPress={() => { onNavigate('Contact'); onClose(); }}>
                 <Text style={styles.footerBtnText}>✉️  Contact Us</Text>
               </TouchableOpacity>
             </View>

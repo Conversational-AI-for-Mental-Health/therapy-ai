@@ -49,6 +49,7 @@ export default function SignupScreen({ navigation }: Props) {
           <View style={styles.form}>
             <TextInput
               style={styles.input}
+              testID="signup-name"
               placeholder="Full Name"
               placeholderTextColor={colors.textMuted}
               value={name}
@@ -57,6 +58,7 @@ export default function SignupScreen({ navigation }: Props) {
             />
             <TextInput
               style={styles.input}
+              testID="signup-email"
               placeholder="Email"
               placeholderTextColor={colors.textMuted}
               value={email}
@@ -67,12 +69,13 @@ export default function SignupScreen({ navigation }: Props) {
             />
             <TextInput
               style={styles.input}
+              testID="signup-password"
               placeholder="Password (min. 8 characters)"
               placeholderTextColor={colors.textMuted}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
-              textContentType="newPassword"
+              textContentType="oneTimeCode"
             />
 
             {error ? <Text style={styles.error}>{error}</Text> : null}

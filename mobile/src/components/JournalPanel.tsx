@@ -100,6 +100,7 @@ export default function JournalPanel() {
 
       <TextInput
         style={styles.textarea}
+        testID="journal-input"
         placeholder="Start today's entry..."
         placeholderTextColor={colors.textMuted}
         value={journalText}

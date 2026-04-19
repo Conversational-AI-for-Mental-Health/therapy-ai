@@ -4,12 +4,12 @@
 
 This is a full-stack **monorepo** managed with **Yarn Workspaces**.
 
-| Service     | Technology                   | Local Port | Role                               |
-| :---------- | :--------------------------- | :--------- | :--------------------------------- |
-| `backend/`  | Node.js, Express, TypeScript | **3000**   | API Server & Socket.IO             |
-| `frontend/` | React, TypeScript, Webpack   | **8080**   | UI (served by Webpack Dev Server)  |
-| `mobile/`   | Expo, React Native, TypeScript | Expo DevTools | Mobile client                      |
-| `conversational_ai/` | Python, Flask, Transformers | **5000** | Local LLM Model Server (Qwen 2.5) |
+| Service              | Technology                     | Local Port    | Role                              |
+| :------------------- | :----------------------------- | :------------ | :-------------------------------- |
+| `backend/`           | Node.js, Express, TypeScript   | **3000**      | API Server & Socket.IO            |
+| `frontend/`          | React, TypeScript, Webpack     | **8080**      | UI (served by Webpack Dev Server) |
+| `mobile/`            | Expo, React Native, TypeScript | Expo DevTools | Mobile client                     |
+| `conversational_ai/` | Python, Flask, Transformers    | **5000**      | Local LLM Model Server (Qwen 2.5) |
 
 ---
 
@@ -20,7 +20,7 @@ This is a full-stack **monorepo** managed with **Yarn Workspaces**.
 You need the following installed on your system:
 
 - **Git**
-- **Node.js (LTS)**  
+- **Node.js (LTS)**
   - Corepack (included by default with Node 16.9+, 18+, 20+)
 - **Docker Desktop** (for MongoDB container)
 - **Python 3.10+**
@@ -32,9 +32,9 @@ Enable Corepack (use these two commands if yarn 4 is not installed):
 corepack enable
 corepack prepare yarn@4.10.3 --activate
 ```
+
 - **check version using**
-   - yarn -v
-  
+  - yarn -v
 
 ### Setup Steps
 
@@ -45,17 +45,17 @@ corepack prepare yarn@4.10.3 --activate
     cd therapy-ai
     ```
 
-2.  **Install Dependencies:** (json file has setup for concurrent installation so yarn install should work after  yarn installation in a device)
-   This installs dependencies for:
+2.  **Install Dependencies:** (json file has setup for concurrent installation so yarn install should work after yarn installation in a device)
+    This installs dependencies for:
 
 - **backend**
 - **frontend**
 - **root workspace**
 
 No separate installation inside folders is required.
-    ```bash
+`bash
     yarn install
-    ```
+    `
 
 ---
 
@@ -83,6 +83,7 @@ You can also run this command in the frontend or backend to test them separately
 No seperate yarn installation is required
 
 ## 🔑 Environment Variables
+
 backend/.env
 
 ```bash
@@ -91,12 +92,16 @@ PORT=3000
 CORS_ORIGIN=http://localhost:8080
 ```
 
-## 🐳 Docker 
+## 🐳 Docker
+
 Run MongoDB with Docker:
+
 ```bash
 docker-compose up -d mongodb mongo-express
 ```
+
 View Database
+
 ```bash
 http://localhost:8081
 username: admin
@@ -104,18 +109,22 @@ password: admin123
 ```
 
 Run full app stack (backend + frontend + mobile + mongodb):
+
 ```bash
 docker compose up --build -d
 ```
 
 Mobile Expo service is exposed on ports `8082` (mapped to container `8081`), `19000`, `19001`, `19002`, and `19006`.
 Set `EXPO_PUBLIC_API_URL` in compose if you need a different backend URL for your device/simulator setup.
+
 ## 📘 Documentation Links
+
 1. Project Charter https://www.overleaf.com/project/68d58effa5d65c5eaa9b1018
 2. SRS https://www.overleaf.com/project/68eec9d6dc78d607a23ee0a8
-3. ADS  https://www.overleaf.com/project/690d7a0d18e5aa3efccd83ff
+3. ADS https://www.overleaf.com/project/690d7a0d18e5aa3efccd83ff
 
 ## Repo Structure
+
 ```bash
 therapy-ai/
 │
@@ -141,5 +150,3 @@ therapy-ai/
 └── yarn.lock
 
 ```
-
-

@@ -6,6 +6,7 @@ import {
   getStoredUser,
   getValidToken as _getValidToken,
 } from '../services/authApi';
+import { getRefreshToken } from '../services/secureSession';
 import type { StoredUser } from '../services/secureSession';
 
 
@@ -95,7 +96,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = useCallback(async () => {
     try {
       const token = await _getValidToken();
-      const { getRefreshToken } = await import('../services/secureSession');
       const refreshToken = await getRefreshToken();
       if (token && refreshToken) {
         await authApi.logout({ refreshToken }, token).catch(() => {});

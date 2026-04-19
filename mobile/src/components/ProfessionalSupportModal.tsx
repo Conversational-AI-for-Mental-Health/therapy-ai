@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { colors, spacing, radius } from '../constants/theme';
 import { getValidToken } from '../services/authApi';
+import { getApiBaseUrl } from '../config/env';
 
 
 async function requestProfessionalSupport(params: {
@@ -13,7 +14,6 @@ async function requestProfessionalSupport(params: {
 }): Promise<{ success: boolean; message: string }> {
   try {
     const token = await getValidToken();
-    const { getApiBaseUrl } = await import('../config/env');
     const res = await fetch(`${getApiBaseUrl()}/emergency/request-support`, {
       method:  'POST',
       headers: {

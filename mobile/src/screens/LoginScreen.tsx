@@ -47,6 +47,7 @@ export default function LoginScreen({ navigation }: Props) {
           <View style={styles.form}>
             <TextInput
               style={styles.input}
+              testID="login-email"
               placeholder="Email"
               placeholderTextColor={colors.textMuted}
               value={email}
@@ -57,12 +58,13 @@ export default function LoginScreen({ navigation }: Props) {
             />
             <TextInput
               style={styles.input}
+              testID="login-password"
               placeholder="Password"
               placeholderTextColor={colors.textMuted}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
-              textContentType="password"
+              textContentType="oneTimeCode"
             />
 
             {error ? <Text style={styles.error}>{error}</Text> : null}

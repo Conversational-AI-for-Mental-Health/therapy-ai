@@ -161,6 +161,7 @@ export default function ChatPanel({
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
+          testID="chat-input"
           placeholder="Type your message..."
           placeholderTextColor={colors.textMuted}
           value={chatInput}

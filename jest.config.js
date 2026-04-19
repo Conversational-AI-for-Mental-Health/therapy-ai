@@ -1,11 +1,12 @@
 module.exports = {
   // Directories where Jest should look for jest unit test files
-  roots: ["<rootDir>/backend", "<rootDir>/frontend"],
+  roots: ["<rootDir>/backend", "<rootDir>/frontend", "<rootDir>/mobile"],
 
   
   projects: [
     "<rootDir>/backend",
-    "<rootDir>/frontend"
+    "<rootDir>/frontend",
+    "<rootDir>/mobile"
   ],
 
   collectCoverage: false,

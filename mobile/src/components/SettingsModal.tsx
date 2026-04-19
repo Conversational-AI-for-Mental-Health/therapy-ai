@@ -36,15 +36,17 @@ export default function SettingsModal({ visible, onClose, onLogout, user }: Sett
   const handleLogout = () => {
     Alert.alert('Log Out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Log Out', style: 'destructive', onPress: onLogout },
+      { text: 'Yes, Log Out', style: 'destructive', onPress: onLogout },
     ]);
   };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
+      <Pressable testID="settings-backdrop" style={styles.backdrop} onPress={onClose} />
       <View style={styles.sheet}>
-        <View style={styles.drag} />
+        <TouchableOpacity testID="close-settings-modal" onPress={onClose} hitSlop={{top: 20, bottom: 20, left: 50, right: 50}}>
+          <View style={styles.drag} />
+        </TouchableOpacity>
 
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Profile */}

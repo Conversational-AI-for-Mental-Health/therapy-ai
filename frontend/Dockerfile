@@ -1,10 +1,15 @@
 # Dependency Installation & Workspace Linking
 FROM node:20-alpine AS installer
+# Enable Corepack to use the Latest Yarn version in packageManager
+RUN corepack enable
 WORKDIR /app
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock .yarnrc.yml ./
 COPY backend/ ./backend
 COPY frontend/ ./frontend
-RUN yarn install --frozen-lockfile --production=false
+COPY e2e/ ./e2e
+COPY mobile/ ./mobile
+COPY packages/ ./packages
+RUN yarn install --immutable
 
 # ----------------------------------------------------
 # Build the Frontend Static Assets

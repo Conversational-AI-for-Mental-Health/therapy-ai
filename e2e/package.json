@@ -1,0 +1,22 @@
+{
+    "name": "therapy-ai-e2e",
+    "private": true,
+    "scripts": {
+        "cy:open": "cypress open",
+        "cy:run": "cypress run",
+        "cy:run:auth": "cypress run --spec 'cypress/e2e/auth.cy.ts'",
+        "cy:run:api": "cypress run --spec 'cypress/e2e/api.cy.ts'",
+        "cy:run:chat": "cypress run --spec 'cypress/e2e/chat.cy.ts'",
+        "cy:run:dashboard": "cypress run --spec 'cypress/e2e/dashboard.cy.ts'",
+        "cy:run:journal": "cypress run --spec 'cypress/e2e/journal.cy.ts'",
+        "cy:run:navigation": "cypress run --spec 'cypress/e2e/navigation.cy.ts'",
+        "cy:run:settings": "cypress run --spec 'cypress/e2e/settings.cy.ts'"
+    },
+    "devDependencies": {
+        "@testing-library/cypress": "^10.0.1",
+        "cypress": "^13.6.0",
+        "cypress-real-events": "^1.13.0",
+        "node-fetch": "^3.3.2",
+        "typescript": "^5.3.3"
+    }
+}

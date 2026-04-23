@@ -8,9 +8,14 @@
     "strict": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
+    "ignoreDeprecations": "5.0",
+    "rootDir": "src",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*"]
 }
